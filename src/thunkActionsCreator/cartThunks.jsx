@@ -1,5 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
+const CART_URL = `${import.meta.env.VITE_API_URL}/wp-json/wc/store/v1/cart`;
+
+// Espace de noms des extensions Store API déclarées dans mu-plugins/cart.php.
+export const CART_EXTENSION_NAMESPACE = "headless-cart";
+
 const buildCartHeaders = (thunkAPI, currentNonce) => {
   const token = thunkAPI.getState().user.token;
   return {
@@ -9,19 +14,53 @@ const buildCartHeaders = (thunkAPI, currentNonce) => {
   };
 };
 
+// Appelle une route d'écriture du panier et renvoie la réponse accompagnée du
+// nonce, que WooCommerce peut renouveler à chaque échange.
+const requestCart = async (
+  thunkAPI,
+  { path, method = "POST", body, fallbackMessage },
+) => {
+  const currentNonce = thunkAPI.getState().cart.nonce;
+  if (!currentNonce) {
+    throw new Error("Jeton de session manquant.");
+  }
+
+  const response = await fetch(`${CART_URL}${path}`, {
+    method,
+    headers: buildCartHeaders(thunkAPI, currentNonce),
+    ...(body && { body: JSON.stringify(body) }),
+  });
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.message || fallbackMessage);
+  }
+
+  const nonce = response.headers.get("Nonce");
+  return { ...data, ...(nonce && { nonce }) };
+};
+
+// Fabrique un thunk de mutation : `buildRequest(arg)` décrit la requête, le
+// thunk renvoie le panier à jour ou rejette avec un message affichable.
+const createCartMutation = (type, buildRequest) =>
+  createAsyncThunk(type, async (arg, thunkAPI) => {
+    try {
+      return await requestCart(thunkAPI, buildRequest(arg));
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  });
+
 export const initializeCartThunk = createAsyncThunk(
   "cart/initialize",
   async (_, thunkAPI) => {
     try {
       const token = thunkAPI.getState().user.token;
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/wp-json/wc/store/v1/cart`,
-        {
-          headers: {
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
+      const response = await fetch(CART_URL, {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
-      );
+      });
       if (!response.ok) {
         throw new Error("Impossible de récupérer le panier initial.");
       }
@@ -37,219 +76,104 @@ export const initializeCartThunk = createAsyncThunk(
 export const emptyCartThunk = createAsyncThunk(
   "cart/empty",
   async (_, thunkAPI) => {
-    const currentNonce = thunkAPI.getState().cart.nonce;
     try {
-      if (!currentNonce) {
-        throw new Error("Jeton de session manquant.");
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/wp-json/wc/store/v1/cart/items`,
-        {
-          method: "DELETE",
-          headers: buildCartHeaders(thunkAPI, currentNonce),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Impossible de vider le panier.");
-      }
-
-      const nonce = response.headers.get("Nonce");
-      const cart = await response.json();
-      cart.items = [];
-      return { ...cart, nonce };
+      // DELETE /cart/items renvoie la liste (vide) des articles, pas le panier.
+      const { nonce } = await requestCart(thunkAPI, {
+        path: "/items",
+        method: "DELETE",
+        fallbackMessage: "Impossible de vider le panier.",
+      });
+      return { items: [], ...(nonce && { nonce }) };
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
   },
 );
 
-export const addProductToCart = createAsyncThunk(
+export const addProductToCart = createCartMutation(
   "cart/addProduct",
-  async ({ productId, quantity, variation = [] }, thunkAPI) => {
-    const currentNonce = thunkAPI.getState().cart.nonce;
-
-    try {
-      if (!currentNonce) {
-        throw new Error("Jeton de session manquant.");
-      }
-
-      const variationData = Object.entries(variation).map(
-        ([attribute, value]) => ({
-          attribute,
-          value,
-        }),
-      );
-
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/wp-json/wc/store/v1/cart/add-item`,
-        {
-          method: "POST",
-          headers: buildCartHeaders(thunkAPI, currentNonce),
-          body: JSON.stringify({
-            id: productId,
-            quantity,
-            variation: variationData,
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Impossible d'ajouter l'article au panier.");
-      }
-      // Si WooCommerce renouvelle le jeton dans la réponse, on met à jour le store et le localStorage
-      const nonce = response.headers.get("Nonce");
-      const cart = await response.json();
-      return { ...cart, nonce };
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
-    }
-  },
+  ({ productId, quantity, variation = [] }) => ({
+    path: "/add-item",
+    body: {
+      id: productId,
+      quantity,
+      variation: Object.entries(variation).map(([attribute, value]) => ({
+        attribute,
+        value,
+      })),
+    },
+    fallbackMessage: "Impossible d'ajouter l'article au panier.",
+  }),
 );
 
-export const deleteProductFromCart = createAsyncThunk(
+export const deleteProductFromCart = createCartMutation(
   "cart/deleteProduct",
-  async ({ itemKey }, thunkAPI) => {
-    const currentNonce = thunkAPI.getState().cart.nonce;
-
-    try {
-      if (!currentNonce) {
-        throw new Error("Jeton de session manquant.");
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/wp-json/wc/store/v1/cart/remove-item`,
-        {
-          method: "POST",
-          headers: buildCartHeaders(thunkAPI, currentNonce),
-          body: JSON.stringify({ key: itemKey }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Impossible de supprimer l'article du panier.");
-      }
-      // Si WooCommerce renouvelle le jeton dans la réponse, on met à jour le store et le localStorage
-      const nonce = response.headers.get("Nonce");
-      const cart = await response.json();
-      return { ...cart, nonce };
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
-    }
-  },
+  ({ itemKey }) => ({
+    path: "/remove-item",
+    body: { key: itemKey },
+    fallbackMessage: "Impossible de supprimer l'article du panier.",
+  }),
 );
 
-export const substractProductFromCart = createAsyncThunk(
+export const substractProductFromCart = createCartMutation(
   "cart/substractProduct",
-  async ({ itemKey, quantity }, thunkAPI) => {
-    const currentNonce = thunkAPI.getState().cart.nonce;
-
-    try {
-      if (!currentNonce) {
-        throw new Error("Jeton de session manquant.");
-      }
-
-      const newQuantity = quantity - 1;
-
-      let url = "";
-      let body = {};
-
-      if (newQuantity > 0) {
-        url = `${import.meta.env.VITE_API_URL}/wp-json/wc/store/v1/cart/update-item`;
-        body = {
-          method: "POST",
-          headers: buildCartHeaders(thunkAPI, currentNonce),
-          body: JSON.stringify({
-            key: itemKey,
-            quantity: newQuantity,
-          }),
-        };
-      } else {
-        url = `${import.meta.env.VITE_API_URL}/wp-json/wc/store/v1/cart/remove-item`;
-        body = {
-          method: "POST",
-          headers: buildCartHeaders(thunkAPI, currentNonce),
-          body: JSON.stringify({ key: itemKey }),
-        };
-      }
-
-      const response = await fetch(url, body);
-
-      if (!response.ok) {
-        throw new Error("Impossible de modifier l'article.");
-      }
-
-      const nonce = response.headers.get("Nonce");
-      const cart = await response.json();
-      return { ...cart, nonce };
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
-    }
+  ({ itemKey, quantity }) => {
+    const newQuantity = quantity - 1;
+    return {
+      path: newQuantity > 0 ? "/update-item" : "/remove-item",
+      body:
+        newQuantity > 0
+          ? { key: itemKey, quantity: newQuantity }
+          : { key: itemKey },
+      fallbackMessage: "Impossible de modifier l'article.",
+    };
   },
 );
 
-export const applyCouponThunk = createAsyncThunk(
+export const updateCartItemQuantityThunk = createCartMutation(
+  "cart/updateItemQuantity",
+  ({ itemKey, quantity }) => ({
+    path: "/update-item",
+    body: { key: itemKey, quantity },
+    fallbackMessage: "Impossible de modifier la quantité.",
+  }),
+);
+
+export const applyCouponThunk = createCartMutation(
   "cart/applyCoupon",
-  async ({ code }, thunkAPI) => {
-    const currentNonce = thunkAPI.getState().cart.nonce;
-
-    try {
-      if (!currentNonce) {
-        throw new Error("Jeton de session manquant.");
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/wp-json/wc/store/v1/cart/apply-coupon`,
-        {
-          method: "POST",
-          headers: buildCartHeaders(thunkAPI, currentNonce),
-          body: JSON.stringify({ code }),
-        },
-      );
-
-      const cart = await response.json();
-
-      if (!response.ok) {
-        throw new Error(cart.message || "Ce code promo n'est pas valide.");
-      }
-
-      const nonce = response.headers.get("Nonce");
-      return { ...cart, nonce };
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
-    }
-  },
+  ({ code }) => ({
+    path: "/apply-coupon",
+    body: { code },
+    fallbackMessage: "Ce code promo n'est pas valide.",
+  }),
 );
 
-export const removeCouponThunk = createAsyncThunk(
+export const removeCouponThunk = createCartMutation(
   "cart/removeCoupon",
-  async ({ code }, thunkAPI) => {
-    const currentNonce = thunkAPI.getState().cart.nonce;
+  ({ code }) => ({
+    path: "/remove-coupon",
+    body: { code },
+    fallbackMessage: "Impossible de retirer ce code promo.",
+  }),
+);
 
-    try {
-      if (!currentNonce) {
-        throw new Error("Jeton de session manquant.");
-      }
+export const selectShippingRateThunk = createCartMutation(
+  "cart/selectShippingRate",
+  ({ packageId, rateId }) => ({
+    path: "/select-shipping-rate",
+    body: { package_id: packageId, rate_id: rateId },
+    fallbackMessage: "Impossible de choisir ce mode de livraison.",
+  }),
+);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/wp-json/wc/store/v1/cart/remove-coupon`,
-        {
-          method: "POST",
-          headers: buildCartHeaders(thunkAPI, currentNonce),
-          body: JSON.stringify({ code }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Impossible de retirer ce code promo.");
-      }
-
-      const nonce = response.headers.get("Nonce");
-      const cart = await response.json();
-      return { ...cart, nonce };
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
-    }
-  },
+export const toggleGiftWrapThunk = createCartMutation(
+  "cart/toggleGiftWrap",
+  ({ itemKey, giftWrap }) => ({
+    path: "/extensions",
+    body: {
+      namespace: CART_EXTENSION_NAMESPACE,
+      data: { key: itemKey, gift_wrap: giftWrap },
+    },
+    fallbackMessage: "Impossible de modifier l'emballage cadeau.",
+  }),
 );
