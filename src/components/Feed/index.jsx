@@ -1,11 +1,12 @@
 import "./index.css";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import Loader from "../../components/Loader";
 import { fetchProductsThunk } from "../../thunkActionsCreator/productsThunks";
 import CatalogueCard from "../CatalogueCard";
+import icArrow from "../../assets/maktaba/ic-arrow-gold.svg";
 
 export default function Feed() {
   const dispatch = useDispatch();
@@ -33,19 +34,6 @@ export default function Feed() {
     }
   };
 
-  // Chargement automatique quand on approche du bas de la grille
-  useEffect(() => {
-    if (!loadMoreRef.current || !hasMore || loading) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) loadMoreProducts();
-      },
-      { rootMargin: "600px 0px" },
-    );
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [hasMore, loading, currentPage]);
-
   if (!loading && error && items.length === 0) {
     return (
       <div className="feed-state" role="alert">
@@ -72,6 +60,8 @@ export default function Feed() {
     );
   }
 
+  const totalPages = list?.totalPages || (hasMore ? currentPage + 1 : currentPage);
+
   return (
     <>
       <div className="feed-container">
@@ -80,13 +70,18 @@ export default function Feed() {
         ))}
       </div>
       {loading && <Loader size="lg" />}
-      {hasMore && !loading && (
-        <div className="feed-footer" ref={loadMoreRef}>
-          <button type="button" className="feed-more" onClick={loadMoreProducts}>
-            Voir plus d&apos;articles
-          </button>
-        </div>
-      )}
+      <div className="feed-footer" ref={loadMoreRef}>
+        <button
+          type="button"
+          className="feed-pagination"
+          onClick={loadMoreProducts}
+          disabled={!hasMore || loading}
+          aria-label={hasMore ? "Afficher la page suivante" : "Dernière page"}
+        >
+          Page {currentPage} / {totalPages}
+          {hasMore && <img src={icArrow} alt="" />}
+        </button>
+      </div>
     </>
   );
 }

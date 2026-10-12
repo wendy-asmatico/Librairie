@@ -14,40 +14,28 @@ const SORTS = [
   { value: "title-asc", label: "Nom : A à Z" },
 ];
 
+// « Filtrer » + « Trier » (pastilles de la maquette mobile de Lisa)
 export default function CatalogueToolbar() {
   const dispatch = useDispatch();
   const filters = useSelector((state) => state.filters);
   const categories = useSelector((state) => state.categories.items);
-  const [priceOpen, setPriceOpen] = useState(false);
-  const priceRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
 
-  const hasPrice = filters.min_price !== "" || filters.max_price !== "";
-  const hasActiveFilters =
-    filters.category ||
-    filters.search ||
-    hasPrice ||
-    filters.orderby !== "date" ||
-    filters.order !== "desc";
+  const activeCount =
+    (filters.category ? 1 : 0) + (filters.min_price !== "" || filters.max_price !== "" ? 1 : 0);
 
-  // Ferme le panneau prix au clic extérieur / Échap
   useEffect(() => {
-    if (!priceOpen) return;
-    const onClick = (e) => {
-      if (priceRef.current && !priceRef.current.contains(e.target)) {
-        setPriceOpen(false);
-      }
-    };
-    const onKey = (e) => e.key === "Escape" && setPriceOpen(false);
+    if (!open) return;
+    const onClick = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
     document.addEventListener("mousedown", onClick);
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("mousedown", onClick);
       document.removeEventListener("keydown", onKey);
     };
-  }, [priceOpen]);
-
-  const selectCategory = (id) =>
-    dispatch(setFilters({ category: id ? String(id) : "" }));
+  }, [open]);
 
   const handleSort = (e) => {
     const [orderby, order] = e.target.value.split("-");
@@ -55,88 +43,71 @@ export default function CatalogueToolbar() {
   };
 
   const reset = () =>
-    dispatch(
-      setFilters({
-        category: "",
-        search: "",
-        min_price: "",
-        max_price: "",
-        orderby: "date",
-        order: "desc",
-      }),
-    );
+    dispatch(setFilters({ category: "", search: "", min_price: "", max_price: "" }));
 
   return (
     <div className="catalogue-toolbar">
-      <div
-        className="catalogue-toolbar__chips"
-        role="group"
-        aria-label="Filtrer par catégorie"
-      >
+      <div className="catalogue-toolbar__filter" ref={ref}>
         <button
           type="button"
-          className={`catalogue-chip${!filters.category ? " is-active" : ""}`}
-          aria-pressed={!filters.category}
-          onClick={() => selectCategory("")}
+          className={`catalogue-pill${activeCount ? " is-active" : ""}`}
+          aria-expanded={open}
+          aria-controls="catalogue-filter-panel"
+          onClick={() => setOpen((o) => !o)}
         >
-          Tout
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          Filtrer
+          {activeCount > 0 && <span className="catalogue-pill__count">{activeCount}</span>}
         </button>
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            type="button"
-            className={`catalogue-chip${filters.category === String(cat.id) ? " is-active" : ""}`}
-            aria-pressed={filters.category === String(cat.id)}
-            onClick={() => selectCategory(cat.id)}
-          >
-            {decodeHtml(cat.name)}
-          </button>
-        ))}
-      </div>
 
-      <div className="catalogue-toolbar__controls">
-        <div className="catalogue-toolbar__price" ref={priceRef}>
-          <button
-            type="button"
-            className={`catalogue-control${hasPrice ? " is-active" : ""}`}
-            aria-expanded={priceOpen}
-            aria-controls="catalogue-price-panel"
-            onClick={() => setPriceOpen((open) => !open)}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 6h16M7 12h10M10 18h4" />
-            </svg>
-            Prix
-            {hasPrice && (
-              <span className="catalogue-control__value">
-                {filters.min_price || 0}–{filters.max_price || 1000} €
-              </span>
-            )}
-          </button>
-          {priceOpen && (
-            <div id="catalogue-price-panel" className="catalogue-toolbar__panel">
-              <PriceRangeSlider onApply={() => {}} />
+        {open && (
+          <div id="catalogue-filter-panel" className="catalogue-toolbar__panel">
+            <p className="catalogue-toolbar__label">Rayon</p>
+            <div className="catalogue-toolbar__cats">
+              <button
+                type="button"
+                className={`catalogue-chip${!filters.category ? " is-active" : ""}`}
+                onClick={() => dispatch(setFilters({ category: "" }))}
+              >
+                Tout
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`catalogue-chip${filters.category === String(cat.id) ? " is-active" : ""}`}
+                  onClick={() => dispatch(setFilters({ category: String(cat.id) }))}
+                >
+                  {decodeHtml(cat.name)}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
-
-        <label className="catalogue-control catalogue-control--select">
-          <span className="catalogue-control__label">Trier :</span>
-          <select value={`${filters.orderby}-${filters.order}`} onChange={handleSort}>
-            {SORTS.map((sort) => (
-              <option key={sort.value} value={sort.value}>
-                {sort.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {hasActiveFilters && (
-          <button type="button" className="catalogue-toolbar__reset" onClick={reset}>
-            Réinitialiser
-          </button>
+            <p className="catalogue-toolbar__label">Prix (€)</p>
+            <PriceRangeSlider onApply={() => {}} />
+            {activeCount > 0 && (
+              <button type="button" className="catalogue-toolbar__reset" onClick={reset}>
+                Réinitialiser les filtres
+              </button>
+            )}
+          </div>
         )}
       </div>
+
+      <label className="catalogue-pill catalogue-pill--select">
+        <span>Trier :</span>
+        <select value={`${filters.orderby}-${filters.order}`} onChange={handleSort}>
+          {SORTS.map((sort) => (
+            <option key={sort.value} value={sort.value}>
+              {sort.label}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }

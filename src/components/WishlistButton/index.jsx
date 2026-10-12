@@ -12,7 +12,8 @@ import "./index.css";
 import active from "./favorite-active.svg";
 import inactive from "./favorite-inactive.svg";
 
-export default function WishlistButton({ product }) {
+// iconActive / iconInactive permettent d'utiliser les cœurs de la maquette
+export default function WishlistButton({ product, iconActive, iconInactive }) {
   const dispatch = useDispatch();
   const token = useSelector((state) => state.user.token);
   const isWishlisted = useSelector((state) =>
@@ -60,7 +61,7 @@ export default function WishlistButton({ product }) {
       aria-label={isWishlisted ? "Retirer des favoris" : "Ajouter aux favoris"}
       title={isWishlisted ? "Retirer des favoris" : "Ajouter aux favoris"}
       onClick={toggleWishlist}
-      src={isWishlisted ? active : inactive}
+      src={isWishlisted ? iconActive || active : iconInactive || inactive}
     />
   );
 }

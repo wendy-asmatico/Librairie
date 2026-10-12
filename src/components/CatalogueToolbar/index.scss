@@ -1,45 +1,11 @@
+$jakarta: "Plus Jakarta Sans", sans-serif;
+
 .catalogue-toolbar {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  align-items: center;
+  gap: 8px;
 
-  @media (min-width: 900px) {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-  }
-
-  // Catégories : défilement horizontal sur mobile
-  &__chips {
-    display: flex;
-    gap: 8px;
-    margin: 0 -16px;
-    padding: 2px 16px 6px;
-    overflow-x: auto;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-
-    @media (min-width: 900px) {
-      flex-wrap: wrap;
-      margin: 0;
-      padding: 0;
-      overflow: visible;
-    }
-  }
-
-  &__controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-  }
-
-  &__price {
+  &__filter {
     position: relative;
   }
 
@@ -48,14 +14,14 @@
     top: calc(100% + 8px);
     left: 0;
     z-index: 20;
-    width: min(340px, calc(100vw - 32px));
+    width: min(360px, calc(100vw - 32px));
     padding: 16px;
     border: 1px solid #e3eadf;
     border-radius: 12px;
     background: #fff;
     box-shadow: 0 16px 32px -16px rgba(45, 63, 40, 0.35);
 
-    @media (min-width: 900px) {
+    @media (min-width: 768px) {
       right: 0;
       left: auto;
     }
@@ -70,19 +36,37 @@
     }
   }
 
+  &__label {
+    margin: 0 0 8px;
+    color: #747870;
+    font-family: $jakarta;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.55px;
+    text-transform: uppercase;
+
+    &:not(:first-child) {
+      margin-top: 16px;
+    }
+  }
+
+  &__cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
   &__reset {
-    height: 36px;
-    margin: 0;
-    padding: 0 12px;
+    width: 100%;
+    margin: 16px 0 0;
+    padding: 10px;
     border: none;
     border-radius: 8px;
-    background: transparent;
+    background: #f5f4ee;
     color: #775a19;
-    font-family: var(--font-sans, "Plus Jakarta Sans", sans-serif);
+    font-family: $jakarta;
     font-size: 13px;
     font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 3px;
 
     &:hover {
       background: #ffe3b2;
@@ -90,53 +74,28 @@
   }
 }
 
-.catalogue-chip {
-  flex-shrink: 0;
-  height: 36px;
-  margin: 0;
-  padding: 0 16px;
-  border: 1px solid #e3eadf;
-  border-radius: 999px;
-  background: #fff;
-  color: #444841;
-  font-family: var(--font-sans, "Plus Jakarta Sans", sans-serif);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-
-  &:hover {
-    background: #eef6ea;
-  }
-
-  &.is-active {
-    border-color: #2d3f28;
-    background: #2d3f28;
-    color: #fff;
-  }
-}
-
-.catalogue-control {
+.catalogue-pill {
   display: inline-flex;
-  gap: 8px;
   align-items: center;
+  gap: 8px;
   height: 36px;
   margin: 0;
-  padding: 0 12px;
+  padding: 0 13px;
   border: 1px solid #e3eadf;
   border-radius: 8px;
   background: #fff;
   color: #444841;
-  font-family: var(--font-sans, "Plus Jakarta Sans", sans-serif);
-  font-size: 13px;
+  font-family: $jakarta;
+  font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 
   svg {
     width: 14px;
     height: 14px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
+    stroke-width: 1.8;
   }
 
   &:hover {
@@ -145,34 +104,64 @@
 
   &.is-active {
     border-color: #b2d1a7;
-    background: #eef6ea;
   }
 
-  &__value {
-    color: #775a19;
-    font-size: 12px;
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: #775a19;
+    color: #fff;
+    font-size: 10px;
     font-weight: 700;
   }
 
   &--select {
     cursor: pointer;
 
+    span {
+      color: #444841;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
     select {
       margin: 0;
-      padding: 0 2px;
+      padding: 0;
       border: none;
       background: transparent;
-      color: #2d3f28;
-      font-family: inherit;
-      font-size: 13px;
+      color: #444841;
+      font-family: $jakarta;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
     }
   }
+}
 
-  &__label {
-    color: #747870;
-    font-size: 13px;
-    font-weight: 500;
+.catalogue-chip {
+  height: 32px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid #e3eadf;
+  border-radius: 9999px;
+  background: #fff;
+  color: #444841;
+  font-family: $jakarta;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &:hover {
+    background: #eef6ea;
+  }
+
+  &.is-active {
+    border-color: #b2d1a7;
+    background: #b2d1a7;
+    color: #fff;
   }
 }

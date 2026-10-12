@@ -6,7 +6,7 @@ import { fetchProductsThunk } from "../../thunkActionsCreator/productsThunks";
 import "./index.css";
 import { decodeHtml } from "../../utils/decodeHtml";
 
-export default function Autocomplete() {
+export default function Autocomplete({ placeholder = "Rechercher..." }) {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ export default function Autocomplete() {
       <input
         type="search"
         className="autocomplete-input"
-        placeholder="Rechercher..."
+        placeholder={placeholder}
         value={search}
         onChange={handleChange}
         onKeyDown={handleKeyDown}

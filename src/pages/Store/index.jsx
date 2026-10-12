@@ -48,16 +48,14 @@ export default function Store() {
     scrollToListing();
   };
 
-  const showAll = () => {
-    dispatch(
-      setFilters({ category: "", search: "", min_price: "", max_price: "" }),
-    );
+  const showBooks = () => {
+    const books = categories.find((cat) => /livre|coran/i.test(`${cat.slug} ${cat.name}`));
+    dispatch(setFilters({ category: books ? String(books.id) : "", search: "" }));
     scrollToListing();
   };
 
   const showGifts = () => {
-    if (!giftCategory) return;
-    dispatch(setFilters({ category: String(giftCategory.id), search: "" }));
+    dispatch(setFilters({ category: giftCategory ? String(giftCategory.id) : "", search: "" }));
     scrollToListing();
   };
 
@@ -65,30 +63,31 @@ export default function Store() {
     ? `Résultats pour « ${filters.search} »`
     : category
       ? decodeHtml(category.name)
-      : "Notre catalogue";
+      : "Nos Livres";
 
   return (
     <main className="catalogue-page">
-      <CatalogueHero category={category} onDiscover={showNewest} onBrowse={showAll} />
+      <CatalogueHero onDiscover={showNewest} onBrowse={showBooks} />
       <CatalogueTrust />
 
       <section className="catalogue-listing" ref={listingRef} aria-labelledby="catalogue-title">
         <header className="catalogue-listing__header">
-          <h2 id="catalogue-title" className="catalogue-listing__title">
-            {title}
-          </h2>
-          <p className="catalogue-listing__subtitle">
-            {typeof total === "number" && !(loading && list.page === 1)
-              ? `${total} article${total > 1 ? "s" : ""} sélectionné${total > 1 ? "s" : ""} avec soin`
-              : "Une sélection d’ouvrages et d’articles choisis avec soin"}
-          </p>
+          <div>
+            <h2 id="catalogue-title" className="catalogue-listing__title">
+              {title}
+            </h2>
+            <p className="catalogue-listing__subtitle">
+              {typeof total === "number" && !(loading && list.page === 1) && (category || filters.search)
+                ? `${total} article${total > 1 ? "s" : ""}`
+                : "Une sélection d’ouvrages"}
+            </p>
+          </div>
+          <CatalogueToolbar />
         </header>
-
-        <CatalogueToolbar />
         <Feed />
       </section>
 
-      <CatalogueGift category={giftCategory} onSelect={showGifts} />
+      <CatalogueGift onSelect={showGifts} />
     </main>
   );
 }

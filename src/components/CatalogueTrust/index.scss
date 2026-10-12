@@ -1,48 +1,47 @@
+// Bandeau de réassurance — node 195:5 (fond blanc, 77 px)
 .catalogue-trust {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 24px 16px;
-  list-style: none;
+  background: #fff;
 
-  @media (min-width: 900px) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
-    padding: 28px 32px;
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    max-width: 1109px;
+    margin: 0 auto;
+    padding: 18px 16px;
+    list-style: none;
+
+    @media (min-width: 1024px) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 77px;
+      padding: 0;
+    }
   }
 
   &__item {
     display: flex;
-    gap: 10px;
     align-items: center;
-    min-height: 56px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    background: #fff;
+    gap: 14px;
     list-style: none;
 
-    svg {
+    img {
+      display: block;
       flex-shrink: 0;
-      width: 18px;
-      height: 18px;
-      fill: none;
-      stroke: #775a19;
-      stroke-width: 1.8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
     }
 
     span {
       color: #775a19;
-      font-family: var(--font-sans, "Plus Jakarta Sans", sans-serif);
-      font-size: 12px;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      font-size: 13px;
       font-weight: 700;
       line-height: 1.35;
 
-      @media (min-width: 900px) {
-        font-size: 13px;
+      @media (min-width: 1024px) {
+        font-size: 16px;
+        line-height: 24px;
+        white-space: nowrap;
       }
     }
   }

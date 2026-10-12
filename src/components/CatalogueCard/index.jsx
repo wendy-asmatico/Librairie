@@ -7,6 +7,10 @@ import { showToast } from "../../slices/toastSlice";
 import WishlistButton from "../WishlistButton";
 import { decodeHtml } from "../../utils/decodeHtml";
 import { formatPrice } from "../../utils/formatPrice";
+import icHeart from "../../assets/maktaba/ic-heart-card.svg";
+import icHeartActive from "../../assets/maktaba/ic-heart-card-active.svg";
+import icStar from "../../assets/maktaba/ic-star-green.svg";
+import icBag from "../../assets/maktaba/ic-bag-small.svg";
 import "./index.css";
 
 const PLACEHOLDER =
@@ -89,20 +93,15 @@ export default function CatalogueCard({ product }) {
         </Link>
 
         <div className="catalogue-card__wishlist">
-          <WishlistButton product={product} />
+          <WishlistButton product={product} iconInactive={icHeart} iconActive={icHeartActive} />
         </div>
 
         {onSale && <span className="catalogue-card__badge">Promo</span>}
 
         {reviewCount > 0 && (
           <span className="catalogue-card__rating">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" />
-            </svg>
-            {rating.toFixed(1)}
-            <span className="catalogue-card__rating-count">
-              ({reviewCount} avis)
-            </span>
+            <img src={icStar} alt="" />
+            {rating.toFixed(1)} ({reviewCount} avis)
           </span>
         )}
       </div>
@@ -163,11 +162,8 @@ export default function CatalogueCard({ product }) {
           onClick={handleAdd}
           disabled={!inStock || adding}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 8h14l-1 13H6L5 8z" />
-            <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-          </svg>
-          {!inStock ? "Rupture de stock" : adding ? "Ajout…" : "Ajouter"}
+          <img src={icBag} alt="" />
+          {!inStock ? "Rupture de stock" : adding ? "Ajout…" : "Ajouter au panier"}
         </button>
       </div>
     </article>

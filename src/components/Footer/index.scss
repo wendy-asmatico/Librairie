@@ -1,117 +1,275 @@
-.footer {
-  background-color: var(--dark-color);
-  color: var(--bg-color);
-  margin-top: auto;
-  .footer_grid {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 4vw 3vw;
-    gap: 2vw;
-    @media screen and (aspect-ratio > 2.6/1) {
-      padding: 10.4lvh 7.8lvh;
-      gap: 5.2lvh;
+// Pied de page Maktaba El Hikma — maquette de Lisa (node 195:348)
+$jakarta: "Plus Jakarta Sans", sans-serif;
+
+.mk-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  padding: 32px 16px 24px;
+  background: #fff;
+
+  @media (min-width: 1024px) {
+    gap: 40px;
+    padding: 40px 48px 28px;
+  }
+
+  img {
+    display: block;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 28px;
+
+    @media (min-width: 700px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 24px;
     }
   }
 
-  .footer_col {
-    display: flex;
-    flex-direction: column;
-    gap: 1vw;
-    padding: 4vw 3vw;
-    @media screen and (aspect-ratio > 2.6/1) {
-      padding: 10.4lvh 7.8lvh;
-      gap: 2.6lvh;
-    }
-  }
-
-  .footer_col--brand {
-    max-width: 25%;
-  }
-
-  .footer_logo {
-    height: 7.8vw;
-    @media screen and (aspect-ratio > 1/1) {
-      height: 3vw;
-    }
-    @media screen and (aspect-ratio > 2.6/1) {
-      height: 7.8lvh;
-    }
-    width: auto;
-    object-fit: contain;
-  }
-
-  .footer_site-name {
-    color: var(--bg-color);
-    margin-bottom: 0;
-  }
-
-  .footer_description {
-    color: var(--secondary-color);
-    margin-bottom: 0;
-  }
-
-  .footer_title {
-    color: var(--bg-color);
-    margin-bottom: 0;
-  }
-
-  .footer_links {
-    list-style: none;
+  &__col {
     display: flex;
     flex-direction: column;
-    gap: 0.7vw;
-    @media screen and (aspect-ratio > 2.6/1) {
-      gap: 2lvh;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__logo {
+    display: block;
+    width: 32px;
+    height: 32px;
+    overflow: hidden;
+    border-radius: 9999px;
+    background: #e9f0e5;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
+  }
+
+  &__name {
+    color: #2d3f28;
+    font-family: "Playfair Display", serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 30px;
+  }
+
+  &__text {
     margin: 0;
+    color: #444841;
+    font-family: $jakarta;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 22.75px;
+  }
 
-    a {
-      color: var(--secondary-color);
-      text-decoration: none;
-      transition: color 0.2s ease;
+  &__rating {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    background: #fff;
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.04));
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+    span {
+      color: #161d17;
+      font-family: $jakarta;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.66px;
+      line-height: 16px;
+    }
+  }
+
+  &__stars {
+    display: flex;
+
+    img {
+      width: 11.667px;
+      height: 11.083px;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    color: #2d3f28;
+    font-family: $jakarta;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      list-style: none;
+    }
+
+    a,
+    button {
+      display: block;
+      width: auto;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: none;
+      color: #444841;
+      font-family: $jakarta;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 22px;
+      text-align: left;
 
       &:hover {
-        color: var(--primary-color);
-        opacity: 1;
+        background: none;
+        color: #775a19;
       }
     }
   }
 
-  .footer_link-button {
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    cursor: pointer;
-    text-align: left;
-    border-radius: 0;
-    width: auto;
-    color: var(--secondary-color);
-    font-family: var(--font-body);
-    font-size: inherit;
-    line-height: inherit;
-    transition: color 0.2s ease;
+  &__contact {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 
-    &:hover {
-      color: var(--primary-color);
-      opacity: 1;
-      transform: none;
+  &__contact-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &--top {
+      align-items: flex-start;
+    }
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 3.5px;
     }
   }
 
-  .footer_bottom {
-    border-top: 1px solid var(--secondary-color);
-    padding: 1.5vw 3vw;
-    @media screen and (aspect-ratio > 2.6/1) {
-      padding: 3.2lvh 7.8lvh;
-    }
-    text-align: center;
+  &__pin {
+    width: 10.667px;
+    height: 15.333px;
+    margin-top: 3px;
+  }
 
-    p {
-      color: var(--secondary-color);
-      margin: 0;
+  &__icon {
+    width: 13.333px;
+    height: 13.333px;
+
+    &--sm {
+      width: 12px;
+      height: 12px;
     }
+  }
+
+  &__contact-text {
+    color: #444841;
+    font-family: $jakarta;
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  &__contact-note {
+    color: #2d3f28;
+    font-family: $jakarta;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 18px;
+  }
+
+  &__whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 24px;
+    border-radius: 8px;
+    background: #2d3f28;
+
+    img {
+      width: 13.333px;
+      height: 13.333px;
+    }
+
+    span {
+      color: #fff;
+      font-family: $jakarta;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.52px;
+      line-height: 18px;
+    }
+
+    &:hover {
+      background: #1c2a19;
+    }
+  }
+
+  &__bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 17px;
+    border-top: 1px solid rgba(196, 200, 190, 0.3);
+
+    @media (min-width: 1024px) {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  &__legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 24px;
+
+    span,
+    a {
+      color: #444841;
+      font-family: $jakarta;
+      font-size: 12px;
+      line-height: 18px;
+    }
+
+    a:hover {
+      color: #775a19;
+    }
+  }
+
+  &__payments {
+    color: #747870;
+    font-family: $jakarta;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.66px;
+    line-height: 16px;
   }
 }

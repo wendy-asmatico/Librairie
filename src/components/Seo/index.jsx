@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { useSelector } from "react-redux";
+import { BRAND } from "../../brand";
 
 const stripHtml = (value) =>
   String(value || "")
@@ -18,11 +18,9 @@ function Seo({
   lang = "fr",
 }) {
   /* On charge dynamiquement le titre et description par defaut du site depuis le slice site*/
-  const {
-    name: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
-    faviconUrl,
-  } = useSelector((state) => state.site);
+  const DEFAULT_TITLE = BRAND.name;
+  const DEFAULT_DESCRIPTION = BRAND.description;
+  const faviconUrl = BRAND.favicon;
   const SITE_NAME = DEFAULT_TITLE;
 
   const cleanTitle = stripHtml(title);

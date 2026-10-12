@@ -1,53 +1,28 @@
+import icStore from "../../assets/maktaba/ic-store.svg";
+import icBox from "../../assets/maktaba/ic-box.svg";
+import icLock from "../../assets/maktaba/ic-lock.svg";
+import icSupport from "../../assets/maktaba/ic-support.svg";
 import "./index.css";
 
+// Bandeau de réassurance — node 195:5
 const ITEMS = [
-  {
-    label: "Retrait gratuit en boutique",
-    icon: (
-      <>
-        <path d="M4 10v10h16V10" />
-        <path d="M3 10l2-6h14l2 6" />
-        <path d="M10 20v-5h4v5" />
-      </>
-    ),
-  },
-  {
-    label: "Livraison soignée",
-    icon: (
-      <>
-        <path d="M3 6h11v10H3z" />
-        <path d="M14 10h4l3 3v3h-7" />
-        <circle cx="7" cy="18" r="2" />
-        <circle cx="17" cy="18" r="2" />
-      </>
-    ),
-  },
-  {
-    label: "Paiement 100% sécurisé",
-    icon: (
-      <>
-        <rect x="5" y="11" width="14" height="10" rx="2" />
-        <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-      </>
-    ),
-  },
-  {
-    label: "Conseil & accompagnement",
-    icon: <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />,
-  },
+  { label: "Retrait Gratuit en Boutique", icon: icStore, w: 20.094, h: 18 },
+  { label: "Livraison Soignée", icon: icBox, w: 20, h: 20 },
+  { label: "Paiement 100% sécurisé", icon: icLock, w: 16, h: 21 },
+  { label: "Conseil & Accompagnement", icon: icSupport, w: 20, h: 18 },
 ];
 
 export default function CatalogueTrust() {
   return (
-    <ul className="catalogue-trust" aria-label="Nos engagements">
-      {ITEMS.map((item) => (
-        <li key={item.label} className="catalogue-trust__item">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            {item.icon}
-          </svg>
-          <span>{item.label}</span>
-        </li>
-      ))}
-    </ul>
+    <section className="catalogue-trust" aria-label="Nos engagements">
+      <ul className="catalogue-trust__list">
+        {ITEMS.map((item) => (
+          <li key={item.label} className="catalogue-trust__item">
+            <img src={item.icon} alt="" style={{ width: item.w, height: item.h }} />
+            <span>{item.label}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
