@@ -1,0 +1,49 @@
+.catalogue-trust {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  list-style: none;
+
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    padding: 28px 32px;
+  }
+
+  &__item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-height: 56px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #fff;
+    list-style: none;
+
+    svg {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: #775a19;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    span {
+      color: #775a19;
+      font-family: var(--font-sans, "Plus Jakarta Sans", sans-serif);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.35;
+
+      @media (min-width: 900px) {
+        font-size: 13px;
+      }
+    }
+  }
+}
