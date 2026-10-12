@@ -1,19 +1,74 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
 @font-face {
-  font-family: "PlayfairDisplay";
-  src: url("./assets/fonts/PlayfairDisplay-Medium.ttf") format("truetype");
+  font-family: 'Playfair Display';
+  src: url('./assets/fonts/PlayfairDisplay-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
 }
 @font-face {
-  font-family: "PoppinsCustom";
-  src: url("./assets/fonts/Poppins-Medium.ttf") format("truetype");
+  font-family: 'Playfair Display';
+  src: url('./assets/fonts/PlayfairDisplay-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('./assets/fonts/PlayfairDisplay-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('./assets/fonts/PlayfairDisplay-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
 }
-:root {
-  --font-body: "PlayfairDisplay", sans-serif;
-  --font-heading: "PoppinsCustom", sans-serif;
+
+/* Plus Jakarta Sans */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./assets/fonts/PlusJakartaSans-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
 }
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./assets/fonts/PlusJakartaSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./assets/fonts/PlusJakartaSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./assets/fonts/PlusJakartaSans-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./assets/fonts/PlusJakartaSans-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@theme {
+  --color-primary: #EEF6EAB2;
+  --color-primary-hover: #2D3F28;
+  --color-secondary: #775A19;
+  --color-white: #FFFFFF;
+
+
+--font-serif: 'Playfair Display', serif;
+--font-sans: 'Plus Jakarta Sans', sans-serif;
+}
+
 
 * {
   box-sizing: border-box;
