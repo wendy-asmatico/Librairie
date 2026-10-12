@@ -6,7 +6,6 @@ export const siteSlice = createSlice({
     // name: "",
     // description: "",
     // url: "",
-    // logoUrl: "",
     // faviconUrl: "",
     palette: [],
   },
