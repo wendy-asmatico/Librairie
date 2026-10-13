@@ -37,4 +37,12 @@ Un WordPress + WooCommerce prêt à l'emploi est fourni dans `wordpress/` :
 2. Première fois seulement : `./setup.sh` (installe WordPress en français, WooCommerce, Stripe, Tax, JWT et crée les catégories de la boutique)
 3. Créez un fichier `.env.production.local` à la racine avec `VITE_API_URL=http://localhost:8080`, puis relancez `npm run dev`
 
-Admin : http://localhost:8080/wp-admin (identifiant `admin`, mot de passe `admin`). Les `mu-plugins` du projet sont montés automatiquement.
+Admin : http://localhost:8080/wp-admin (identifiant `admin`, mot de passe `maktaba2026`). Les `mu-plugins` du projet sont montés automatiquement.
+
+4. Optionnel : `./seed.sh` ajoute des données de démo (livres de la maquette avec couvertures, clients, 140 commandes sur 60 jours).
+
+## Tableau de bord administrateur
+
+`/admin` (ex. http://localhost:5173/ecom/admin) : réservé aux comptes `administrator` / `shop_manager`.
+Connectez-vous sur le site avec un compte admin, puis ouvrez la page. Les données viennent de l'API WooCommerce (`wc/v3`) avec le jeton JWT.
+Les liens du menu latéral ouvrent l'admin WordPress (`VITE_WP_ADMIN_URL`, défini dans `.env.development`).
