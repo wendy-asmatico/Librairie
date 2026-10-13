@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { setFilters } from "../../slices/filtersSlice";
 import { decodeHtml } from "../../utils/decodeHtml";
+import { childrenOf, isSelected } from "../../utils/categoryTree";
 import PriceRangeSlider from "../PriceRangeSlider";
 import "./index.css";
 
@@ -23,7 +24,9 @@ export default function CatalogueToolbar() {
   const ref = useRef(null);
 
   const activeCount =
-    (filters.category ? 1 : 0) + (filters.min_price !== "" || filters.max_price !== "" ? 1 : 0);
+    (filters.category ? 1 : 0) +
+    (filters.min_price !== "" || filters.max_price !== "" ? 1 : 0) +
+    (filters.stock_status ? 1 : 0);
 
   useEffect(() => {
     if (!open) return;
@@ -43,7 +46,21 @@ export default function CatalogueToolbar() {
   };
 
   const reset = () =>
-    dispatch(setFilters({ category: "", search: "", min_price: "", max_price: "" }));
+    dispatch(
+      setFilters({ category: "", search: "", min_price: "", max_price: "", stock_status: "" }),
+    );
+
+  const chip = (cat, isChild = false) => (
+    <button
+      key={cat.id}
+      type="button"
+      className={`catalogue-chip${isChild ? " catalogue-chip--child" : ""}${isSelected(cat, filters.category) ? " is-active" : ""}`}
+      aria-pressed={isSelected(cat, filters.category)}
+      onClick={() => dispatch(setFilters({ category: String(cat.id) }))}
+    >
+      {decodeHtml(cat.name)}
+    </button>
+  );
 
   return (
     <div className="catalogue-toolbar">
@@ -67,26 +84,43 @@ export default function CatalogueToolbar() {
 
         {open && (
           <div id="catalogue-filter-panel" className="catalogue-toolbar__panel">
-            <p className="catalogue-toolbar__label">Rayon</p>
+            <p className="catalogue-toolbar__label">Catégories</p>
             <div className="catalogue-toolbar__cats">
               <button
                 type="button"
                 className={`catalogue-chip${!filters.category ? " is-active" : ""}`}
+                aria-pressed={!filters.category}
                 onClick={() => dispatch(setFilters({ category: "" }))}
               >
                 Tout
               </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  className={`catalogue-chip${filters.category === String(cat.id) ? " is-active" : ""}`}
-                  onClick={() => dispatch(setFilters({ category: String(cat.id) }))}
-                >
-                  {decodeHtml(cat.name)}
-                </button>
-              ))}
             </div>
+            <ul className="catalogue-toolbar__tree">
+              {childrenOf(categories, 0).map((parent) => {
+                const subs = childrenOf(categories, parent.id);
+                return (
+                  <li key={parent.id}>
+                    {chip(parent)}
+                    {subs.length > 0 && (
+                      <div className="catalogue-toolbar__subs">{subs.map((sub) => chip(sub, true))}</div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+
+            <p className="catalogue-toolbar__label">Disponibilité</p>
+            <label className="catalogue-toolbar__check">
+              <input
+                type="checkbox"
+                checked={filters.stock_status === "instock"}
+                onChange={(e) =>
+                  dispatch(setFilters({ stock_status: e.target.checked ? "instock" : "" }))
+                }
+              />
+              <span>En stock uniquement</span>
+            </label>
+
             <p className="catalogue-toolbar__label">Prix (€)</p>
             <PriceRangeSlider onApply={() => {}} />
             {activeCount > 0 && (

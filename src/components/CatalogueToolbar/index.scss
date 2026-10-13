@@ -56,6 +56,52 @@ $jakarta: "Plus Jakarta Sans", sans-serif;
     gap: 6px;
   }
 
+  &__tree {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 220px;
+    margin: 8px 0 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+
+    li {
+      list-style: none;
+    }
+  }
+
+  &__subs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0 0 14px;
+    padding-left: 10px;
+    border-left: 2px solid #eef6ea;
+  }
+
+  &__check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+
+    input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: #775a19;
+      cursor: pointer;
+    }
+
+    span {
+      color: #444841;
+      font-family: $jakarta;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+
   &__reset {
     width: 100%;
     margin: 16px 0 0;
@@ -163,5 +209,10 @@ $jakarta: "Plus Jakarta Sans", sans-serif;
     border-color: #b2d1a7;
     background: #b2d1a7;
     color: #fff;
+  }
+
+  &--child {
+    height: 28px;
+    font-size: 11px;
   }
 }

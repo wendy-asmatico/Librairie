@@ -31,3 +31,15 @@ export const PALETTE = {
   "--font-body": "'Plus Jakarta Sans', sans-serif",
   "--font-heading": "'Plus Jakarta Sans', sans-serif",
 };
+
+// Rayons de la maquette. Le slug sert de filtre WooCommerce (la Store API
+// accepte les slugs) : il suffit de créer les catégories avec ces slugs.
+export const RAYONS = [
+  { key: "books", label: "Livres & Coran", slug: "livres-coran", chevron: true },
+  { key: "clothes", label: "Vêtements", slug: "vetements", chevron: true },
+  { key: "accessories", label: "Accessoires", slug: "accessoires", chevron: true },
+  { key: "kids", label: "Enfants", slug: "enfants" },
+  { key: "gifts", label: "Coffrets Cadeaux", slug: "coffrets-cadeaux" },
+];
+
+export const rayonBySlug = (slug) => RAYONS.find((r) => r.slug === slug);

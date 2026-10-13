@@ -8,7 +8,7 @@ import { logout } from "../../slices/userSlice";
 import { openModal } from "../../slices/modalSlice";
 import { setFilters } from "../../slices/filtersSlice";
 import { fetchCategoriesThunk } from "../../thunkActionsCreator/categoriesThunks";
-import { BRAND } from "../../brand";
+import { BRAND, RAYONS } from "../../brand";
 
 import logo from "../../assets/maktaba/logo.png";
 import icGift from "../../assets/maktaba/ic-gift.svg";
@@ -20,16 +20,11 @@ import icHeart from "../../assets/maktaba/ic-heart.svg";
 import icBag from "../../assets/maktaba/ic-bag.svg";
 import icChevron from "../../assets/maktaba/ic-chevron.svg";
 
-// Menu de la maquette : chaque rayon pointe vers la catégorie WooCommerce
-// dont le nom/slug correspond (sinon vers tout le catalogue).
+// Menu de la maquette : Accueil, Nouveautés puis les rayons (filtrés par slug)
 const NAV = [
   { key: "home", label: "Accueil", to: "/" },
   { key: "new", label: "Nouveautés", sort: true },
-  { key: "books", label: "Livres & Coran", match: /livre|coran/i, chevron: true },
-  { key: "clothes", label: "Vêtements", match: /v[eê]tement/i, chevron: true },
-  { key: "accessories", label: "Accessoires", match: /accessoire/i, chevron: true },
-  { key: "kids", label: "Enfants", match: /enfant/i },
-  { key: "gifts", label: "Coffrets Cadeaux", match: /coffret/i },
+  ...RAYONS,
 ];
 
 const badge = (n) => (n > 9 ? "9+" : String(n));
@@ -62,15 +57,12 @@ export default function Header() {
     };
   }, [menuOpen]);
 
-  const categoryFor = (item) =>
-    item.match ? categories.find((cat) => item.match.test(`${cat.slug} ${cat.name}`)) : null;
-
   const isActive = (item) => {
     if (item.to) return location.pathname === item.to;
     if (location.pathname !== "/catalogue") return false;
-    const cat = categoryFor(item);
     if (item.sort) return !filters.category && !filters.search;
-    return !!cat && filters.category === String(cat.id);
+    const cat = categories.find((c) => String(c.id) === filters.category);
+    return filters.category === item.slug || cat?.slug === item.slug;
   };
 
   const goTo = (item) => {
@@ -79,10 +71,9 @@ export default function Header() {
       navigate(item.to);
       return;
     }
-    const cat = categoryFor(item);
     dispatch(
       setFilters({
-        category: cat ? String(cat.id) : "",
+        category: item.slug || "",
         search: "",
         ...(item.sort ? { orderby: "date", order: "desc" } : {}),
       }),

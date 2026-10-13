@@ -1,7 +1,7 @@
 import "./index.css";
 
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { setFilters } from "../../slices/filtersSlice";
 import { BRAND } from "../../brand";
@@ -12,13 +12,14 @@ import icClock from "../../assets/maktaba/ic-clock.svg";
 import icPhone from "../../assets/maktaba/ic-phone-dark.svg";
 import icChat from "../../assets/maktaba/ic-chat.svg";
 
-const RAYONS = [
-  { label: "Livres du Saint Coran & Tafsir", match: /livre|coran/i },
-  { label: "Recueils de Hadiths & Fiqh classique", match: /hadith|fiqh|livre/i },
-  { label: "Vêtements pudiques Homme & Femme", match: /v[eê]tement/i },
-  { label: "Tapis d'artisanat & Parfums de Dubaï", match: /tapis|parfum/i },
-  { label: "Univers Éducatif & Éveil Enfants", match: /enfant/i },
-  { label: "Coffrets Cadeaux Ciselés sur Mesure", match: /coffret/i },
+// Liens « Rayons & Produits » → slugs des rayons (cf. RAYONS dans brand.js)
+const LINKS = [
+  { label: "Livres du Saint Coran & Tafsir", slug: "livres-coran" },
+  { label: "Recueils de Hadiths & Fiqh classique", slug: "livres-coran" },
+  { label: "Vêtements pudiques Homme & Femme", slug: "vetements" },
+  { label: "Tapis d'artisanat & Parfums de Dubaï", slug: "accessoires" },
+  { label: "Univers Éducatif & Éveil Enfants", slug: "enfants" },
+  { label: "Coffrets Cadeaux Ciselés sur Mesure", slug: "coffrets-cadeaux" },
 ];
 
 const SERVICES = [
@@ -32,11 +33,8 @@ const SERVICES = [
 export default function Footer() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const categories = useSelector((state) => state.categories.items);
-
-  const openRayon = (match) => {
-    const cat = categories.find((c) => match.test(`${c.slug} ${c.name}`));
-    dispatch(setFilters({ category: cat ? String(cat.id) : "", search: "" }));
+  const openRayon = (slug) => {
+    dispatch(setFilters({ category: slug, search: "" }));
     navigate("/catalogue");
   };
 
@@ -64,9 +62,9 @@ export default function Footer() {
         <div className="mk-footer__col">
           <h4 className="mk-footer__title">Rayons &amp; Produits</h4>
           <ul className="mk-footer__list">
-            {RAYONS.map((item) => (
+            {LINKS.map((item) => (
               <li key={item.label}>
-                <button type="button" onClick={() => openRayon(item.match)}>
+                <button type="button" onClick={() => openRayon(item.slug)}>
                   {item.label}
                 </button>
               </li>

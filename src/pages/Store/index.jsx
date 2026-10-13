@@ -6,9 +6,12 @@ import CatalogueHero from "../../components/CatalogueHero";
 import CatalogueTrust from "../../components/CatalogueTrust";
 import CatalogueToolbar from "../../components/CatalogueToolbar";
 import CatalogueGift from "../../components/CatalogueGift";
+import CatalogueCategories from "../../components/CatalogueCategories";
 import { fetchCategoriesThunk } from "../../thunkActionsCreator/categoriesThunks";
 import { setFilters } from "../../slices/filtersSlice";
 import { decodeHtml } from "../../utils/decodeHtml";
+import { findCategory } from "../../utils/categoryTree";
+import { rayonBySlug } from "../../brand";
 import "./index.css";
 
 export default function Store() {
@@ -19,8 +22,8 @@ export default function Store() {
   const listingRef = useRef(null);
   const firstRender = useRef(true);
 
-  const category = categories.find((cat) => String(cat.id) === filters.category);
-  const giftCategory = categories.find((cat) => /coffret/i.test(cat.slug || cat.name));
+  const category = findCategory(categories, filters.category);
+  const rayon = !category ? rayonBySlug(filters.category) : null;
   const total = list?.total;
 
   useEffect(() => {
@@ -49,13 +52,12 @@ export default function Store() {
   };
 
   const showBooks = () => {
-    const books = categories.find((cat) => /livre|coran/i.test(`${cat.slug} ${cat.name}`));
-    dispatch(setFilters({ category: books ? String(books.id) : "", search: "" }));
+    dispatch(setFilters({ category: "livres-coran", search: "" }));
     scrollToListing();
   };
 
   const showGifts = () => {
-    dispatch(setFilters({ category: giftCategory ? String(giftCategory.id) : "", search: "" }));
+    dispatch(setFilters({ category: "coffrets-cadeaux", search: "" }));
     scrollToListing();
   };
 
@@ -63,7 +65,9 @@ export default function Store() {
     ? `Résultats pour « ${filters.search} »`
     : category
       ? decodeHtml(category.name)
-      : "Nos Livres";
+      : rayon
+        ? rayon.label
+        : "Nos Livres";
 
   return (
     <main className="catalogue-page">
@@ -77,13 +81,15 @@ export default function Store() {
               {title}
             </h2>
             <p className="catalogue-listing__subtitle">
-              {typeof total === "number" && !(loading && list.page === 1) && (category || filters.search)
+              {typeof total === "number" && !(loading && list.page === 1) && (category || rayon || filters.search)
                 ? `${total} article${total > 1 ? "s" : ""}`
                 : "Une sélection d’ouvrages"}
             </p>
           </div>
           <CatalogueToolbar />
         </header>
+
+        <CatalogueCategories />
         <Feed />
       </section>
 

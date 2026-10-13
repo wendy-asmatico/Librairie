@@ -1,0 +1,121 @@
+$jakarta: "Plus Jakarta Sans", sans-serif;
+
+.catalogue-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 1184px;
+  margin: 0 auto 24px;
+
+  &__crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      list-style: none;
+    }
+
+    span,
+    strong,
+    button {
+      color: #747870;
+      font-family: $jakarta;
+      font-size: 13px;
+      line-height: 18px;
+    }
+
+    strong {
+      color: #2d3f28;
+      font-weight: 700;
+    }
+
+    button {
+      width: auto;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: none;
+      font-weight: 500;
+
+      &:hover {
+        background: none;
+        color: #775a19;
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &__chips {
+    display: flex;
+    gap: 8px;
+    margin: 0 -16px;
+    padding: 0 16px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @media (min-width: 1024px) {
+      flex-wrap: wrap;
+      margin: 0;
+      padding: 0;
+    }
+  }
+
+  &__chip {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    margin: 0;
+    padding: 0 14px;
+    border: 1px solid #e3eadf;
+    border-radius: 9999px;
+    background: #fff;
+    color: #444841;
+    font-family: $jakarta;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    &:hover {
+      background: #f4fcf0;
+    }
+
+    &.is-active {
+      border-color: #b2d1a7;
+      background: #b2d1a7;
+      color: #fff;
+
+      .catalogue-cats__count {
+        background: rgba(255, 255, 255, 0.35);
+        color: #fff;
+      }
+    }
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: #eef6ea;
+    color: #747870;
+    font-size: 11px;
+    font-weight: 600;
+  }
+}
