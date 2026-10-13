@@ -10,7 +10,7 @@ until wp db check >/dev/null 2>&1; do sleep 2; done
 
 if ! wp core is-installed >/dev/null 2>&1; then
   wp core install --url="http://localhost:8080" --title="Maktaba El Hikma" \
-    --admin_user=admin --admin_password=admin --admin_email=admin@maktaba.local --skip-email
+    --admin_user=admin --admin_password=maktaba2026 --admin_email=admin@maktaba.local --skip-email
 fi
 
 wp language core install fr_FR --activate || true
@@ -61,4 +61,4 @@ create_cat "Tasbih" tasbih accessoires
 create_cat "Enfants" enfants
 create_cat "Coffrets Cadeaux" coffrets-cadeaux
 
-echo "✓ WordPress prêt : http://localhost:8080/wp-admin (admin / admin)"
+echo "✓ WordPress prêt : http://localhost:8080/wp-admin (admin / maktaba2026)"
