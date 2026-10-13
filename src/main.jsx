@@ -19,6 +19,7 @@ import Home from "./pages/Home";
 import Store from "./pages/Store";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 import NewPassword from "./pages/NewPassword";
 import Profile from "./pages/Profile";
@@ -71,6 +72,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/cgu" element={<CGU />} />
             <Route path="/cgv" element={<CGV />} />
             <Route path="/panier" element={<Cart />} />
+            <Route path="/commande" element={<Checkout />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/blog" element={<BlogPage />} />
