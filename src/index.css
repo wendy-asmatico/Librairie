@@ -99,6 +99,16 @@
   --color-success: #2F6B3A;
   --color-danger: #9B3B2E;
 
+  /* Catalogue (maquettes de Lisa) */
+  --color-forest-deep: #2B4A33;
+  --color-gold: #775A19;
+  --color-gold-dark: #5C4512;
+  --color-leaf-soft: #D1EAC6;
+  --color-cream: #FFE3B2;
+  --color-ivory: #F4FCF0;
+  --color-muted: #747870;
+  --color-stock: #44563E;
+
   --font-serif: 'Playfair Display', serif;
   --font-sans: 'Plus Jakarta Sans', sans-serif;
 
