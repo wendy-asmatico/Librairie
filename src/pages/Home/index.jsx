@@ -2,8 +2,6 @@ import "./index.css";
 
 import Hero from "../../components/HomeSlider/Hero"; // Ton nouveau composant
 import Trust from "../../components/Trust";
-import PageContent from "../../components/PageContent";
-import Advantages from "../../components/Advantages";
 import HomeCategories from "../../components/HomeCategory";
 import BestSellers from "../../components/BestSellers";
 import Gift from "../../components/Gift";
@@ -14,12 +12,7 @@ export default function Home() {
       <Hero />
       <Trust />
       <HomeCategories />
-      <BestSellers />
-      <PageContent slug="home" />
-      <div className="apropos-wrapper">
-        <PageContent slug="a-propos" />
-        <Advantages />
-      </div>
+      <BestSellers />    
       <Gift />
     </div>
   );
