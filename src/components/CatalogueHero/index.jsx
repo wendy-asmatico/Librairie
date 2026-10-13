@@ -20,7 +20,7 @@ export default function CatalogueHero({ onDiscover, onBrowse }) {
       </div>
 
       <div className="relative mx-auto flex w-full max-w-[1184px] flex-col items-start">
-        <span className="mb-4 inline-flex items-center gap-1 rounded-full bg-leaf px-4 py-1 font-sans text-[11px] leading-4 font-semibold tracking-[0.55px] text-[#0d200a] uppercase">
+        <span className="mb-4 inline-flex items-center gap-1 rounded-full bg-leaf-soft px-4 py-1 font-sans text-[11px] leading-4 font-semibold tracking-[0.55px] text-[#0d200a] uppercase">
           <span className="size-2 rounded-full bg-sage" />
           Nouvel arrivage — Livres et coran
         </span>
