@@ -1,17 +1,29 @@
-// Les prix de la Store API WooCommerce sont en unités mineures
-// (ex. "3490" pour 34,90 €) avec currency_minor_unit pour la précision.
-export function formatPrice(amount, prices = {}) {
-  if (amount === undefined || amount === null || amount === "") return null;
-  const minorUnit = prices.currency_minor_unit ?? 2;
-  const value = Number(amount) / 10 ** minorUnit;
-  if (Number.isNaN(value)) return null;
+const formatters = new Map();
 
-  try {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: prices.currency_code || "EUR",
-    }).format(value);
-  } catch {
-    return `${value.toFixed(minorUnit)} ${prices.currency_symbol || "€"}`;
+const getFormatter = (currency, fractionDigits) => {
+  const cacheKey = `${currency}:${fractionDigits}`;
+  if (!formatters.has(cacheKey)) {
+    formatters.set(
+      cacheKey,
+      new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency,
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits,
+      }),
+    );
   }
+  return formatters.get(cacheKey);
+};
+
+/**
+ * Formate un montant de la Store API WooCommerce, exprimé en unités mineures :
+ * formatPrice("3490", cart.totals) → « 34,90 € ».
+ * `currency` accepte tout objet Store API portant `currency_code` et
+ * `currency_minor_unit` (totaux, prix d'un article, tarif de livraison...).
+ */
+export function formatPrice(amount, currency = {}) {
+  const { currency_code: code = "EUR", currency_minor_unit: minorUnit = 2 } =
+    currency;
+  return getFormatter(code, minorUnit).format(Number(amount) / 10 ** minorUnit);
 }
