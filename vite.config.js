@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
                     .replace(/Secure/gi, "")
                     .replace(/SameSite=None/gi, "SameSite=Lax")
                     .replace(/domain=[^;]+/gi, "")
-                    .replace(/path=\/wooc\/?/gi, "path=/")
+                    .replace(/path=\/wooc[\w-]*\/?/gi, "path=/")
                     .replace(/;\s*;/g, ";"),
                 );
               }

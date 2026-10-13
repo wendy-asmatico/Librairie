@@ -62,9 +62,7 @@ export default function Header() {
 
   return (
     <>
-      <div className="h-[130px] md:h-[150px] w-full" />
-
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-white shadow-xs transition-transform duration-300 ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
+      <header className={`sticky top-0 z-50 bg-white shadow-xs transition-transform duration-300 ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
         <TopBar />
 
         {/* Section centrale : Logo + Recherche + Actions */}
