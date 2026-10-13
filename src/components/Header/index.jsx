@@ -6,7 +6,7 @@ import { openModal } from "../../slices/modalSlice";
 import { logout } from "../../slices/userSlice";
 
 import logoLocal from "/logo.png";
-import Navbar from "./NavBar";
+import Navbar from "./Navbar";
 import MobileMenu from "./MobileMenu";
 import TopBar from "./topbar";
 
