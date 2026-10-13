@@ -20,6 +20,19 @@ export async function wcFetch(path, token, params = {}) {
   };
 }
 
+// Routes du site (mu-plugins, espace custom/v1)
+export async function customFetch(path, token, params = {}) {
+  const query = new URLSearchParams(params).toString();
+  const response = await fetch(`${API}/custom/v1${path}${query ? `?${query}` : ""}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} sur ${path}`);
+  }
+  return data;
+}
+
 // Récupère toutes les pages d'une liste (plafonné pour rester raisonnable)
 export async function wcFetchAll(path, token, params = {}, maxPages = 5) {
   const first = await wcFetch(path, token, { ...params, per_page: 100, page: 1 });

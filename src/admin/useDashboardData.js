@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { wcFetch, wcFetchAll } from "./api";
+import { customFetch, wcFetch, wcFetchAll } from "./api";
 import { evolution, isPickup } from "./format";
 import { decodeHtml } from "../utils/decodeHtml";
 
@@ -20,7 +20,7 @@ export default function useDashboardData(token, days) {
       const from = new Date(startOfDay(now).getTime() - (days - 1) * DAY);
       const prevFrom = new Date(from.getTime() - days * DAY);
 
-      const [orders, prevOrders, latest, processing, customers, products] = await Promise.all([
+      const [orders, prevOrders, latest, processing, customers, products, messages] = await Promise.all([
         wcFetchAll("/orders", token, { after: from.toISOString(), status: "any" }),
         wcFetchAll("/orders", token, {
           after: prevFrom.toISOString(),
@@ -32,6 +32,8 @@ export default function useDashboardData(token, days) {
         wcFetchAll("/customers", token, { orderby: "registered_date", order: "desc", role: "all" }, 3),
         // stock_status côté API dépend d'une table de recherche pas toujours à jour : on filtre ici
         wcFetchAll("/products", token, { status: "publish" }),
+        // Formulaire de contact (mu-plugin contact.php) : le tableau de bord reste utilisable sans
+        customFetch("/contact-messages", token, { per_page: 3 }).catch(() => null),
       ]);
 
       // Commandes et retraits par jour
@@ -121,6 +123,7 @@ export default function useDashboardData(token, days) {
           pickupsToPrepare: processing.items.filter(isPickup).length,
           rayons,
           lowStock,
+          messages,
         },
       });
     } catch (error) {

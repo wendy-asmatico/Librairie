@@ -54,7 +54,12 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
       title: "Relation client",
       items: [
         { label: "Clients", icon: icClients, href: wp("users.php?role=customer") },
-        { label: "Messages", icon: icMessages, soon: true },
+        {
+          label: "Messages",
+          icon: icMessages,
+          href: wp("edit.php?post_type=contact_message"),
+          badge: badges.messages,
+        },
         { label: "Avis clients", icon: icReviews, href: wp("edit.php?post_type=product&page=product-reviews") },
       ],
     },
@@ -115,20 +120,20 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
                   <img src={item.icon} alt="" className="size-[18px] shrink-0" />
                   <span
                     className={`flex-1 text-sm leading-5 ${
-                      item.active ? "font-bold text-forest" : "font-semibold text-leaf"
+                      item.active ? "font-bold text-forest" : "font-semibold text-leaf-soft"
                     }`}
                   >
                     {item.label}
                   </span>
                   {item.soon && (
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-leaf">
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-leaf-soft">
                       Bientôt
                     </span>
                   )}
                   {item.badge > 0 && (
                     <span
                       className={`rounded-full px-2 py-0.5 text-[11px] leading-4 font-bold ${
-                        item.label === "Coffrets & devis" ? "bg-cream text-[#261900]" : "bg-leaf text-[#0d200a]"
+                        item.label === "Coffrets & devis" ? "bg-cream text-[#261900]" : "bg-leaf-soft text-[#0d200a]"
                       }`}
                     >
                       {item.badge}
@@ -164,7 +169,7 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
 
         <div className="flex flex-col gap-1.5 rounded-[14px] border border-sage/25 bg-white/[0.06] p-4">
           <p className="text-[13px] leading-[18px] font-bold text-white">Boutique en ligne</p>
-          <p className="flex items-center gap-1.5 text-xs leading-[18px] text-leaf">
+          <p className="flex items-center gap-1.5 text-xs leading-[18px] text-leaf-soft">
             <img src={dotOnline} alt="" className="size-2" />
             En ligne
           </p>

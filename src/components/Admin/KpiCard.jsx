@@ -21,7 +21,7 @@ export default function KpiCard({ label, icon, value, evolution, compareLabel, n
           {evolution !== null && evolution !== undefined ? (
             <span
               className={`flex items-center gap-1 rounded-full px-2 py-[3px] text-[11px] leading-4 font-bold ${
-                up ? "bg-leaf text-forest-deep" : "bg-cream text-gold"
+                up ? "bg-leaf-soft text-forest-deep" : "bg-cream text-gold"
               }`}
             >
               <img src={up ? trendUp : trendDown} alt="" className="size-3" />

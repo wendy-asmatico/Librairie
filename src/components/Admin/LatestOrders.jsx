@@ -19,7 +19,7 @@ function statusOf(order) {
       return { label: "En préparation", icon: stProcessing, cls: "bg-cream text-gold" };
     case "completed":
       return pickup
-        ? { label: "Retirée", icon: stReady, cls: "bg-leaf text-forest-deep" }
+        ? { label: "Retirée", icon: stReady, cls: "bg-leaf-soft text-forest-deep" }
         : { label: "Expédiée", icon: stShipped, cls: "bg-[#eceee9] text-ink" };
     case "on-hold":
       return { label: "En attente", icon: stProcessing, cls: "bg-[#eceee9] text-ink" };

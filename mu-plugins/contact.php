@@ -48,7 +48,107 @@ add_action('rest_api_init', function () {
         'callback'            => 'headless_contact_submit',
         'permission_callback' => '__return_true',
     ]);
+
+    // Tableau de bord /admin : derniers messages + nombre de non lus
+    register_rest_route('custom/v1', '/contact-messages', [
+        'methods'             => 'GET',
+        'callback'            => 'headless_contact_list_messages',
+        'permission_callback' => function () {
+            return current_user_can('manage_woocommerce');
+        },
+    ]);
 });
+
+function headless_contact_list_messages($request)
+{
+    $limit = max(1, min(20, (int) ($request->get_param('per_page') ?: 5)));
+
+    $posts = get_posts([
+        'post_type'      => 'contact_message',
+        'post_status'    => 'private',
+        'posts_per_page' => $limit,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    ]);
+
+    $unread = new WP_Query([
+        'post_type'      => 'contact_message',
+        'post_status'    => 'private',
+        'posts_per_page' => 1,
+        'fields'         => 'ids',
+        'meta_query'     => [['key' => 'contact_read', 'value' => '0']],
+    ]);
+
+    $items = array_map(function ($post) {
+        $subject = get_post_meta($post->ID, 'contact_subject', true);
+        return [
+            'id'        => $post->ID,
+            'date'      => get_post_time('c', true, $post),
+            'firstname' => get_post_meta($post->ID, 'contact_firstname', true),
+            'lastname'  => get_post_meta($post->ID, 'contact_lastname', true),
+            'email'     => get_post_meta($post->ID, 'contact_email', true),
+            'subject'   => HEADLESS_CONTACT_SUBJECTS[$subject] ?? $subject,
+            'excerpt'   => wp_trim_words($post->post_content, 24, '…'),
+            'unread'    => get_post_meta($post->ID, 'contact_read', true) === '0',
+            'edit_url'  => admin_url('post.php?post=' . $post->ID . '&action=edit'),
+        ];
+    }, $posts);
+
+    return rest_ensure_response([
+        'unread' => (int) $unread->found_posts,
+        'items'  => $items,
+    ]);
+}
+
+// Administration WordPress : détail lisible du message, marqué comme lu à l'ouverture
+add_action('add_meta_boxes_contact_message', function ($post) {
+    if (get_post_meta($post->ID, 'contact_read', true) === '0') {
+        update_post_meta($post->ID, 'contact_read', 1);
+    }
+    remove_meta_box('postcustom', 'contact_message', 'normal');
+    add_meta_box('contact_details', 'Coordonnées', function ($post) {
+        $meta = fn ($key) => get_post_meta($post->ID, 'contact_' . $key, true);
+        $subject = $meta('subject');
+        $rows = [
+            'Objet'          => HEADLESS_CONTACT_SUBJECTS[$subject] ?? $subject,
+            'Nom'            => trim($meta('firstname') . ' ' . $meta('lastname')),
+            'Email'          => sprintf('<a href="mailto:%1$s">%1$s</a>', esc_attr($meta('email'))),
+            'Téléphone'      => esc_html($meta('phone')),
+            'N° de commande' => esc_html($meta('order')),
+            'Pièce jointe'   => $meta('attachment')
+                ? sprintf('<a href="%s" target="_blank" rel="noreferrer">Ouvrir</a>', esc_url($meta('attachment')))
+                : '',
+        ];
+        echo '<table class="form-table" role="presentation">';
+        foreach ($rows as $label => $value) {
+            if ($value === '') {
+                continue;
+            }
+            $html = in_array($label, ['Email', 'Pièce jointe', 'Téléphone', 'N° de commande'], true) ? $value : esc_html($value);
+            printf('<tr><th scope="row">%s</th><td>%s</td></tr>', esc_html($label), $html);
+        }
+        echo '</table>';
+    }, 'contact_message', 'normal', 'high');
+});
+
+add_filter('manage_contact_message_posts_columns', function ($columns) {
+    return [
+        'cb'              => $columns['cb'],
+        'title'           => 'Message',
+        'contact_email'   => 'Email',
+        'contact_status'  => 'Statut',
+        'date'            => $columns['date'],
+    ];
+});
+
+add_action('manage_contact_message_posts_custom_column', function ($column, $post_id) {
+    if ($column === 'contact_email') {
+        echo esc_html(get_post_meta($post_id, 'contact_email', true));
+    }
+    if ($column === 'contact_status') {
+        echo get_post_meta($post_id, 'contact_read', true) === '0' ? '<strong>Non lu</strong>' : 'Lu';
+    }
+}, 10, 2);
 
 function headless_contact_rate_limit_check()
 {

@@ -78,7 +78,7 @@ export default function OrdersChart({ daily, total, days }) {
               left: `clamp(115px, calc(44px + (100% - 44px) * ${(shown + 0.5) / daily.length}), calc(100% - 95px))`,
             }}
           >
-            <span className="text-[11px] leading-[14px] text-leaf first-letter:uppercase">
+            <span className="text-[11px] leading-[14px] text-leaf-soft first-letter:uppercase">
               {longDate(daily[shown].date)}
             </span>
             <span className="text-[13px] leading-[18px] font-bold text-white">

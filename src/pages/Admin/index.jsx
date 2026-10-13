@@ -116,7 +116,7 @@ export default function AdminDashboard() {
     <div className="flex min-h-screen bg-ivory font-sans">
       <Seo title="Tableau de bord — Espace administrateur" noIndex />
       <Sidebar
-        badges={{ orders: data?.toPrepare, pickups: data?.pickupsToPrepare }}
+        badges={{ orders: data?.toPrepare, pickups: data?.pickupsToPrepare, messages: data?.messages?.unread }}
         user={profile}
         onLogout={() => dispatch(logout())}
         open={menuOpen}
@@ -218,7 +218,18 @@ export default function AdminDashboard() {
               <KpiCard label="Commandes" icon={kpiOrders} value={data.kpis.orders.value} evolution={data.kpis.orders.evolution} compareLabel={compare} />
               <KpiCard label="Retraits en boutique" icon={kpiPickup} value={data.kpis.pickups.value} evolution={data.kpis.pickups.evolution} compareLabel={compare} />
               <KpiCard label="Nouveaux clients" icon={kpiClients} value={data.kpis.customers.value} evolution={data.kpis.customers.evolution} compareLabel={compare} />
-              <KpiCard label="Messages en attente" icon={kpiMessages} value="—" note="Formulaire de contact à brancher" />
+              <KpiCard
+                label="Messages en attente"
+                icon={kpiMessages}
+                value={data.messages ? data.messages.unread : "—"}
+                note={
+                  !data.messages
+                    ? "Formulaire de contact indisponible"
+                    : data.messages.unread
+                      ? "Non lus, depuis le formulaire de contact"
+                      : "Tous les messages ont été lus"
+                }
+              />
             </section>
 
             {/* Graphiques — 209:2 */}
@@ -231,7 +242,7 @@ export default function AdminDashboard() {
             <LatestOrders orders={data.latest} search={search} />
             <section className="grid gap-5 lg:grid-cols-2">
               <StockAlerts products={data.lowStock} />
-              <RecentMessages />
+              <RecentMessages messages={data.messages?.items} />
             </section>
           </div>
         ) : null}
