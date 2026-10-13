@@ -11,7 +11,7 @@ export default function Layout() {
       <Seo />
       <Header />
 
-      <main className="flex-1 pt-[140px] md:pt-[175px]">
+      <main className="flex-1">
         <Outlet /> 
       </main>
 
