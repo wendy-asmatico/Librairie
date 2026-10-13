@@ -9,6 +9,8 @@ export const productsSlice = createSlice({
       data: [],
       page: 1,
       perPage: 20,
+      total: null,
+      totalPages: null,
     },
     loading: false,
     error: null,
@@ -22,6 +24,7 @@ export const productsSlice = createSlice({
     builder
       .addCase(fetchProductsThunk.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchProductsThunk.fulfilled, (state, action) => {
         state.loading = false;
@@ -33,6 +36,8 @@ export const productsSlice = createSlice({
         }
         state.list.page = page;
         state.list.perPage = perPage;
+        state.list.total = action.payload.total ?? null;
+        state.list.totalPages = action.payload.totalPages ?? null;
       })
       .addCase(fetchProductsThunk.rejected, (state, action) => {
         state.loading = false;

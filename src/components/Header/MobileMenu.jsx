@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import Autocomplete from "../Autocomplete";
+import useRayonNav from "./useRayonNav";
 
 export default function MobileMenu({ isOpen, onClose, cartBadgeValue, token, onLogout }) {
+  const { items, isActive, goTo } = useRayonNav(onClose);
+
   return (
     <>
       <div
@@ -26,13 +29,20 @@ export default function MobileMenu({ isOpen, onClose, cartBadgeValue, token, onL
         </div>
 
         <nav className="flex flex-col gap-4 font-medium text-gray-800 flex-1">
-          <Link to="/" onClick={onClose} className="text-[#2A3B28] font-bold">Accueil</Link>
-          <Link to="/nouveautes" onClick={onClose}>Nouveautés</Link>
-          <Link to="/catalogue" onClick={onClose}>Livres & Coran</Link>
-          <Link to="/vetements" onClick={onClose}>Vêtements</Link>
-          <Link to="/accessoires" onClick={onClose}>Accessoires</Link>
-          <Link to="/enfants" onClick={onClose}>Enfants</Link>
-          <Link to="/coffrets" onClick={onClose}>Coffrets Cadeaux</Link>
+          {items.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => goTo(item)}
+              aria-current={isActive(item) ? "page" : undefined}
+              className={`text-left bg-transparent border-none p-0 cursor-pointer ${
+                isActive(item) ? "text-[#2A3B28] font-bold" : "text-gray-800 font-medium"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+          <Link to="/contact" onClick={onClose}>Contact</Link>
         </nav>
 
         <div className="border-t pt-4 space-y-3">

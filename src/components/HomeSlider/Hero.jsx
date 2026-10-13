@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { decodeHtml } from "../../utils/decodeHtml";
 
-export default function Hero() {
+export default function Hero({ onDiscover, onBrowse } = {}) {
   // 1. On récupère les produits et l'état de chargement depuis le store Redux
   const { list, loading } = useSelector((state) => state.products);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -80,20 +80,41 @@ export default function Hero() {
 
           {/* Boutons d'action */}
           <div className="flex flex-wrap items-center gap-4">
-            <Link
-              to={`/product/${currentProduct?.id}`}
-              className="bg-[#B1D2AA] hover:bg-[#a1c49a] text-[#2A3B28] font-bold px-6 py-3.5 rounded-xl transition-colors text-sm flex items-center gap-2 shadow-xs"
-            >
-              <span>Voir le Produit</span>
-              <span className="text-base">→</span>
-            </Link>
+            {onDiscover ? (
+              <button
+                type="button"
+                onClick={onDiscover}
+                className="bg-[#B1D2AA] hover:bg-[#a1c49a] text-[#2A3B28] font-bold px-6 py-3.5 rounded-xl transition-colors text-sm flex items-center gap-2 shadow-xs"
+              >
+                <span>Découvrir les Nouveautés</span>
+                <span className="text-base">→</span>
+              </button>
+            ) : (
+              <Link
+                to={`/product/${currentProduct?.id}`}
+                className="bg-[#B1D2AA] hover:bg-[#a1c49a] text-[#2A3B28] font-bold px-6 py-3.5 rounded-xl transition-colors text-sm flex items-center gap-2 shadow-xs"
+              >
+                <span>Voir le Produit</span>
+                <span className="text-base">→</span>
+              </Link>
+            )}
 
-            <Link
-              to="/catalogue"
-              className="bg-white hover:bg-gray-50 text-gray-800 font-semibold px-6 py-3.5 rounded-xl border border-gray-200 transition-colors text-sm flex items-center gap-2 shadow-xs"
-            >
-              <span>Toutes les Nouveautés</span>
-            </Link>
+            {onBrowse ? (
+              <button
+                type="button"
+                onClick={onBrowse}
+                className="bg-white hover:bg-gray-50 text-gray-800 font-semibold px-6 py-3.5 rounded-xl border border-gray-200 transition-colors text-sm flex items-center gap-2 shadow-xs"
+              >
+                <span>Voir le Rayon Livres</span>
+              </button>
+            ) : (
+              <Link
+                to="/catalogue"
+                className="bg-white hover:bg-gray-50 text-gray-800 font-semibold px-6 py-3.5 rounded-xl border border-gray-200 transition-colors text-sm flex items-center gap-2 shadow-xs"
+              >
+                <span>Toutes les Nouveautés</span>
+              </Link>
+            )}
           </div>
         </div>
       </div>
