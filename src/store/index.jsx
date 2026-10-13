@@ -14,6 +14,7 @@ import { modalSlice } from "../slices/modalSlice";
 import { wishlistSlice } from "../slices/wishlistSlice";
 
 import { cartIdentityListener } from "./cartIdentityListener";
+import { cartRestoreListener } from "./cartRestoreListener";
 
 const store = configureStore({
   reducer: {
@@ -31,7 +32,10 @@ const store = configureStore({
     wishlist: wishlistSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().prepend(cartIdentityListener.middleware),
+    getDefaultMiddleware().prepend(
+      cartIdentityListener.middleware,
+      cartRestoreListener.middleware,
+    ),
 });
 
 export default store;
