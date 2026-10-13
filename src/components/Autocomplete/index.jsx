@@ -3,17 +3,17 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setFilters } from "../../slices/filtersSlice";
 import { fetchProductsThunk } from "../../thunkActionsCreator/productsThunks";
-import "./index.css";
 import { decodeHtml } from "../../utils/decodeHtml";
 
-export default function Autocomplete({ placeholder = "Rechercher..." }) {
+export default function Autocomplete({ placeholder = "Rechercher un livre, un Coran, un tapis, un coffret..." }) {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const search = useSelector((state) => state.filters.search);
   const [focused, setFocused] = useState(false);
   const filters = useSelector((state) => state.filters);
-  const { list, loading, error } = useSelector((state) => state.products);
+  const { list } = useSelector((state) => state.products);
+
   useEffect(() => {
     dispatch(fetchProductsThunk({ ...filters, page: 1, per_page: 20 }));
   }, [filters, dispatch]);
@@ -26,7 +26,7 @@ export default function Autocomplete({ placeholder = "Rechercher..." }) {
           min_price: "",
           max_price: "",
           search: e.target.value,
-        }),
+        })
       );
     } else {
       dispatch(setFilters({ search: e.target.value }));
@@ -45,24 +45,24 @@ export default function Autocomplete({ placeholder = "Rechercher..." }) {
   };
 
   return (
-    <div className="autocomplete">
+    <div className="relative w-full h-full font-sans">
+      {/* Input de recherche */}
       <input
         type="search"
-        className="autocomplete-input"
+        className="w-full bg-[#FAF8F5] border border-gray-200 rounded-l-lg py-2.5 px-4 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#785E1A] transition-colors"
         placeholder={placeholder}
         value={search}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onFocus={() => setFocused(true)}
-        onBlur={() => {
-          setFocused(false);
-        }}
+        onBlur={() => setFocused(false)}
         aria-label="Rechercher"
       />
 
-      {focused && list.data.length > 0 && (
+      {/* Liste des suggestions / résultats */}
+      {focused && list?.data?.length > 0 && (
         <ul
-          className="autocomplete-suggestions"
+          className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-b-lg shadow-lg max-h-80 overflow-y-auto divide-y divide-gray-100 list-none p-0"
           onMouseDown={(e) => e.preventDefault()}
           tabIndex="-1"
         >
@@ -72,15 +72,19 @@ export default function Autocomplete({ placeholder = "Rechercher..." }) {
                 to={`/product/${product.id}`}
                 onClick={handleSelect}
                 tabIndex="-1"
+                className="flex items-center gap-3 p-2.5 hover:bg-[#EEF4EC] transition-colors text-decoration-none text-gray-800"
               >
                 <img
                   src={
                     product.images[0]?.src ||
                     "https://placeholder.pics/svg/300/DEDEDE/555555/Placeholder"
                   }
-                  alt={decodeHtml(product.name) || "la photo du produit"}
+                  alt={decodeHtml(product.name) || "Photo du produit"}
+                  className="w-10 h-10 object-cover rounded-md border border-gray-100 shrink-0"
                 />
-                <span>{decodeHtml(product.name)}</span>
+                <span className="text-sm font-medium line-clamp-2">
+                  {decodeHtml(product.name)}
+                </span>
               </Link>
             </li>
           ))}

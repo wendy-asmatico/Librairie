@@ -70,7 +70,7 @@ export default function Store() {
         : "Nos Livres";
 
   return (
-    <main className="catalogue-page">
+    <div className="catalogue-page">
       <CatalogueHero onDiscover={showNewest} onBrowse={showBooks} />
       <CatalogueTrust />
 
@@ -94,6 +94,6 @@ export default function Store() {
       </section>
 
       <CatalogueGift onSelect={showGifts} />
-    </main>
+    </div>
   );
 }

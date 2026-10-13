@@ -1,254 +1,145 @@
-import "./index.css";
-import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
+import { Link } from "react-router-dom";
 import Autocomplete from "../Autocomplete";
-import { logout } from "../../slices/userSlice";
 import { openModal } from "../../slices/modalSlice";
-import { setFilters } from "../../slices/filtersSlice";
-import { fetchCategoriesThunk } from "../../thunkActionsCreator/categoriesThunks";
-import { BRAND, RAYONS } from "../../brand";
+import { logout } from "../../slices/userSlice";
 
-import logo from "../../assets/maktaba/logo.png";
-import icGift from "../../assets/maktaba/ic-gift.svg";
-import icPhone from "../../assets/maktaba/ic-phone.svg";
-import icWhatsapp from "../../assets/maktaba/ic-whatsapp.svg";
-import icSearch from "../../assets/maktaba/ic-search.svg";
-import icUser from "../../assets/maktaba/ic-user.svg";
-import icHeart from "../../assets/maktaba/ic-heart.svg";
-import icBag from "../../assets/maktaba/ic-bag.svg";
-import icChevron from "../../assets/maktaba/ic-chevron.svg";
+import logoLocal from "/logo.png";
+import Navbar from "./Navbar";
+import MobileMenu from "./MobileMenu";
+import TopBar from "./topbar";
 
-// Menu de la maquette : Accueil, Nouveautés puis les rayons (filtrés par slug)
-const NAV = [
-  { key: "home", label: "Accueil", to: "/" },
-  { key: "new", label: "Nouveautés", sort: true },
-  ...RAYONS,
-];
-
-const badge = (n) => (n > 9 ? "9+" : String(n));
+import searchIcon from "./search.svg";
+import heartIcon from "./heart.svg";
+import bagIcon from "./bag.svg";
+import peopleIcon from "./people.svg";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+
+
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
   const token = useSelector((state) => state.user.token);
   const cartItems = useSelector((state) => state.cart.items);
   const wishlistItems = useSelector((state) => state.wishlist.items);
-  const categories = useSelector((state) => state.categories.items);
-  const filters = useSelector((state) => state.filters);
+  const logoUrl = useSelector((state) => state.site.logoUrl);
+  const isAuthentificated = useSelector((state) => state.user?.token);
 
-  const cartCount = cartItems.reduce(
-    (total, item) => total + (Number(item.quantity) || 0),
-    0,
-  );
-  const closeMenu = () => setMenuOpen(false);
+  const cartCount = cartItems.reduce((total, item) => total + (Number(item.quantity) || 0), 0);
+  const cartBadgeValue = cartCount > 9 ? "9+" : String(cartCount);
 
   useEffect(() => {
-    if (categories.length === 0) dispatch(fetchCategoriesThunk());
-  }, [dispatch, categories.length]);
-
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+    const updateScroll = () => {
+      const y = window.scrollY;
+      if (y <= 0) {
+        setIsHidden(false);
+        lastScrollY = 0;
+        ticking = false;
+        return;
+      }
+      const delta = y - lastScrollY;
+      if (Math.abs(delta) > 10) {
+        setIsHidden(delta > 0);
+        lastScrollY = y;
+      }
+      ticking = false;
     };
-  }, [menuOpen]);
 
-  const isActive = (item) => {
-    if (item.to) return location.pathname === item.to;
-    if (location.pathname !== "/catalogue") return false;
-    if (item.sort) return !filters.category && !filters.search;
-    const cat = categories.find((c) => String(c.id) === filters.category);
-    return filters.category === item.slug || cat?.slug === item.slug;
-  };
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateScroll);
+        ticking = true;
+      }
+    };
 
-  const goTo = (item) => {
-    closeMenu();
-    if (item.to) {
-      navigate(item.to);
-      return;
-    }
-    dispatch(
-      setFilters({
-        category: item.slug || "",
-        search: "",
-        ...(item.sort ? { orderby: "date", order: "desc" } : {}),
-      }),
-    );
-    navigate("/catalogue");
-  };
-
-  const openAccount = () => {
-    closeMenu();
-    if (token) navigate("/profile");
-    else dispatch(openModal({ name: "auth", props: { view: "login" } }));
-  };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <header className="mk-header">
-      <div className="mk-header__topbar">
-        <div className="mk-header__topbar-left">
-          <img src={icGift} alt="" className="mk-header__topbar-icon" />
-          <span>
-            Livraison sous 1 semaine ou <strong>Retrait gratuit en boutique</strong>
-          </span>
-          <span className="mk-header__sep" aria-hidden="true">
-            |
-          </span>
-          <span className="mk-header__hide-sm">Paiement 100% sécurisé</span>
-        </div>
-        <div className="mk-header__topbar-right">
-          <a href={BRAND.phoneHref} className="mk-header__topbar-link">
-            <img src={icPhone} alt="" className="mk-header__topbar-icon mk-header__topbar-icon--sm" />
-            <span>Service client : {BRAND.phone}</span>
-          </a>
-          <a
-            href={BRAND.whatsappHref}
-            target="_blank"
-            rel="noreferrer"
-            className="mk-header__topbar-link mk-header__topbar-link--gold"
-          >
-            <img src={icWhatsapp} alt="" className="mk-header__topbar-icon" />
-            <span>WhatsApp Conseil Direct</span>
-          </a>
-        </div>
-      </div>
+    <>
+      <header className={`sticky top-0 z-50 bg-white shadow-xs transition-transform duration-300 ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
+        <TopBar />
 
-      <div className="mk-header__main">
-        <button
-          type="button"
-          className="mk-header__burger"
-          onClick={() => setMenuOpen(true)}
-          aria-label="Ouvrir le menu"
-          aria-expanded={menuOpen}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-
-        <Link to="/" className="mk-header__brand" aria-label={`${BRAND.name} — accueil`}>
-          <span className="mk-header__logo">
-            <img src={logo} alt={BRAND.name} />
-          </span>
-          <span className="mk-header__tagline">Librairie &amp; boutique islamique</span>
-        </Link>
-
-        <div className="mk-header__search">
-          <Autocomplete placeholder="Rechercher un livre, un Coran, un tapis, un coffret..." />
-          <Link to="/catalogue" className="mk-header__search-btn" aria-label="Rechercher">
-            <img src={icSearch} alt="" />
-          </Link>
-        </div>
-
-        <div className="mk-header__actions">
-          <button type="button" className="mk-header__account" onClick={openAccount}>
-            <img src={icUser} alt="" />
-            <span>Mon Compte</span>
-          </button>
-
-          <Link
-            to="/wishlist"
-            className="mk-header__wish"
-            aria-label={`Coups de cœur (${wishlistItems.length})`}
-          >
-            <img src={icHeart} alt="" />
-            <span className="mk-header__badge mk-header__badge--gold">
-              {badge(wishlistItems.length)}
+        {/* Section centrale : Logo + Recherche + Actions */}
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
+          <Link to="/" className="flex items-center gap-3 shrink-0">
+            <img src={logoLocal} alt="Logo" className="h-30 w-auto object-contain" />
+            <span className="flex flex-col">
+              <small className="font-sans text-[10px] text-[#8C6D23] tracking-widest uppercase mt-1">
+                LIBRAIRIE & BOUTIQUE ISLAMIQUE
+              </small>
             </span>
           </Link>
 
-          <Link to="/panier" className="mk-header__cart" aria-label={`Panier (${cartCount})`}>
-            <span className="mk-header__cart-icon">
-              <img src={icBag} alt="" />
-              <span className="mk-header__badge mk-header__badge--cream">{badge(cartCount)}</span>
-            </span>
-            <span className="mk-header__cart-label">Panier</span>
-          </Link>
-        </div>
-      </div>
-
-      <nav className="mk-header__nav" aria-label="Rayons">
-        <ul>
-          {NAV.map((item) => (
-            <li key={item.key}>
-              <button
-                type="button"
-                className={`mk-header__nav-link${isActive(item) ? " is-active" : ""}`}
-                aria-current={isActive(item) ? "page" : undefined}
-                onClick={() => goTo(item)}
-              >
-                {item.label}
-                {item.chevron && <img src={icChevron} alt="" className="mk-header__chevron" />}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      {/* Menu latéral mobile */}
-      <div
-        className={`mk-drawer__overlay${menuOpen ? " is-open" : ""}`}
-        onClick={closeMenu}
-        aria-hidden="true"
-      />
-      <aside
-        className={`mk-drawer${menuOpen ? " is-open" : ""}`}
-        aria-hidden={!menuOpen}
-        inert={!menuOpen ? "" : undefined}
-      >
-        <div className="mk-drawer__head">
-          <span className="mk-drawer__title">Menu</span>
-          <button type="button" className="mk-drawer__close" onClick={closeMenu} aria-label="Fermer le menu">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
-          </button>
-        </div>
-        <ul className="mk-drawer__links">
-          {NAV.map((item) => (
-            <li key={item.key}>
-              <button
-                type="button"
-                className={isActive(item) ? "is-active" : ""}
-                onClick={() => goTo(item)}
-              >
-                {item.label}
-              </button>
-            </li>
-          ))}
-          <li>
-            <Link to="/blog" onClick={closeMenu}>
-              Blog
-            </Link>
-          </li>
-          <li>
-            <Link to="/contact" onClick={closeMenu}>
-              Contact
-            </Link>
-          </li>
-        </ul>
-        <div className="mk-drawer__footer">
-          <button type="button" className="mk-drawer__btn" onClick={openAccount}>
-            {token ? "Mon compte" : "Se connecter"}
-          </button>
-          {token && (
+          <div className="hidden md:flex flex-1 max-w-xl items-stretch h-11 relative">
+            <div className="flex-1 relative [&_input]:w-full [&_input]:h-full [&_input]:bg-[#FAF8F5] [&_input]:border [&_input]:border-r-0 [&_input]:border-gray-200 [&_input]:rounded-l-lg [&_input]:px-4 [&_input]:text-sm [&_input]:outline-none">
+              <Autocomplete placeholder="Rechercher un livre, un Coran, un tapis, un coffret..." />
+            </div>
             <button
-              type="button"
-              className="mk-drawer__btn mk-drawer__btn--logout"
-              onClick={() => {
-                closeMenu();
-                dispatch(logout());
-              }}
+              type="submit"
+              className="bg-[#785E1A] hover:bg-[#624c14] text-white px-5 rounded-r-lg flex items-center justify-center transition-colors shrink-0 border border-l-0 border-[#785E1A]"
             >
-              Déconnexion
+              <img src={searchIcon} alt="" className="w-5 h-5 filter invert" />
             </button>
-          )}
+          </div>
+
+          <div className="flex items-center gap-6 shrink-0">
+            {isAuthentificated ? (
+              <Link to="/profile" className="hidden sm:flex items-center gap-2 text-gray-900 font-medium hover:text-[#785E1A]">
+                <img src={peopleIcon} alt="" className="w-5 h-5" />
+                <span className="text-sm font-semibold">Mon Compte</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className="hidden sm:flex items-center gap-2 text-gray-900 font-medium hover:text-[#785E1A] bg-transparent p-0 border-none cursor-pointer"
+                onClick={() => dispatch(openModal({ name: "auth", props: { view: "login" } }))}
+              >
+                <img src={peopleIcon} alt="" className="w-5 h-5" />
+                <span className="text-sm font-semibold">Mon Compte</span>
+              </button>
+            )}
+
+            <Link to="/wishlist" className="relative p-1 text-gray-900 hover:text-[#785E1A]">
+              <img src={heartIcon} alt="" className="w-6 h-6" />
+              {wishlistItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#785E1A] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {wishlistItems.length > 9 ? "9+" : wishlistItems.length}
+                </span>
+              )}
+            </Link>
+
+            <Link to="/panier" className="flex items-center gap-2 bg-[#B2D1A7] hover:bg-primary-hover text-white font-bold px-4 py-2 rounded-xl transition-colors">
+              <div className="relative">
+                <img src={bagIcon} alt="" className="w-5 h-5 brightness-0 invert" />
+                <span className="absolute -top-2 -right-2 bg-[#785E1A] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {cartBadgeValue}
+                </span>
+              </div>
+              <span className="uppercase text-xs tracking-wider font-extrabold">PANIER</span>
+            </Link>
+
+            <button className="md:hidden text-2xl p-1 text-gray-800 bg-transparent border-none cursor-pointer" onClick={() => setMenuOpen(!menuOpen)}>
+              ☰
+            </button>
+          </div>
         </div>
-      </aside>
-    </header>
+
+        <Navbar />
+
+        <MobileMenu
+          isOpen={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          cartBadgeValue={cartBadgeValue}
+          token={token}
+          onLogout={() => dispatch(logout())}
+        />
+      </header>
+    </>
   );
 }
