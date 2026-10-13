@@ -1,4 +1,7 @@
 import { Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setFilters } from "../../slices/filtersSlice";
 import coffretsImage from "../../assets/images/coffrets.jpg";
 import motif from "../../assets/images/coffrets-motif.svg";
 import icBadge from "../../assets/images/ic-badge-star.svg";
@@ -7,9 +10,33 @@ const BTN =
   "flex h-16 w-full cursor-pointer items-center justify-center rounded-xl px-6 text-center font-sans text-[13px] leading-[18px] font-semibold tracking-[0.52px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] transition-colors";
 
 // Bloc « Coffrets Cadeaux » — maquette de Lisa (nodes 195:439 + 195:300)
-export default function CatalogueGift({ onSelect }) {
+export default function Gift() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const browseGiftBoxes = () => {
+    dispatch(
+      setFilters({
+        category: "coffrets-cadeaux",
+        search: "",
+        min_price: "",
+        max_price: "",
+        stock_status: "",
+      }),
+    );
+
+    if (pathname === "/catalogue") {
+      document
+        .getElementById("catalogue-listing")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      navigate("/catalogue");
+    }
+  };
+
   return (
-    <section className="grid bg-sage lg:min-h-[552px] lg:grid-cols-[59.7%_1fr]">
+    <section className="grid bg-sage lg:min-h-[400px] lg:grid-cols-[59.7%_1fr]">
       <div className="relative min-h-[260px] overflow-hidden">
         <img
           src={coffretsImage}
@@ -31,15 +58,15 @@ export default function CatalogueGift({ onSelect }) {
           <p className="font-sans text-sm leading-[22px] text-forest-deep lg:text-base lg:leading-[26px]">
             Offrez un présent soigné dans les moindres détails.
           </p>
-          <div className="mt-7 flex w-full flex-col gap-[22px] lg:mt-[62px]">
+          <div className="mt-7 flex w-full flex-col gap-[22px] lg:mt-[64px]">
             <button
               type="button"
-              onClick={onSelect}
-              className={`${BTN} bg-gold text-white hover:bg-gold-dark lg:h-[95px]`}
+              onClick={browseGiftBoxes}
+              className={`${BTN} bg-secondary text-white hover:bg-secondary-hover lg:h-[85px]`}
             >
               Regarder nos coffrets cadeaux
             </button>
-            <Link to="/contact" className={`${BTN} bg-white text-gold hover:bg-cream lg:h-[100px]`}>
+            <Link to="/contact" className={`${BTN} bg-white text-gold hover:bg-line lg:h-[85px]`}>
               Créer un coffret cadeau personnalisé
             </Link>
           </div>

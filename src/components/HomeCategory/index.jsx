@@ -14,7 +14,7 @@ export default function HomeCategories() {
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-12 font-sans">
+    <section className="max-w-7xl mx-auto font-sans">
      
       {/* 2. Grand Cadre Principal avec Bords Arrondis et Liseré Doré */}
       <div className="bg-[#FAFDF9] border border-[#775A19]/30 rounded-[2.5rem] p-6 lg:p-10 shadow-xs">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import Autocomplete from "../Autocomplete";
@@ -17,7 +17,6 @@ import peopleIcon from "./people.svg";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isHidden, setIsHidden] = useState(false);
 
 
   const dispatch = useDispatch();
@@ -30,39 +29,9 @@ export default function Header() {
   const cartCount = cartItems.reduce((total, item) => total + (Number(item.quantity) || 0), 0);
   const cartBadgeValue = cartCount > 9 ? "9+" : String(cartCount);
 
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-    let ticking = false;
-    const updateScroll = () => {
-      const y = window.scrollY;
-      if (y <= 0) {
-        setIsHidden(false);
-        lastScrollY = 0;
-        ticking = false;
-        return;
-      }
-      const delta = y - lastScrollY;
-      if (Math.abs(delta) > 10) {
-        setIsHidden(delta > 0);
-        lastScrollY = y;
-      }
-      ticking = false;
-    };
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(updateScroll);
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <>
-      <header className={`sticky top-0 z-50 bg-white shadow-xs transition-transform duration-300 ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
+      <header className="relative z-50 bg-white shadow-xs">
         <TopBar />
 
         {/* Section centrale : Logo + Recherche + Actions */}

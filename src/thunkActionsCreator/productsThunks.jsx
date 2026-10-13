@@ -1,5 +1,32 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
+export const fetchBestSellersThunk = createAsyncThunk(
+  "products/fetchBestSellers",
+  async (_, thunkAPI) => {
+    try {
+      const queryString = new URLSearchParams({
+        page: "1",
+        per_page: "4",
+        orderby: "popularity",
+        order: "desc",
+      }).toString();
+      const url = `${import.meta.env.VITE_API_URL}/wp-json/custom/v1/products?${queryString}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Impossible de récupérer les meilleures ventes.");
+      }
+
+      return await response.json();
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  },
+);
+
 export const fetchProductsThunk = createAsyncThunk(
   "products/fetchAll",
   async (params = {}, thunkAPI) => {
