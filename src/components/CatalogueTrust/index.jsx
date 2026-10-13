@@ -2,24 +2,25 @@ import icStore from "../../assets/maktaba/ic-store.svg";
 import icBox from "../../assets/maktaba/ic-box.svg";
 import icLock from "../../assets/maktaba/ic-lock.svg";
 import icSupport from "../../assets/maktaba/ic-support.svg";
-import "./index.css";
 
 // Bandeau de réassurance — node 195:5
 const ITEMS = [
-  { label: "Retrait Gratuit en Boutique", icon: icStore, w: 20.094, h: 18 },
-  { label: "Livraison Soignée", icon: icBox, w: 20, h: 20 },
-  { label: "Paiement 100% sécurisé", icon: icLock, w: 16, h: 21 },
-  { label: "Conseil & Accompagnement", icon: icSupport, w: 20, h: 18 },
+  { label: "Retrait Gratuit en Boutique", icon: icStore, size: "h-[18px] w-[20.094px]" },
+  { label: "Livraison Soignée", icon: icBox, size: "size-5" },
+  { label: "Paiement 100% sécurisé", icon: icLock, size: "h-[21px] w-4" },
+  { label: "Conseil & Accompagnement", icon: icSupport, size: "h-[18px] w-5" },
 ];
 
 export default function CatalogueTrust() {
   return (
-    <section className="catalogue-trust" aria-label="Nos engagements">
-      <ul className="catalogue-trust__list">
+    <section className="bg-white" aria-label="Nos engagements">
+      <ul className="mx-auto grid max-w-[1109px] list-none grid-cols-2 gap-x-4 gap-y-3 px-4 py-[18px] lg:flex lg:min-h-[77px] lg:items-center lg:justify-between lg:p-0">
         {ITEMS.map((item) => (
-          <li key={item.label} className="catalogue-trust__item">
-            <img src={item.icon} alt="" style={{ width: item.w, height: item.h }} />
-            <span>{item.label}</span>
+          <li key={item.label} className="flex items-center gap-3.5">
+            <img src={item.icon} alt="" className={`block shrink-0 ${item.size}`} />
+            <span className="font-sans text-[13px] leading-[1.35] font-bold text-gold lg:text-base lg:leading-6 lg:whitespace-nowrap">
+              {item.label}
+            </span>
           </li>
         ))}
       </ul>

@@ -64,6 +64,21 @@
   --color-secondary: #775A19;
   --color-white: #FFFFFF;
 
+  /* Palette Maktaba El Hikma (maquettes de Lisa) */
+  --color-sage: #B2D1A7;
+  --color-forest: #2D3F28;
+  --color-forest-deep: #2B4A33;
+  --color-gold: #775A19;
+  --color-gold-dark: #5C4512;
+  --color-mint: #EEF6EA;
+  --color-line: #E3EADF;
+  --color-leaf: #D1EAC6;
+  --color-cream: #FFE3B2;
+  --color-ivory: #F4FCF0;
+  --color-ink: #444841;
+  --color-muted: #747870;
+  --color-stock: #44563E;
+
 
 --font-serif: 'Playfair Display', serif;
 --font-sans: 'Plus Jakarta Sans', sans-serif;

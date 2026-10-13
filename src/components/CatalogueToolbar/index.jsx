@@ -5,7 +5,6 @@ import { setFilters } from "../../slices/filtersSlice";
 import { decodeHtml } from "../../utils/decodeHtml";
 import { childrenOf, isSelected } from "../../utils/categoryTree";
 import PriceRangeSlider from "../PriceRangeSlider";
-import "./index.css";
 
 const SORTS = [
   { value: "date-desc", label: "Nouveautés" },
@@ -14,6 +13,17 @@ const SORTS = [
   { value: "price-desc", label: "Prix décroissant" },
   { value: "title-asc", label: "Nom : A à Z" },
 ];
+
+const PILL =
+  "inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border bg-white px-[13px] font-sans text-xs font-semibold whitespace-nowrap text-ink transition-colors hover:bg-mint";
+const CHIP =
+  "cursor-pointer rounded-full border px-3 font-sans font-semibold whitespace-nowrap transition-colors";
+const chipClass = (active, small = false) =>
+  `${CHIP} ${small ? "h-7 text-[11px]" : "h-8 text-xs"} ${
+    active ? "border-sage bg-sage text-white" : "border-line bg-white text-ink hover:bg-mint"
+  }`;
+const LABEL =
+  "mb-2 font-sans text-[11px] font-semibold tracking-[0.55px] text-muted uppercase [&:not(:first-child)]:mt-4";
 
 // « Filtrer » + « Trier » (pastilles de la maquette mobile de Lisa)
 export default function CatalogueToolbar() {
@@ -54,7 +64,7 @@ export default function CatalogueToolbar() {
     <button
       key={cat.id}
       type="button"
-      className={`catalogue-chip${isChild ? " catalogue-chip--child" : ""}${isSelected(cat, filters.category) ? " is-active" : ""}`}
+      className={chipClass(isSelected(cat, filters.category), isChild)}
       aria-pressed={isSelected(cat, filters.category)}
       onClick={() => dispatch(setFilters({ category: String(cat.id) }))}
     >
@@ -63,68 +73,71 @@ export default function CatalogueToolbar() {
   );
 
   return (
-    <div className="catalogue-toolbar">
-      <div className="catalogue-toolbar__filter" ref={ref}>
+    <div className="flex items-center gap-2">
+      <div className="relative" ref={ref}>
         <button
           type="button"
-          className={`catalogue-pill${activeCount ? " is-active" : ""}`}
+          className={`${PILL} ${activeCount ? "border-sage" : "border-line"}`}
           aria-expanded={open}
           aria-controls="catalogue-filter-panel"
           onClick={() => setOpen((o) => !o)}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3.5 fill-none stroke-current stroke-[1.8]">
             <rect x="3" y="3" width="7" height="7" rx="1" />
             <rect x="14" y="3" width="7" height="7" rx="1" />
             <rect x="3" y="14" width="7" height="7" rx="1" />
             <rect x="14" y="14" width="7" height="7" rx="1" />
           </svg>
           Filtrer
-          {activeCount > 0 && <span className="catalogue-pill__count">{activeCount}</span>}
+          {activeCount > 0 && <span className="inline-flex size-[18px] items-center justify-center rounded-full bg-gold text-[10px] font-bold text-white">
+              {activeCount}
+            </span>}
         </button>
 
         {open && (
-          <div id="catalogue-filter-panel" className="catalogue-toolbar__panel">
-            <p className="catalogue-toolbar__label">Catégories</p>
-            <div className="catalogue-toolbar__cats">
+          <div id="catalogue-filter-panel" className="absolute top-[calc(100%+8px)] left-0 z-20 w-[min(360px,calc(100vw-32px))] rounded-xl border border-line bg-white p-4 shadow-[0_16px_32px_-16px_rgba(45,63,40,0.35)] md:right-0 md:left-auto [&_input[type=number]]:w-[72px] [&_input[type=number]]:rounded-md [&_input[type=number]]:border [&_input[type=number]]:border-line [&_input[type=number]]:px-2 [&_input[type=number]]:py-1.5 [&_input[type=number]]:text-[13px]">
+            <p className={LABEL}>Catégories</p>
+            <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
-                className={`catalogue-chip${!filters.category ? " is-active" : ""}`}
+                className={chipClass(!filters.category)}
                 aria-pressed={!filters.category}
                 onClick={() => dispatch(setFilters({ category: "" }))}
               >
                 Tout
               </button>
             </div>
-            <ul className="catalogue-toolbar__tree">
+            <ul className="mt-2 flex max-h-[220px] list-none flex-col gap-2 overflow-y-auto">
               {childrenOf(categories, 0).map((parent) => {
                 const subs = childrenOf(categories, parent.id);
                 return (
                   <li key={parent.id}>
                     {chip(parent)}
                     {subs.length > 0 && (
-                      <div className="catalogue-toolbar__subs">{subs.map((sub) => chip(sub, true))}</div>
+                      <div className="mt-1.5 ml-3.5 flex flex-wrap gap-1.5 border-l-2 border-mint pl-2.5">{subs.map((sub) => chip(sub, true))}</div>
                     )}
                   </li>
                 );
               })}
             </ul>
 
-            <p className="catalogue-toolbar__label">Disponibilité</p>
-            <label className="catalogue-toolbar__check">
+            <p className={LABEL}>Disponibilité</p>
+            <label className="flex cursor-pointer items-center gap-2.5">
               <input
                 type="checkbox"
+                className="size-[18px] cursor-pointer accent-gold"
                 checked={filters.stock_status === "instock"}
                 onChange={(e) =>
                   dispatch(setFilters({ stock_status: e.target.checked ? "instock" : "" }))
                 }
               />
-              <span>En stock uniquement</span>
+              <span className="font-sans text-sm font-medium text-ink">En stock uniquement</span>
             </label>
 
-            <p className="catalogue-toolbar__label">Prix (€)</p>
+            <p className={LABEL}>Prix (€)</p>
             <PriceRangeSlider onApply={() => {}} />
             {activeCount > 0 && (
-              <button type="button" className="catalogue-toolbar__reset" onClick={reset}>
+              <button type="button" className="mt-4 w-full cursor-pointer rounded-lg bg-[#f5f4ee] p-2.5 font-sans text-[13px] font-semibold text-gold transition-colors hover:bg-cream" onClick={reset}>
                 Réinitialiser les filtres
               </button>
             )}
@@ -132,9 +145,13 @@ export default function CatalogueToolbar() {
         )}
       </div>
 
-      <label className="catalogue-pill catalogue-pill--select">
+      <label className={`${PILL} border-line`}>
         <span>Trier :</span>
-        <select value={`${filters.orderby}-${filters.order}`} onChange={handleSort}>
+        <select
+          value={`${filters.orderby}-${filters.order}`}
+          onChange={handleSort}
+          className="cursor-pointer bg-transparent font-sans text-xs font-semibold text-ink outline-none"
+        >
           {SORTS.map((sort) => (
             <option key={sort.value} value={sort.value}>
               {sort.label}

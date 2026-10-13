@@ -12,7 +12,6 @@ import { setFilters } from "../../slices/filtersSlice";
 import { decodeHtml } from "../../utils/decodeHtml";
 import { findCategory } from "../../utils/categoryTree";
 import { rayonBySlug } from "../../brand";
-import "./index.css";
 
 export default function Store() {
   const dispatch = useDispatch();
@@ -70,17 +69,24 @@ export default function Store() {
         : "Nos Livres";
 
   return (
-    <div className="catalogue-page">
+    <div className="w-full bg-ivory pb-10">
       <CatalogueHero onDiscover={showNewest} onBrowse={showBooks} />
       <CatalogueTrust />
 
-      <section className="catalogue-listing" ref={listingRef} aria-labelledby="catalogue-title">
-        <header className="catalogue-listing__header">
+      <section
+        ref={listingRef}
+        aria-labelledby="catalogue-title"
+        className="scroll-mt-[180px] overflow-x-clip bg-mint px-4 pt-8 lg:px-12 lg:pt-10"
+      >
+        <header className="mx-auto flex max-w-[1184px] flex-wrap items-end justify-between gap-4 pb-7">
           <div>
-            <h2 id="catalogue-title" className="catalogue-listing__title">
+            <h2
+              id="catalogue-title"
+              className="pt-1.5 font-serif text-[30px] leading-[1.3] font-bold tracking-[-0.4px] text-sage lg:text-[40px] lg:leading-[52px]"
+            >
               {title}
             </h2>
-            <p className="catalogue-listing__subtitle">
+            <p className="mt-1 font-sans text-sm leading-[22px] text-ink">
               {typeof total === "number" && !(loading && list.page === 1) && (category || rayon || filters.search)
                 ? `${total} article${total > 1 ? "s" : ""}`
                 : "Une sélection d’ouvrages"}
