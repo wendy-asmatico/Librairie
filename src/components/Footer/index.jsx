@@ -3,12 +3,12 @@ import { useDispatch } from "react-redux";
 
 import { setFilters } from "../../slices/filtersSlice";
 import { BRAND } from "../../brand";
-import logoRound from "../../assets/maktaba/logo-round.jpg";
-import icStar from "../../assets/maktaba/ic-star.svg";
-import icPin from "../../assets/maktaba/ic-pin.svg";
-import icClock from "../../assets/maktaba/ic-clock.svg";
-import icPhone from "../../assets/maktaba/ic-phone-dark.svg";
-import icChat from "../../assets/maktaba/ic-chat.svg";
+import logoRound from "../../assets/images/logo-round.jpg";
+import icStar from "../../assets/images/ic-star.svg";
+import icPin from "../../assets/images/ic-pin.svg";
+import icClock from "../../assets/images/ic-clock.svg";
+import icPhone from "../../assets/images/ic-phone-dark.svg";
+import icChat from "../../assets/images/ic-chat.svg";
 
 // Liens « Rayons & Produits » → slugs des rayons (cf. RAYONS dans brand.js)
 const LINKS = [

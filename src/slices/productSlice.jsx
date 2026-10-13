@@ -1,6 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 // Importation de la nouvelle action thunk
-import { fetchProductsThunk, fetchProductByIdThunk } from "../thunkActionsCreator/productsThunks";
+import {
+  fetchBestSellersThunk,
+  fetchProductsThunk,
+  fetchProductByIdThunk,
+} from "../thunkActionsCreator/productsThunks";
 
 export const productsSlice = createSlice({
   name: "products",
@@ -14,6 +18,9 @@ export const productsSlice = createSlice({
     },
     loading: false,
     error: null,
+    bestSellers: [],
+    loadingBestSellers: false,
+    errorBestSellers: null,
     // Nouveaux états pour stocker les détails d'un seul produit
     singleProduct: null,
     loadingSingle: false,
@@ -22,6 +29,18 @@ export const productsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(fetchBestSellersThunk.pending, (state) => {
+        state.loadingBestSellers = true;
+        state.errorBestSellers = null;
+      })
+      .addCase(fetchBestSellersThunk.fulfilled, (state, action) => {
+        state.loadingBestSellers = false;
+        state.bestSellers = action.payload;
+      })
+      .addCase(fetchBestSellersThunk.rejected, (state, action) => {
+        state.loadingBestSellers = false;
+        state.errorBestSellers = action.payload;
+      })
       .addCase(fetchProductsThunk.pending, (state) => {
         state.loading = true;
         state.error = null;

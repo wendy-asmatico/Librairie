@@ -1,6 +1,6 @@
 // Identité Maktaba El Hikma (maquettes de Lisa) — remplace les infos
 // de la boutique de démo renvoyées par WordPress.
-import logoRound from "./assets/maktaba/logo-round.jpg";
+import logoRound from "./assets/images/logo-round.jpg";
 
 export const BRAND = {
   name: "Maktaba El Hikma",

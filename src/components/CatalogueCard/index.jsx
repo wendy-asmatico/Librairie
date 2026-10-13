@@ -7,10 +7,10 @@ import { showToast } from "../../slices/toastSlice";
 import WishlistButton from "../WishlistButton";
 import { decodeHtml } from "../../utils/decodeHtml";
 import { formatPrice } from "../../utils/formatPrice";
-import icHeart from "../../assets/maktaba/ic-heart-card.svg";
-import icHeartActive from "../../assets/maktaba/ic-heart-card-active.svg";
-import icStar from "../../assets/maktaba/ic-star-green.svg";
-import icBag from "../../assets/maktaba/ic-bag-small.svg";
+import icHeart from "../../assets/images/ic-heart-card.svg";
+import icHeartActive from "../../assets/images/ic-heart-card-active.svg";
+import icStar from "../../assets/images/ic-star-green.svg";
+import icBag from "../../assets/images/ic-bag-small.svg";
 
 const PLACEHOLDER =
   "https://placeholder.pics/svg/300/E9F0E5/747870/Maktaba%20El%20Hikma";
@@ -19,7 +19,7 @@ const PLACEHOLDER =
 const STOCK =
   "inline-flex shrink-0 items-center gap-1 font-sans text-[11px] leading-[18px] font-medium before:size-2 before:rounded-full before:bg-current before:content-[''] md:text-xs";
 
-export default function CatalogueCard({ product }) {
+export default function CatalogueCard({ product, compact = false }) {
   const dispatch = useDispatch();
   const [itemVariation, setItemVariation] = useState({});
   const [adding, setAdding] = useState(false);
@@ -78,117 +78,135 @@ export default function CatalogueCard({ product }) {
   };
 
   return (
-    <article className="group relative flex min-w-0 flex-col overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition duration-200 hover:-translate-y-[3px] hover:shadow-[0_12px_28px_-14px_rgba(45,63,40,0.35)]">
-      <div className="relative aspect-[278/384] overflow-hidden bg-[#e9f0e5]">
+  <article className="group relative flex min-w-0 flex-col overflow-hidden rounded-xl bg-white shadow-xs transition duration-200 hover:-translate-y-[2px] hover:shadow-md">
+    {/* Conteneur Image réduit */}
+    <div
+      className={`relative overflow-hidden bg-[#e9f0e5] ${
+        compact ? "aspect-square" : "aspect-[4/3]"
+      }`}
+    >
+      <Link
+        to={`/product/${product.slug}`}
+        className="absolute inset-0 block"
+        tabIndex={-1}
+        aria-hidden="true"
+      >
+        <img
+          src={image?.thumbnail || image?.src || PLACEHOLDER}
+          srcSet={image?.srcset || undefined}
+          sizes="(min-width: 1024px) 240px, 40vw"
+          alt={image?.alt || name}
+          loading="lazy"
+          className="block size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+        />
+      </Link>
+
+      {/* Bouton Favoris plus petit */}
+      <div className="absolute top-2 right-2 z-[1]">
+        <WishlistButton
+          product={product}
+          iconInactive={icHeart}
+          iconActive={icHeartActive}
+          className="block size-7 cursor-pointer rounded-full bg-white/95 p-1.5 object-contain shadow-xs transition hover:scale-105 hover:bg-white [&.active]:bg-cream"
+        />
+      </div>
+
+      {onSale && (
+        <span className="absolute top-2 left-2 rounded-full bg-cream px-1.5 py-0.5 font-sans text-[10px] font-bold text-gold uppercase">
+          Promo
+        </span>
+      )}
+
+      {reviewCount > 0 && (
+        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded bg-white/90 backdrop-blur-xs px-1.5 py-0.5 font-sans text-[10px] font-semibold text-sage">
+          <img src={icStar} alt="" className="block h-2.5 w-2.5" />
+          {rating.toFixed(1)} ({reviewCount})
+        </span>
+      )}
+    </div>
+
+    {/* Contenu Texte réduit */}
+    <div className="flex flex-1 flex-col p-2.5 md:p-3">
+      {category && (
+        <span className="font-sans text-[9px] font-semibold tracking-wider text-muted uppercase md:text-[10px]">
+          {category}
+        </span>
+      )}
+
+      <h3 className="mt-0.5 font-sans text-xs font-bold leading-snug md:text-sm">
         <Link
           to={`/product/${product.slug}`}
-          className="absolute inset-0 block"
-          tabIndex={-1}
-          aria-hidden="true"
+          className="line-clamp-2 text-forest-deep transition-colors hover:text-gold"
         >
-          <img
-            src={image?.thumbnail || image?.src || PLACEHOLDER}
-            srcSet={image?.srcset || undefined}
-            sizes="(min-width: 1024px) 280px, 50vw"
-            alt={image?.alt || name}
-            loading="lazy"
-            className="block size-full object-cover transition-transform duration-[400ms] group-hover:scale-[1.03]"
-          />
+          {name}
         </Link>
+      </h3>
 
-        <div className="absolute top-3 right-3 z-[1]">
-          <WishlistButton
-            product={product}
-            iconInactive={icHeart}
-            iconActive={icHeartActive}
-            className="block size-9 cursor-pointer rounded-full bg-white/95 p-[9px] object-contain shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)] transition hover:scale-[1.08] hover:bg-white [&.active]:bg-cream"
-          />
-        </div>
-
-        {onSale && <span className="absolute top-3 left-3 rounded-full bg-cream px-2 py-0.5 font-sans text-[11px] leading-4 font-bold tracking-[0.55px] text-gold uppercase">
-            Promo
-          </span>}
-
-        {reviewCount > 0 && (
-          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded px-2 py-0.5 bg-white/90 backdrop-blur-[2px] font-sans text-xs leading-[18px] font-semibold text-sage">
-            <img src={icStar} alt="" className="block h-[11.083px] w-[11.667px]" />
-            {rating.toFixed(1)} ({reviewCount} avis)
-          </span>
-        )}
-      </div>
-
-      <div className="flex min-h-[170px] flex-1 flex-col p-3 md:min-h-[198px] md:p-4">
-        {category && (
-          <span className="pt-[4.5px] font-sans text-[10px] leading-4 font-semibold tracking-[0.55px] text-muted uppercase md:text-[11px]">
-            {category}
-          </span>
-        )}
-        <h3 className="mt-1 pt-[1.5px] pb-2 font-sans text-sm leading-5 font-bold md:text-base md:leading-6">
-          <Link
-            to={`/product/${product.slug}`}
-            className="line-clamp-2 text-forest-deep transition-colors hover:text-gold"
-          >
-            {name}
-          </Link>
-        </h3>
-
-        {product.attributes?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {product.attributes.map((attribute) => (
-              <select
-                key={attribute.name}
-                aria-label={attribute.name}
-                className="max-w-full rounded-md border border-line bg-[#f8fbf6] px-2 py-1 text-xs text-ink"
-                value={itemVariation[attribute.name] || ""}
-                onChange={(e) =>
-                  setItemVariation((prev) => ({
-                    ...prev,
-                    [attribute.name]: e.target.value,
-                  }))
-                }
-              >
-                {attribute.terms.map((term) => (
-                  <option key={term.name} value={term.name}>
-                    {term.name}
-                  </option>
-                ))}
-              </select>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <span className="inline-flex flex-wrap items-baseline gap-1.5 font-serif text-lg leading-[26px] font-bold text-forest-deep md:text-[22px] md:leading-[30px]">
-            {price || "Prix indisponible"}
-            {onSale && (
-              <span className="font-sans text-xs font-medium text-muted line-through">
-                {regularPrice}
-              </span>
-            )}
-          </span>
-          {product.low_stock_remaining ? (
-            <span className={`${STOCK} text-[#ba1a1a]`}>
-              Plus que {product.low_stock_remaining}
-            </span>
-          ) : (
-            <span
-              className={`${STOCK} ${inStock ? "text-stock" : "text-muted"}`}
+      {product.attributes?.length > 0 && (
+        <div className="mt-1 flex flex-wrap gap-1">
+          {product.attributes.map((attribute) => (
+            <select
+              key={attribute.name}
+              aria-label={attribute.name}
+              className="max-w-full rounded border border-line bg-[#f8fbf6] px-1.5 py-0.5 text-[11px] text-ink"
+              value={itemVariation[attribute.name] || ""}
+              onChange={(e) =>
+                setItemVariation((prev) => ({
+                  ...prev,
+                  [attribute.name]: e.target.value,
+                }))
+              }
             >
-              {inStock ? "En stock" : "Rupture"}
+              {attribute.terms.map((term) => (
+                <option key={term.name} value={term.name}>
+                  {term.name}
+                </option>
+              ))}
+            </select>
+          ))}
+        </div>
+      )}
+
+      {/* Prix et Stock */}
+      <div className="mt-auto flex items-center justify-between gap-1 pt-2">
+        <span className="inline-flex flex-wrap items-baseline gap-1 font-serif text-base font-bold text-forest-deep md:text-lg">
+          {price || "Prix indisponible"}
+          {onSale && (
+            <span className="font-sans text-[10px] font-medium text-muted line-through">
+              {regularPrice}
             </span>
           )}
-        </div>
-
-        <button
-          type="button"
-          className="mt-4 flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg bg-sage px-2 py-2.5 text-center font-sans text-xs leading-[18px] font-semibold tracking-[0.52px] text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)] transition-colors hover:bg-forest disabled:cursor-not-allowed disabled:bg-line disabled:text-muted md:text-[13px]"
-          onClick={handleAdd}
-          disabled={!inStock || adding}
-        >
-          {inStock && <img src={icBag} alt="" className="block h-[13.333px] w-[10.667px]" />}
-          {!inStock ? "Rupture de stock" : adding ? "Ajout…" : "Ajouter au panier"}
-        </button>
+        </span>
+        {product.low_stock_remaining ? (
+          <span className={`${STOCK} text-[10px] text-[#ba1a1a]`}>
+            Reste {product.low_stock_remaining}
+          </span>
+        ) : (
+          <span
+            className={`${STOCK} text-[10px] ${
+              inStock ? "text-stock" : "text-muted"
+            }`}
+          >
+            {inStock ? "En stock" : "Rupture"}
+          </span>
+        )}
       </div>
-    </article>
-  );
+
+      {/* Bouton Panier compact */}
+      <button
+        type="button"
+        className="mt-2 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md bg-sage py-1.5 px-2 text-center font-sans text-xs font-semibold text-white transition-colors hover:bg-forest disabled:cursor-not-allowed disabled:bg-line disabled:text-muted"
+        onClick={handleAdd}
+        disabled={!inStock || adding}
+      >
+        {inStock && <img src={icBag} alt="" className="block h-3 w-3" />}
+        {!inStock
+          ? "Rupture"
+          : adding
+          ? "Ajout…"
+          : "Ajouter"}
+      </button>
+    </div>
+  </article>
+);
 }

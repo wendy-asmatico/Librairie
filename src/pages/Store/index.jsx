@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 
 import Feed from "../../components/Feed";
 import CatalogueHero from "../../components/CatalogueHero";
-import CatalogueTrust from "../../components/CatalogueTrust";
+import Trust from "../../components/Trust";
 import CatalogueToolbar from "../../components/CatalogueToolbar";
-import CatalogueGift from "../../components/CatalogueGift";
+import Gift from "../../components/Gift";
 import CatalogueCategories from "../../components/CatalogueCategories";
 import { fetchCategoriesThunk } from "../../thunkActionsCreator/categoriesThunks";
 import { setFilters } from "../../slices/filtersSlice";
@@ -54,12 +54,6 @@ export default function Store() {
     dispatch(setFilters({ category: "livres-coran", search: "" }));
     scrollToListing();
   };
-
-  const showGifts = () => {
-    dispatch(setFilters({ category: "coffrets-cadeaux", search: "" }));
-    scrollToListing();
-  };
-
   const title = filters.search
     ? `Résultats pour « ${filters.search} »`
     : category
@@ -71,9 +65,10 @@ export default function Store() {
   return (
     <div className="w-full bg-ivory pb-10">
       <CatalogueHero onDiscover={showNewest} onBrowse={showBooks} />
-      <CatalogueTrust />
+      <Trust />
 
       <section
+        id="catalogue-listing"
         ref={listingRef}
         aria-labelledby="catalogue-title"
         className="scroll-mt-[180px] overflow-x-clip bg-mint px-4 pt-8 lg:px-12 lg:pt-10"
@@ -99,7 +94,7 @@ export default function Store() {
         <Feed />
       </section>
 
-      <CatalogueGift onSelect={showGifts} />
+      <Gift />
     </div>
   );
 }

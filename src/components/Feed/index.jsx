@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Loader from "../../components/Loader";
 import { fetchProductsThunk } from "../../thunkActionsCreator/productsThunks";
 import CatalogueCard from "../CatalogueCard";
-import icArrow from "../../assets/maktaba/ic-arrow-gold.svg";
+import icArrow from "../../assets/images/ic-arrow-gold.svg";
 
 const STATE =
   "mx-auto flex max-w-[1184px] flex-col items-center gap-2 rounded-2xl border border-dashed border-sage bg-white px-4 py-14 text-center";
