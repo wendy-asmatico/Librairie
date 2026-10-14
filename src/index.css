@@ -57,319 +57,92 @@
   font-weight: 400;
   font-style: italic;
 }
+/* Graisse 700 : les TTF statiques s'arrêtent au SemiBold, on la tire des
+   sous-ensembles variables (Google Fonts) pour éviter un gras synthétique. */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./assets/fonts/PlusJakartaSans-Variable-latin-ext.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('./assets/fonts/PlusJakartaSans-Variable-latin.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 @theme {
   --color-primary: #EEF6EAB2;
   --color-primary-hover: #2D3F28;
   --color-secondary: #775A19;
+  --color-secondary-hover: #634A12;
   --color-white: #FFFFFF;
 
+  /* Palette Maktaba El Hikma */
+  --color-forest: #2D3F28;
+  --color-ink: #24382A;
+  --color-ink-soft: #3E5144;
+  --color-ink-muted: #5C6E60;
+  --color-leaf: #5E8C55;
+  --color-sage: #B2D1A7;
+  --color-sage-hover: #A3C795;
+  --color-mint: #F1F8EC;
+  --color-mint-soft: #EEF6EA;
+  --color-sand: #F4EEE8;
+  --color-line: #E3EADF;
+  --color-line-strong: #CFDCC9;
+  --color-success: #2F6B3A;
+  --color-danger: #9B3B2E;
+  --color-cream: #FFE3B2;
 
---font-serif: 'Playfair Display', serif;
---font-sans: 'Plus Jakarta Sans', sans-serif;
-}
+  /* Catalogue (maquettes de Lisa) */
+  --color-forest-deep: #2B4A33;
+  --color-gold: #775A19;
+  --color-gold-dark: #5C4512;
+  --color-leaf-soft: #D1EAC6;
+  --color-cream: #FFE3B2;
+  --color-ivory: #F4FCF0;
+  --color-muted: #747870;
+  --color-stock: #44563E;
 
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-* :focus-visible {
-  outline: 2px solid var(--primary-color-light);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
+  --text-2xs: 0.71875rem;
+  --text-2xs--line-height: 1.2;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.4;
+  --text-md: 0.9375rem;
+  --text-md--line-height: 1.4;
+  --text-display: clamp(1.875rem, 6vw, 2.5rem);
+  --text-display--line-height: 1.1;
+  --text-title: clamp(1.625rem, 5vw, 2rem);
+  --text-title--line-height: 1.1;
+  --text-amount: clamp(1.625rem, 4vw, 1.875rem);
+  --text-amount--line-height: 1;
 
-body {
-  background-color: var(--bg-color);
-  color: var(--dark-color);
-  display: flex;
-  flex-direction: column;
-  max-width: 260lvh;
-  margin: 0 auto;
-}
-body main {
-  min-height: 90lvh;
-  margin: 2vw;
-}
+  /* Marge latérale des pages, fluide entre mobile et desktop. */
+  --spacing-gutter: clamp(1rem, 4vw, 2rem);
 
-::-moz-selection {
-  background-color: var(--primary-color);
-  color: var(--bg-color);
-}
+  --radius-control: 0.625rem;
+  --radius-card: 0.875rem;
 
-::selection {
-  background-color: var(--primary-color);
-  color: var(--bg-color);
-}
+  --shadow-card: 0 2px 12px rgb(36 56 42 / 0.06);
+  --shadow-raised: 0 2px 8px rgb(36 56 42 / 0.15);
+  --shadow-dock: 0 -6px 24px rgb(36 56 42 / 0.12);
+  --shadow-toast: 0 12px 40px rgb(36 56 42 / 0.3);
 
-input,
-textarea,
-select,
-span,
-label,
-li,
-a {
-  font-size: 3.12vw;
-  font-family: var(--font-body);
-  color: var(--dark-color);
-  line-height: 1.5;
-}
-@media screen and (aspect-ratio > 1/1) {
-  input,
-  textarea,
-  select,
-  span,
-  label,
-  li,
-  a {
-    font-size: 1.2vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  input,
-  textarea,
-  select,
-  span,
-  label,
-  li,
-  a {
-    font-size: 3.12lvh;
-  }
-}
+  --animate-rise-in: rise-in 0.25s ease-out both;
 
-p {
-  font-size: 3.12vw;
-  font-family: var(--font-heading);
-  color: var(--text-color-muted);
-  font-weight: 300;
-}
-@media screen and (aspect-ratio > 1/1) {
-  p {
-    font-size: 1.2vw;
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
   }
 }
-@media screen and (aspect-ratio > 2.6/1) {
-  p {
-    font-size: 3.12lvh;
-  }
-}
-
-strong {
-  font-size: 3.12vw;
-  font-family: var(--font-heading);
-  color: var(--text-color-muted);
-  font-weight: 900;
-}
-@media screen and (aspect-ratio > 1/1) {
-  strong {
-    font-size: 1.2vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  strong {
-    font-size: 3.12lvh;
-  }
-}
-
-input,
-textarea,
-select {
-  margin-bottom: 3vw;
-}
-@media screen and (aspect-ratio > 1/1) {
-  input,
-  textarea,
-  select {
-    margin-bottom: 1.5vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  input,
-  textarea,
-  select {
-    margin-bottom: 2lvh;
-  }
-}
-
-p,
-ul {
-  margin-bottom: 2.6vw;
-}
-@media screen and (aspect-ratio > 1/1) {
-  p,
-  ul {
-    margin-bottom: 1vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  p,
-  ul {
-    margin-bottom: 2.6lvh;
-  }
-}
-
-ul {
-  margin-left: 5vw;
-}
-
-li {
-  list-style: square;
-}
-
-a {
-  color: var(--text-color-muted);
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-a:hover {
-  opacity: 1;
-}
-
-h1 {
-  font-size: 6vw;
-  font-family: var(--font-body);
-  margin-bottom: 1vw;
-}
-@media screen and (aspect-ratio > 1/1) {
-  h1 {
-    font-size: 2.5vw;
-    margin-bottom: 2vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  h1 {
-    font-size: 3.2lvh;
-    margin-bottom: 4lvh;
-  }
-}
-
-h2 {
-  font-size: 6vw;
-  font-family: var(--font-body);
-  margin-bottom: 3.5vw;
-  margin-top: 3.5vw;
-}
-@media screen and (aspect-ratio > 1/1) {
-  h2 {
-    font-size: 3vw;
-    margin-bottom: 1.5vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  h2 {
-    font-size: 2.8lvh;
-    margin-bottom: 3.5lvh;
-  }
-}
-
-h3 {
-  font-size: 5.2vw;
-  font-family: var(--font-body);
-  margin-bottom: 3.6vw;
-}
-@media screen and (aspect-ratio > 1/1) {
-  h3 {
-    font-size: 2vw;
-    margin-bottom: 1.2vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  h3 {
-    font-size: 5.2lvh;
-    margin-bottom: 3.6lvh;
-  }
-}
-
-h4 {
-  font-size: 3.64vw;
-  font-family: var(--font-body);
-  margin-bottom: 2.6vw;
-}
-@media screen and (aspect-ratio > 1/1) {
-  h4 {
-    font-size: 1.4vw;
-    margin-bottom: 1vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  h4 {
-    font-size: 3.64lvh;
-    margin-bottom: 2.6lvh;
-  }
-}
-
-h5 {
-  font-size: 4vw;
-  font-family: var(--font-body);
-  margin-bottom: 2vw;
-}
-@media screen and (aspect-ratio > 1/1) {
-  h5 {
-    font-size: 1.5vw;
-    margin-bottom: 0.8vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  h5 {
-    font-size: 3.9lvh;
-    margin-bottom: 3.9lvh;
-  }
-}
-
-h6 {
-  font-size: 4vw;
-  font-family: var(--font-body);
-  margin-bottom: 1.5vw;
-}
-@media screen and (aspect-ratio > 1/1) {
-  h6 {
-    font-size: 1.3vw;
-    margin-bottom: 0.5vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  h6 {
-    font-size: 1.7lvh;
-    margin-bottom: 1.5lvh;
-  }
-}
-
-button {
-  cursor: pointer;
-  border: 1px solid var(--primary-color);
-  background: var(--primary-color);
-  color: var(--bg-color);
-  font-family: var(--font-heading);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  padding: 2.6vw 5.2vw;
-  font-size: 2.6vw;
-  width: -moz-fit-content;
-  width: fit-content;
-  border-radius: 2vw;
-}
-@media screen and (aspect-ratio > 1/1) {
-  button {
-    padding: 1vw 2vw;
-    font-size: 1vw;
-    border-radius: 0.5vw;
-  }
-}
-@media screen and (aspect-ratio > 2.6/1) {
-  button {
-    padding: 2.6lvh 5.2lvh;
-    font-size: 2.6lvh;
-    border-radius: 1lvh;
-  }
-}
-button:hover {
-  background-color: var(--primary-color-light);
-}
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}/*# sourceMappingURL=index.css.map */

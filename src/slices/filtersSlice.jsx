@@ -5,6 +5,7 @@ const initialState = {
   category: "",
   min_price: "",
   max_price: "",
+  stock_status: "", // "instock" = disponibles uniquement
   orderby: "date",
   order: "desc",
 };

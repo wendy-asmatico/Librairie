@@ -44,7 +44,9 @@ export default function Modal() {
       onClick={handleClose}
     >
       <FocusTrap active={isOpen}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div
+          className={`modal-content ${modalName === "auth" ? "modal-content--bare" : ""}`}
+          onClick={(e) => e.stopPropagation()}>
           <button
             className="modal-close-btn"
             onClick={handleClose}

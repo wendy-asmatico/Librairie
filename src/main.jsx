@@ -19,27 +19,26 @@ import Home from "./pages/Home";
 import Store from "./pages/Store";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 import NewPassword from "./pages/NewPassword";
 import Profile from "./pages/Profile";
-import Wishlist from "./pages/Wishlist"; // TEMP: wishlist testing, remove before commit
+import Wishlist from "./pages/Wishlist";
 import BlogPage from "./pages/Blog";
 import SinglePost from "./pages/SinglePost";
 import Contact from "./pages/Contact";
+import Kids from "./pages/Kids";
 import LegalMentions from "./pages/LegalMentions";
 import CGU from "./pages/CGU";
 import CGV from "./pages/CGV";
 import Error404 from "./pages/Error404";
+import AdminDashboard from "./pages/Admin";
 
-import Seo from "./components/Seo";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import Toast from "./components/Toast";
-import Modal from "./components/Modal";
+import Layout from "./components/Layout/layout";
 import ThemeApplier from "./components/ThemeApplier";
+import ScrollToTop from "./components/ScrollToTop";
 
 import "./index.css";
-import ScrollToTop from "./components/ScrollToTop";
 
 store.dispatch(initializeCartThunk());
 store.dispatch(fetchSiteThunk());
@@ -53,7 +52,6 @@ if (store.getState().user.token) {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  // <React.StrictMode>
   <HelmetProvider>
     <Provider store={store}>
       <Router
@@ -65,31 +63,34 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       >
         <ScrollToTop />
         <ThemeApplier />
-        <Header />
-        <Seo />
+
         <Routes>
-          {<Route path="/" element={<Home />} />}
-          <Route path="/new-password" element={<NewPassword />} />
-          <Route path="/catalogue" element={<Store />} />
-          <Route path="/mentions-legales" element={<LegalMentions />} />
-          <Route path="/cgu" element={<CGU />} />
-          <Route path="/cgv" element={<CGV />} />
-          <Route path="/panier" element={<Cart />} />
-          <Route path="*" element={<Error404 />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/product/:id" element={<ProductDetails />} />
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/blog/:slug" element={<SinglePost />} />
-          <Route path="/success/:orderId" element={<Success />} />
-          <Route path="/profile" element={<Profile />} />
-          {/* TEMP: wishlist testing, remove before commit */}
-          <Route path="/wishlist" element={<Wishlist />} />
+          {/* Espace administrateur : sa propre mise en page (sans en-tête ni pied de boutique) */}
+          <Route path="/admin" element={<AdminDashboard />} />
+
+          {/* Layout parent qui englobe toutes les pages */}
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/new-password" element={<NewPassword />} />
+            <Route path="/catalogue" element={<Store />} />
+            <Route path="/enfants" element={<Kids />} />
+            <Route path="/mentions-legales" element={<LegalMentions />} />
+            <Route path="/cgu" element={<CGU />} />
+            <Route path="/cgv" element={<CGV />} />
+            <Route path="/panier" element={<Cart />} />
+            <Route path="/commande" element={<Checkout />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/product/:id" element={<ProductDetails />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:slug" element={<SinglePost />} />
+            <Route path="/success/:orderId" element={<Success />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="*" element={<Error404 />} />
+          </Route>
         </Routes>
-        <Footer />
-        <Toast />
-        <Modal />
+
       </Router>
     </Provider>
-  </HelmetProvider>,
-  /* </React.StrictMode>, */
+  </HelmetProvider>
 );

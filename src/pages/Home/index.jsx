@@ -1,18 +1,23 @@
 import "./index.css";
 
-import HomeSlider from "../../components/HomeSlider";
-import PageContent from "../../components/PageContent";
-import Advantages from "../../components/Advantages";
+import Hero from "../../components/HomeSlider/Hero"; // Ton nouveau composant
+import Trust from "../../components/Trust";
+import HomeCategories from "../../components/HomeCategory";
+import BestSellers from "../../components/BestSellers";
+import Gift from "../../components/Gift";
+import Newsletter from "../../components/Newsletter/Newsletter";
+import StoreLocation from "../../components/StoreLocation";
 
 export default function Home() {
   return (
-    <div className="home">
-      <PageContent slug="home" />
-      <HomeSlider />
-      <div className="apropos-wrapper">
-        <PageContent slug="a-propos" />
-        <Advantages />
-      </div>
+    <div className="home font-sans">
+      <Hero />
+      <Trust />
+      <HomeCategories />
+      <BestSellers />    
+      <Gift />
+      <Newsletter />
+      <StoreLocation />
     </div>
   );
 }
