@@ -1,6 +1,7 @@
 # WordPress + WooCommerce local pour le front Maktaba El Hikma
 #   docker compose up -d        → http://localhost:8080 (admin : /wp-admin)
 #   ./setup.sh                  → installe WP, les extensions et les catégories
+#   http://localhost:8025       → Mailpit : tous les e-mails envoyés par WordPress
 name: maktaba-wp
 
 services:
@@ -20,6 +21,7 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+      - mailpit
     ports:
       - "8080:80"
     environment:
@@ -31,9 +33,18 @@ services:
         define('JWT_AUTH_SECRET_KEY', 'maktaba-local-dev-secret-change-me');
         define('JWT_AUTH_CORS_ENABLE', true);
         define('FS_METHOD', 'direct');
+        define('SMTP_HOST', 'mailpit');
+        define('SMTP_PORT', 1025);
     volumes:
       - wp_data:/var/www/html
       - ../mu-plugins:/var/www/html/wp-content/mu-plugins
+
+  # Fausse boîte mail : capture les e-mails au lieu de les envoyer
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
 
   cli:
     image: wordpress:cli-php8.3

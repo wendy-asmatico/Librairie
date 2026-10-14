@@ -38,3 +38,18 @@ Un WordPress + WooCommerce prêt à l'emploi est fourni dans `wordpress/` :
 3. Créez un fichier `.env.production.local` à la racine avec `VITE_API_URL=http://localhost:8080`, puis relancez `npm run dev`
 
 Admin : http://localhost:8080/wp-admin (identifiant `admin`, mot de passe `admin`). Les `mu-plugins` du projet sont montés automatiquement.
+
+### E-mails
+
+- **En local** : les e-mails de WordPress (formulaire de contact, mot de passe oublié, commandes…) n'arrivent pas dans une vraie boîte : ils sont capturés par **Mailpit**, visible sur http://localhost:8025. Après avoir récupéré ce changement, relancez `docker compose up -d` dans `wordpress/`.
+- **Sur un vrai serveur** : le mu-plugin `smtp.php` envoie les e-mails par SMTP. Ajoutez dans `wp-config.php` les informations du compte mail de la boutique :
+
+  ```php
+  define('SMTP_HOST', 'smtp.exemple.fr');
+  define('SMTP_PORT', 587);
+  define('SMTP_USER', 'contact@maktabaelhikma.fr');
+  define('SMTP_PASS', 'mot-de-passe');
+  define('SMTP_SECURE', 'tls');
+  ```
+
+  Les messages sont envoyés à l'adresse réglée dans WooCommerce → Réglages → E-mails → « Adresse de l'expéditeur ».
