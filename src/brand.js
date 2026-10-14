@@ -39,7 +39,8 @@ export const RAYONS = [
   { key: "books", label: "Livres & Coran", slug: "livres-coran", chevron: true },
   { key: "clothes", label: "Vêtements", slug: "vetements", chevron: true },
   { key: "accessories", label: "Accessoires", slug: "accessoires", chevron: true },
-  { key: "kids", label: "Enfants", slug: "enfants" },
+  // Le rayon Enfants a sa propre page (maquette « Catalogue Enfants »)
+  { key: "kids", label: "Enfants", slug: "enfants", to: "/enfants" },
   { key: "gifts", label: "Coffrets Cadeaux", slug: "coffrets-cadeaux" },
 ];
 

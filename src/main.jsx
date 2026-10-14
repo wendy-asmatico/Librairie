@@ -27,6 +27,7 @@ import Wishlist from "./pages/Wishlist";
 import BlogPage from "./pages/Blog";
 import SinglePost from "./pages/SinglePost";
 import Contact from "./pages/Contact";
+import Kids from "./pages/Kids";
 import LegalMentions from "./pages/LegalMentions";
 import CGU from "./pages/CGU";
 import CGV from "./pages/CGV";
@@ -72,6 +73,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/" element={<Home />} />
             <Route path="/new-password" element={<NewPassword />} />
             <Route path="/catalogue" element={<Store />} />
+            <Route path="/enfants" element={<Kids />} />
             <Route path="/mentions-legales" element={<LegalMentions />} />
             <Route path="/cgu" element={<CGU />} />
             <Route path="/cgv" element={<CGV />} />
