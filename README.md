@@ -53,3 +53,4 @@ Admin : http://localhost:8080/wp-admin (identifiant `admin`, mot de passe `admin
   ```
 
   Les messages sont envoyés à l'adresse réglée dans WooCommerce → Réglages → E-mails → « Adresse de l'expéditeur ».
+- **Lien « mot de passe oublié »** : il pointe vers `FRONTEND_URL` (par défaut `http://localhost:5173/ecom`). Sur un vrai serveur, ajoutez dans `wp-config.php` l'adresse du site React, par ex. `define('FRONTEND_URL', 'https://maktabaelhikma.fr/ecom');`.

@@ -35,6 +35,7 @@ services:
         define('FS_METHOD', 'direct');
         define('SMTP_HOST', 'mailpit');
         define('SMTP_PORT', 1025);
+        define('FRONTEND_URL', 'http://localhost:5173/ecom');
     volumes:
       - wp_data:/var/www/html
       - ../mu-plugins:/var/www/html/wp-content/mu-plugins

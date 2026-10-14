@@ -28,7 +28,9 @@ function headless_reset_password($request)
         return new WP_Error('key_error', 'Erreur lors de la génération du lien.', ['status' => 500]);
     }
 
-    $reset_link = "http://localhost:5173/new-password?login=" . rawurlencode($user->user_login) . "&key=" . rawurlencode($key);
+    // Adresse du site React : FRONTEND_URL dans wp-config.php (sans / final)
+    $front = defined('FRONTEND_URL') ? untrailingslashit(FRONTEND_URL) : 'http://localhost:5173/ecom';
+    $reset_link = $front . '/new-password?login=' . rawurlencode($user->user_login) . '&key=' . rawurlencode($key);
 
 
     wp_mail(
