@@ -19,7 +19,9 @@ const PLACEHOLDER =
 const STOCK =
   "inline-flex shrink-0 items-center gap-1 font-sans text-[11px] leading-[18px] font-medium before:size-2 before:rounded-full before:bg-current before:content-[''] md:text-xs";
 
-export default function CatalogueCard({ product, compact = false }) {
+// accent : couleurs de la carte par rayon (page Enfants) — { border, label }
+// kids : gabarit plus grand de la maquette « Catalogue Enfants »
+export default function CatalogueCard({ product, compact = false, accent = null, kids = false }) {
   const dispatch = useDispatch();
   const [itemVariation, setItemVariation] = useState({});
   const [adding, setAdding] = useState(false);
@@ -78,11 +80,15 @@ export default function CatalogueCard({ product, compact = false }) {
   };
 
   return (
-  <article className="group relative flex min-w-0 flex-col overflow-hidden rounded-xl bg-white shadow-xs transition duration-200 hover:-translate-y-[2px] hover:shadow-md">
+  <article
+    className={`group relative flex min-w-0 flex-col overflow-hidden bg-white shadow-xs transition duration-200 hover:-translate-y-[2px] hover:shadow-md ${
+      accent ? `rounded-2xl border ${accent.border}` : "rounded-xl"
+    }`}
+  >
     {/* Conteneur Image réduit */}
     <div
       className={`relative overflow-hidden bg-[#e9f0e5] ${
-        compact ? "aspect-square" : "aspect-[4/3]"
+        compact ? "aspect-square" : kids ? "aspect-[278/385]" : "aspect-[4/3]"
       }`}
     >
       <Link
@@ -126,14 +132,24 @@ export default function CatalogueCard({ product, compact = false }) {
     </div>
 
     {/* Contenu Texte réduit */}
-    <div className="flex flex-1 flex-col p-2.5 md:p-3">
+    <div className={`flex flex-1 flex-col ${kids ? "p-2.5 md:p-4" : "p-2.5 md:p-3"}`}>
       {category && (
-        <span className="font-sans text-[9px] font-semibold tracking-wider text-muted uppercase md:text-[10px]">
+        <span
+          className={`font-sans font-semibold uppercase ${
+            kids
+              ? "text-[10px] leading-4 tracking-[0.55px] md:text-[11px]"
+              : "text-[9px] tracking-wider md:text-[10px]"
+          } ${accent ? accent.label : "text-muted"}`}
+        >
           {category}
         </span>
       )}
 
-      <h3 className="mt-0.5 font-sans text-xs font-bold leading-snug md:text-sm">
+      <h3
+        className={`mt-0.5 font-sans font-bold ${
+          kids ? "text-[13px] leading-[18px] md:mt-1 md:text-base md:leading-6" : "text-xs leading-snug md:text-sm"
+        }`}
+      >
         <Link
           to={`/product/${product.slug}`}
           className="line-clamp-2 text-forest-deep transition-colors hover:text-gold"
@@ -168,8 +184,12 @@ export default function CatalogueCard({ product, compact = false }) {
       )}
 
       {/* Prix et Stock */}
-      <div className="mt-auto flex items-center justify-between gap-1 pt-2">
-        <span className="inline-flex flex-wrap items-baseline gap-1 font-serif text-base font-bold text-forest-deep md:text-lg">
+      <div className={`mt-auto flex items-center justify-between gap-1 ${kids ? "pt-2 md:pt-6" : "pt-2"}`}>
+        <span
+          className={`inline-flex flex-wrap items-baseline gap-1 font-serif font-bold text-forest-deep ${
+            kids ? "text-base md:text-[22px] md:leading-[30px]" : "text-base md:text-lg"
+          }`}
+        >
           {price || "Prix indisponible"}
           {onSale && (
             <span className="font-sans text-[10px] font-medium text-muted line-through">
@@ -195,7 +215,11 @@ export default function CatalogueCard({ product, compact = false }) {
       {/* Bouton Panier compact */}
       <button
         type="button"
-        className="mt-2 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md bg-sage py-1.5 px-2 text-center font-sans text-xs font-semibold text-white transition-colors hover:bg-forest disabled:cursor-not-allowed disabled:bg-line disabled:text-muted"
+        className={`flex w-full cursor-pointer items-center justify-center gap-1.5 bg-sage px-2 text-center font-sans font-semibold text-white transition-colors hover:bg-forest disabled:cursor-not-allowed disabled:bg-line disabled:text-muted ${
+          kids
+            ? "mt-2 rounded-lg py-2 text-xs md:mt-4 md:py-2.5 md:text-[13px] md:tracking-[0.52px]"
+            : "mt-2 rounded-md py-1.5 text-xs"
+        }`}
         onClick={handleAdd}
         disabled={!inStock || adding}
       >
@@ -204,6 +228,12 @@ export default function CatalogueCard({ product, compact = false }) {
           ? "Rupture"
           : adding
           ? "Ajout…"
+          : kids
+          ? (
+            <>
+              Ajouter<span className="hidden md:inline">&nbsp;au panier</span>
+            </>
+          )
           : "Ajouter"}
       </button>
     </div>

@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
 import { setFilters } from "../../slices/filtersSlice";
-import { BRAND } from "../../brand";
+import { BRAND, rayonBySlug } from "../../brand";
 import logoRound from "../../assets/images/logo-round.jpg";
 import icStar from "../../assets/images/ic-star.svg";
 import icPin from "../../assets/images/ic-pin.svg";
@@ -35,6 +35,11 @@ export default function Footer() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const openRayon = (slug) => {
+    const page = rayonBySlug(slug)?.to;
+    if (page) {
+      navigate(page);
+      return;
+    }
     dispatch(setFilters({ category: slug, search: "" }));
     navigate("/catalogue");
   };
