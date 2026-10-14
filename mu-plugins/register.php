@@ -8,8 +8,20 @@ add_action('rest_api_init', function () {
     ]);
 });
 
+// Pas de limite sur un WordPress local (Docker, MAMP, XAMPP…) : pratique pour tester
+function headless_register_is_local()
+{
+    $host = wp_parse_url(home_url(), PHP_URL_HOST);
+    return in_array($host, ['localhost', '127.0.0.1', '::1'], true)
+        || in_array(wp_get_environment_type(), ['local', 'development'], true);
+}
+
 function headless_register_rate_limit_check()
 {
+    if (headless_register_is_local()) {
+        return true;
+    }
+
     $ip  = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
     $key = 'headless_register_' . md5($ip);
 
