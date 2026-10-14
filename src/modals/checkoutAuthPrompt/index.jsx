@@ -1,9 +1,11 @@
 import { useDispatch } from "react-redux";
-import { openModal, closeModal } from "../../slices/modalSlice";
+import { useNavigate } from "react-router-dom";
+import { closeModal } from "../../slices/modalSlice";
 import "./index.css";
 
 export default function CheckoutAuthPromptModal() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   return (
     <div className="checkout-auth-prompt">
@@ -18,7 +20,8 @@ export default function CheckoutAuthPromptModal() {
           className="login"
           type="button"
           onClick={() => {
-            dispatch(openModal({ name: "auth", props: { view: "login" } }));
+            dispatch(closeModal());
+            navigate("/connexion?redirect=/commande");
           }}
         >
           Se connecter / S'inscrire
