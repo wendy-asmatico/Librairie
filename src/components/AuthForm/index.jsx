@@ -19,6 +19,11 @@ const INPUT_ERROR = "border-danger focus:border-danger focus:ring-danger/20";
 const BUTTON =
   "flex-1 cursor-pointer rounded-lg py-4 font-sans text-sm leading-[18px] font-semibold tracking-[0.56px] transition-colors";
 
+const FieldError = ({ value, error }) =>
+  value && error ? (
+    <p className="font-sans text-xs leading-[18px] text-danger">{error}</p>
+  ) : null;
+
 export default function AuthForm({ view = "login" }) {
   const dispatch = useDispatch();
   const { loading, error, token } = useSelector((state) => state.user);
@@ -51,9 +56,18 @@ export default function AuthForm({ view = "login" }) {
     else if (updatedForm.password.length < 8)
       newErrors.password = " Il faut au moins 8 caractères.";
     if (method === "register") {
+      // Mêmes règles que WordPress (sanitize_user / is_email), pour ne pas
+      // laisser passer un formulaire que le serveur refusera
+      if (
+        updatedForm.username.trim() &&
+        !/^[A-Za-z0-9._@-]+$/.test(updatedForm.username.trim())
+      ) {
+        newErrors.username =
+          "Lettres sans accent, chiffres, . - _ uniquement (sans espace).";
+      }
       if (!updatedForm.email.trim()) {
         newErrors.email = "L'adresse e-mail est requise.";
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updatedForm.email)) {
+      } else if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/.test(updatedForm.email.trim())) {
         newErrors.email = "Entrez une adresse e-mail valide.";
       }
       if (!updatedForm.confirmPassword) {
@@ -134,6 +148,7 @@ export default function AuthForm({ view = "login" }) {
             }
           }}
         />
+        <FieldError value={form.username} error={errors.username} />
       </div>
       {view === "register" && (
         <div className={FIELD}>
@@ -155,6 +170,7 @@ export default function AuthForm({ view = "login" }) {
               }
             }}
           />
+          <FieldError value={form.email} error={errors.email} />
         </div>
       )}
       <div className={FIELD}>
@@ -176,6 +192,7 @@ export default function AuthForm({ view = "login" }) {
             }
           }}
         />
+        <FieldError value={form.password} error={errors.password} />
       </div>
       {view === "register" && (
         <div className={FIELD}>
@@ -198,6 +215,7 @@ export default function AuthForm({ view = "login" }) {
               }
             }}
           />
+          <FieldError value={form.confirmPassword} error={errors.confirmPassword} />
         </div>
       )}
       <button
