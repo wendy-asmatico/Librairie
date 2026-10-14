@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Autocomplete from "../Autocomplete";
 import { openModal } from "../../slices/modalSlice";
 import { logout } from "../../slices/userSlice";
@@ -14,12 +14,14 @@ import searchIcon from "./search.svg";
 import heartIcon from "./heart.svg";
 import bagIcon from "./bag.svg";
 import peopleIcon from "./people.svg";
+import logoutIcon from "../../assets/admin/ic-logout.svg";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const token = useSelector((state) => state.user.token);
   const cartItems = useSelector((state) => state.cart.items);
   const wishlistItems = useSelector((state) => state.wishlist.items);
@@ -59,10 +61,24 @@ export default function Header() {
 
           <div className="flex items-center gap-6 shrink-0">
             {isAuthentificated ? (
-              <Link to="/profile" className="hidden sm:flex items-center gap-2 text-gray-900 font-medium hover:text-[#785E1A]">
-                <img src={peopleIcon} alt="" className="w-5 h-5" />
-                <span className="text-sm font-semibold">Mon Compte</span>
-              </Link>
+              <div className="hidden sm:flex items-center gap-3">
+                <Link to="/profile" className="flex items-center gap-2 text-gray-900 font-medium hover:text-[#785E1A]">
+                  <img src={peopleIcon} alt="" className="w-5 h-5" />
+                  <span className="text-sm font-semibold">Mon Compte</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate("/");
+                    dispatch(logout());
+                  }}
+                  className="flex cursor-pointer items-center rounded-md border border-line p-1.5 transition-colors hover:bg-mint-soft"
+                  aria-label="Se déconnecter"
+                  title="Se déconnecter"
+                >
+                  <img src={logoutIcon} alt="" className="size-4" />
+                </button>
+              </div>
             ) : (
               <button
                 type="button"

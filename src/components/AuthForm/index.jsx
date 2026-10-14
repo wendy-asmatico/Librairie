@@ -1,5 +1,3 @@
-import "./index.css";
-
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -11,6 +9,15 @@ import {
   loginThunk,
   registerThunk,
 } from "../../thunkActionsCreator/userThunks";
+
+// Style des maquettes Connexion / Inscription de Lisa (nodes 200:2 et 211:38)
+const FIELD = "flex flex-col gap-2";
+const LABEL = "font-sans text-[13px] leading-[18px] font-semibold text-[#444841]";
+const INPUT =
+  "w-full rounded-lg border border-line bg-[#f8fbf6] px-4 py-[13px] font-sans text-sm leading-5 text-[#444841] outline-none transition-colors placeholder:text-danger focus:border-sage focus:ring-2 focus:ring-sage/30";
+const INPUT_ERROR = "border-danger focus:border-danger focus:ring-danger/20";
+const BUTTON =
+  "flex-1 cursor-pointer rounded-lg py-4 font-sans text-sm leading-[18px] font-semibold tracking-[0.56px] transition-colors";
 
 export default function AuthForm({ view = "login" }) {
   const dispatch = useDispatch();
@@ -91,23 +98,23 @@ export default function AuthForm({ view = "login" }) {
   };
 
   return (
-    <form className="auth-form">
-      <h2>
+    <form className="flex w-[440px] max-w-full flex-col gap-5 font-sans">
+      <h2 className="font-['Cormorant_Garamond',serif] text-[38px] leading-[44px] font-semibold text-forest-deep">
         {view === "login"
           ? "Bonjour"
           : view === "register"
             ? "Créer un compte"
             : "Confirmez votre mot de passe"}
       </h2>
-      <div className="auth-form__field">
-        <label htmlFor="username">Nom d'utilisateur</label>
+      <div className={FIELD}>
+        <label htmlFor="username" className={LABEL}>Nom d'utilisateur</label>
         <input
           id="username"
           name="username"
           type="text"
           value={form.username}
           onChange={handleChange}
-          className={errors.username ? "input--error" : ""}
+          className={`${INPUT} ${errors.username ? INPUT_ERROR : ""}`}
           autoComplete="username"
           placeholder={errors.username}
           title={errors.username}
@@ -121,15 +128,15 @@ export default function AuthForm({ view = "login" }) {
         />
       </div>
       {view === "register" && (
-        <div className="auth-form__field">
-          <label htmlFor="email">E-mail</label>
+        <div className={FIELD}>
+          <label htmlFor="email" className={LABEL}>E-mail</label>
           <input
             id="email"
             name="email"
             type="email"
             value={form.email}
             onChange={handleChange}
-            className={errors.email ? "input--error" : ""}
+            className={`${INPUT} ${errors.email ? INPUT_ERROR : ""}`}
             autoComplete="email"
             placeholder={errors.email}
             title={errors.email}
@@ -142,15 +149,15 @@ export default function AuthForm({ view = "login" }) {
           />
         </div>
       )}
-      <div className="auth-form__field">
-        <label htmlFor="password">Mot de passe</label>
+      <div className={FIELD}>
+        <label htmlFor="password" className={LABEL}>Mot de passe</label>
         <input
           id="password"
           name="password"
           type="password"
           value={form.password}
           onChange={handleChange}
-          className={errors.password ? "input--error" : ""}
+          className={`${INPUT} ${errors.password ? INPUT_ERROR : ""}`}
           autoComplete={view === "login" ? "current-password" : "new-password"}
           placeholder={errors.password}
           title={errors.password}
@@ -163,15 +170,15 @@ export default function AuthForm({ view = "login" }) {
         />
       </div>
       {view === "register" && (
-        <div className="auth-form__field">
-          <label htmlFor="confirmPassword">Confirmez le mot de passe</label>
+        <div className={FIELD}>
+          <label htmlFor="confirmPassword" className={LABEL}>Confirmez le mot de passe</label>
           <input
             id="confirmPassword"
             name="confirmPassword"
             type="password"
             value={form.confirmPassword}
             onChange={handleChange}
-            className={errors.confirmPassword ? "input--error" : ""}
+            className={`${INPUT} ${errors.confirmPassword ? INPUT_ERROR : ""}`}
             autoComplete="new-password"
             autoFocus
             placeholder={errors.confirmPassword}
@@ -187,14 +194,14 @@ export default function AuthForm({ view = "login" }) {
       )}
       <button
         type="button"
-        className="auth-form__forgot"
+        className="order-2 cursor-pointer self-center font-sans text-xs leading-[18px] font-semibold text-gold hover:text-gold-dark"
         onClick={() => dispatch(updateModalProps({ view: "reset-password" }))}
       >
         Mot de passe oublié ?
       </button>
-      <div className="auth-form__buttons">
+      <div className="order-1 flex flex-wrap gap-3">
         <button
-          className="login"
+          className={`${BUTTON} bg-gold text-white shadow-[0_6px_16px_-4px_rgba(120,89,26,0.25)] hover:bg-gold-dark`}
           type="button"
           onClick={(e) => {
             dispatch(updateModalProps({ view: "login" }));
@@ -205,7 +212,7 @@ export default function AuthForm({ view = "login" }) {
         </button>
         <button
           type="button"
-          className="signin"
+          className={`${BUTTON} bg-sage text-forest-deep hover:bg-sage-hover`}
           onClick={(e) => {
             dispatch(updateModalProps({ view: "register" }));
             handleSubmit(e, "register");
