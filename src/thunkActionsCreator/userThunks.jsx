@@ -1,21 +1,52 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
+async function requestAuthJson(url, options, fallbackMessage) {
+  let response;
+  try {
+    response = await fetch(url, options);
+  } catch {
+    throw new Error(
+      "Impossible de joindre WordPress. Vérifiez que WAMP est démarré et que l’URL API est correcte.",
+    );
+  }
+
+  const body = await response.text();
+  let data = null;
+  if (body) {
+    try {
+      data = JSON.parse(body);
+    } catch {
+      throw new Error(
+        `WordPress a renvoyé une réponse invalide (HTTP ${response.status}). Vérifiez les journaux PHP et l’URL API.`,
+      );
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || `${fallbackMessage} (HTTP ${response.status}).`);
+  }
+  if (!data) {
+    throw new Error(
+      `WordPress a renvoyé une réponse vide (HTTP ${response.status}). Vérifiez l’endpoint REST.`,
+    );
+  }
+
+  return data;
+}
+
 export const loginThunk = createAsyncThunk(
   "user/login",
   async ({ username, password, remember = true }, thunkAPI) => {
     try {
-      const response = await fetch(
+      const data = await requestAuthJson(
         `${import.meta.env.VITE_API_URL}/wp-json/jwt-auth/v1/token`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password }),
         },
+        "Identifiants incorrects.",
       );
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Identifiants incorrects.");
-      }
       thunkAPI.dispatch(fetchCurrentCustomerThunk(data.token));
       thunkAPI.dispatch(fetchCurrentUserOrdersThunk(data.token));
       return {
@@ -160,7 +191,7 @@ export const registerThunk = createAsyncThunk(
       // que le CORS : WordPress ne permet pas la creation de compte anonyme
       // via son API par defaut. On attend en reponse un token, comme pour le
       // login, pour eviter un deuxieme aller-retour reseau.
-      const response = await fetch(
+      const data = await requestAuthJson(
         `${import.meta.env.VITE_API_URL}/wp-json/custom/v1/register`,
         {
           method: "POST",
@@ -168,11 +199,8 @@ export const registerThunk = createAsyncThunk(
           // details : prénom, nom, civilité, newsletter (page Inscription)
           body: JSON.stringify({ username, email, password, ...details }),
         },
+        "Impossible de créer le compte.",
       );
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Impossible de creer le compte.");
-      }
       thunkAPI.dispatch(fetchCurrentCustomerThunk(data.token));
       thunkAPI.dispatch(fetchCurrentUserOrdersThunk(data.token));
       return {

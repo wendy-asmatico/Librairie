@@ -25,6 +25,15 @@ function headless_register_rate_limit_check()
 
 function headless_register_user($request)
 {
+    $routes = rest_get_server()->get_routes();
+    if (!isset($routes['/jwt-auth/v1/token'])) {
+        return new WP_Error(
+            'jwt_auth_unavailable',
+            'Le service d’authentification JWT n’est pas installé ou activé.',
+            ['status' => 503]
+        );
+    }
+
     if (!headless_register_rate_limit_check()) {
         return new WP_Error('too_many_requests', 'Trion depuis cette adresse. Reessayez plus tard.', ['status' => 429]);
     }

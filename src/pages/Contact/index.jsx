@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import ContactHero from "../../components/ContactHero";
-import CatalogueTrust from "../../components/CatalogueTrust";
+import Trust from "../../components/Trust";
 import ContactForm, { SUBJECTS } from "../../components/ContactForm";
 import ContactInfo from "../../components/ContactInfo";
 import ContactShop from "../../components/ContactShop";
@@ -24,7 +24,7 @@ export default function Contact() {
   return (
     <div className="bg-ivory">
       <ContactHero onWrite={scrollToForm} />
-      <CatalogueTrust />
+      <Trust />
 
       <section className="px-4 pt-10 pb-12 lg:px-12 lg:pt-16 lg:pb-[72px]">
         <div className="mx-auto grid max-w-[1184px] items-start gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">

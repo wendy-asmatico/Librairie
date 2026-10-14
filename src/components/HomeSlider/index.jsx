@@ -1,8 +1,6 @@
-import "./index.css";
 
 import arrowLeft from "./arrow_left.png";
 import arrowRight from "./arrow_right.png";
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 

@@ -1,9 +1,8 @@
-import icStore from "../../assets/maktaba/ic-store.svg";
-import icBox from "../../assets/maktaba/ic-box.svg";
-import icLock from "../../assets/maktaba/ic-lock.svg";
-import icSupport from "../../assets/maktaba/ic-support.svg";
+import icStore from "../../assets/images/ic-store.svg";
+import icBox from "../../assets/images/ic-box.svg";
+import icLock from "../../assets/images/ic-lock.svg";
+import icSupport from "../../assets/images/ic-support.svg";
 
-// Bandeau de réassurance — node 195:5
 const ITEMS = [
   { label: "Retrait Gratuit en Boutique", icon: icStore, size: "h-[18px] w-[20.094px]" },
   { label: "Livraison Soignée", icon: icBox, size: "size-5" },
@@ -11,7 +10,7 @@ const ITEMS = [
   { label: "Conseil & Accompagnement", icon: icSupport, size: "h-[18px] w-5" },
 ];
 
-export default function CatalogueTrust() {
+export default function Trust() {
   return (
     <section className="bg-white" aria-label="Nos engagements">
       <ul className="mx-auto grid max-w-[1109px] list-none grid-cols-2 gap-x-4 gap-y-3 px-4 py-[18px] lg:flex lg:min-h-[77px] lg:items-center lg:justify-between lg:p-0">
