@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 
-import CatalogueTrust from "../../components/CatalogueTrust";
+import Trust from "../../components/Trust";
 import AccountAside from "../../components/AccountAside";
 import {
   AccountAlert,
@@ -133,7 +133,7 @@ export default function Login() {
           />
         </div>
       </section>
-      <CatalogueTrust />
+      <Trust />
     </div>
   );
 }
