@@ -10,7 +10,7 @@ import CatalogueCategories from "../../components/CatalogueCategories";
 import { fetchCategoriesThunk } from "../../thunkActionsCreator/categoriesThunks";
 import { setFilters } from "../../slices/filtersSlice";
 import { decodeHtml } from "../../utils/decodeHtml";
-import { findCategory } from "../../utils/categoryTree";
+import { categoryPath, findCategory } from "../../utils/categoryTree";
 import { rayonBySlug } from "../../brand";
 
 export default function Store() {
@@ -19,28 +19,24 @@ export default function Store() {
   const categories = useSelector((state) => state.categories.items);
   const { list, loading } = useSelector((state) => state.products);
   const listingRef = useRef(null);
-  const firstRender = useRef(true);
+  const previousCategory = useRef(filters.category);
 
   const category = findCategory(categories, filters.category);
   const rayon = !category ? rayonBySlug(filters.category) : null;
+  const categorySlug = rayon?.slug || categoryPath(categories, filters.category)[0]?.slug;
   const total = list?.total;
 
   useEffect(() => {
     if (categories.length === 0) dispatch(fetchCategoriesThunk());
   }, [dispatch, categories.length]);
 
-  // Quand les filtres changent, on remonte au début de la liste
-  // (et non tout en haut de la page) pour garder la barre de filtres visible.
+  // Un changement de rayon affiche sa bannière avant les résultats filtrés.
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      return;
+    if (previousCategory.current !== filters.category) {
+      previousCategory.current = filters.category;
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    const el = listingRef.current;
-    if (el && el.getBoundingClientRect().top < 0) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [filters]);
+  }, [filters.category]);
 
   const scrollToListing = () =>
     listingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -64,7 +60,12 @@ export default function Store() {
 
   return (
     <div className="w-full bg-ivory pb-10">
-      <CatalogueHero onDiscover={showNewest} onBrowse={showBooks} />
+      <CatalogueHero
+        categorySlug={categorySlug}
+        onDiscover={showNewest}
+        onBrowse={showBooks}
+        onScrollToListing={scrollToListing}
+      />
       <Trust />
 
       <section

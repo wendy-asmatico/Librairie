@@ -116,7 +116,7 @@ export default function Kids() {
   const select = (key) => {
     setActive(key);
     if (listingRef.current?.getBoundingClientRect().top < 0) {
-      listingRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
