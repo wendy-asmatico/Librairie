@@ -10,16 +10,28 @@ import {
   deleteCurrentUserThunk,
 } from "../thunkActionsCreator/userThunks";
 
+// « Se souvenir de moi » : jeton gardé dans localStorage, sinon le temps de l'onglet
+const TOKEN_KEY = "wc_user_token";
+const readToken = () =>
+  typeof window !== "undefined"
+    ? localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY)
+    : null;
+const saveToken = (token, remember = true) => {
+  clearToken();
+  (remember ? localStorage : sessionStorage).setItem(TOKEN_KEY, token);
+};
+const clearToken = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
+};
+
 export const userSlice = createSlice({
   name: "user",
   initialState: {
     profile: null,
     customer: null,
     orders: [],
-    token:
-      typeof window !== "undefined"
-        ? localStorage.getItem("wc_user_token")
-        : null,
+    token: readToken(),
     loading: false,
     error: null,
   },
@@ -29,7 +41,7 @@ export const userSlice = createSlice({
       state.customer = null;
       state.orders = [];
       state.token = null;
-      localStorage.removeItem("wc_user_token");
+      clearToken();
     },
   },
   extraReducers: (builder) => {
@@ -42,7 +54,7 @@ export const userSlice = createSlice({
         state.loading = false;
         state.token = action.payload.token;
         state.profile = action.payload.profile;
-        localStorage.setItem("wc_user_token", action.payload.token);
+        saveToken(action.payload.token, action.payload.remember);
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
@@ -56,7 +68,7 @@ export const userSlice = createSlice({
         state.loading = false;
         state.token = action.payload.token;
         state.profile = action.payload.profile;
-        localStorage.setItem("wc_user_token", action.payload.token);
+        saveToken(action.payload.token);
       })
       .addCase(registerThunk.rejected, (state, action) => {
         state.loading = false;
@@ -136,7 +148,7 @@ export const userSlice = createSlice({
         state.orders = [];
         state.error = null;
 
-        localStorage.removeItem("wc_user_token");
+        clearToken();
       })
       .addCase(deleteCurrentUserThunk.rejected, (state, action) => {
         state.loading = false;

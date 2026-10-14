@@ -38,6 +38,28 @@
     font-size: 5lvh;
     color: var(--text-color, #333);
   }
+  /* Modale Connexion / Inscription : la carte de la maquette sert de cadre */
+  .modal-content.modal-content--bare {
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    max-width: min(1184px, calc(100vw - 32px));
+    max-height: 92lvh;
+    border-radius: 24px;
+  }
+  .modal-content.modal-content--bare > :nth-child(2) {
+    margin-top: 0;
+  }
+  .modal-content--bare .modal-close-btn {
+    top: 16px;
+    right: 20px;
+    z-index: 1;
+    font-size: 28px;
+    @media (min-width: 1024px) {
+      color: #fff;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    }
+  }
   .modal-loader {
     display: flex;
     justify-content: center;
