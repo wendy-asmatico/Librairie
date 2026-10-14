@@ -84,7 +84,12 @@ export default function AuthForm({ view = "login" }) {
     if (method === "login") {
       dispatch(
         loginThunk({ username: form.username.trim(), password: form.password }),
-      );
+      )
+        .unwrap()
+        .then((data) =>
+          dispatch(showToast(`Bienvenue ${data.profile.displayName || ""}, vous êtes connecté.`)),
+        )
+        .catch(() => {});
     }
     if (method === "register") {
       dispatch(
@@ -93,12 +98,15 @@ export default function AuthForm({ view = "login" }) {
           email: form.email.trim(),
           password: form.password,
         }),
-      );
+      )
+        .unwrap()
+        .then(() => dispatch(showToast("Votre compte a bien été créé, vous êtes connecté.")))
+        .catch(() => {});
     }
   };
 
   return (
-    <form className="flex w-[440px] max-w-full flex-col gap-5 font-sans">
+    <form className="flex w-[440px] max-w-full flex-col gap-4 font-sans">
       <h2 className="font-['Cormorant_Garamond',serif] text-[38px] leading-[44px] font-semibold text-forest-deep">
         {view === "login"
           ? "Bonjour"

@@ -15,12 +15,15 @@ function headless_register_rate_limit_check()
 
     $attempts = (int) get_transient($key);
 
-    if ($attempts >= 5) {
-        return false;
-    }
+    return $attempts < 5;
+}
 
-    set_transient($key, $attempts + 1, HOUR_IN_SECONDS);
-    return true;
+// Seuls les comptes réellement créés comptent : une erreur de saisie ne bloque pas
+function headless_register_rate_limit_hit()
+{
+    $ip  = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
+    $key = 'headless_register_' . md5($ip);
+    set_transient($key, (int) get_transient($key) + 1, HOUR_IN_SECONDS);
 }
 
 function headless_register_user($request)
@@ -35,7 +38,7 @@ function headless_register_user($request)
     }
 
     if (!headless_register_rate_limit_check()) {
-        return new WP_Error('too_many_requests', 'Trion depuis cette adresse. Reessayez plus tard.', ['status' => 429]);
+        return new WP_Error('too_many_requests', 'Trop de tentatives d’inscription depuis cette adresse. Réessayez dans une heure.', ['status' => 429]);
     }
 
     $username = sanitize_user($request->get_param('username'));
@@ -51,14 +54,19 @@ function headless_register_user($request)
     if (strlen($password) < 8) {
         return new WP_Error('weak_password', 'Le mot de passe doit contenir au moins 8 caracteres.', ['status' => 400]);
     }
-    if (username_exists($username) || email_exists($email)) {
-        return new WP_Error('registration_unavailable', 'Impossible de creer ce compte avec ces informations.', ['status' => 409]);
+    // Messages précis : la connexion indique déjà si un identifiant ou un email existe
+    if (username_exists($username)) {
+        return new WP_Error('username_exists', 'Ce nom d’utilisateur est déjà pris, choisissez-en un autre.', ['status' => 409]);
+    }
+    if (email_exists($email)) {
+        return new WP_Error('email_exists', 'Un compte existe déjà avec cette adresse email : connectez-vous.', ['status' => 409]);
     }
 
     $user_id = wp_create_user($username, $password, $email);
     if (is_wp_error($user_id)) {
         return new WP_Error('registration_failed', $user_id->get_error_message(), ['status' => 500]);
     }
+    headless_register_rate_limit_hit();
 
     $token_request = new WP_REST_Request('POST', '/jwt-auth/v1/token');
     $token_request->set_param('username', $username);

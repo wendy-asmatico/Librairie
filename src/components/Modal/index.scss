@@ -19,12 +19,12 @@
     // max-width: 420px;
     max-width: 80%;
     max-height: 80%;
-    overflow-y: hidden;
+    overflow-y: auto;
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     animation: slideUp 0.25s ease;
     > :nth-child(2) {
-      margin-top: 7lvh;
+      margin-top: 3lvh;
     }
   }
   .modal-close-btn {
