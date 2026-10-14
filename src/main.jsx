@@ -27,6 +27,8 @@ import Wishlist from "./pages/Wishlist";
 import BlogPage from "./pages/Blog";
 import SinglePost from "./pages/SinglePost";
 import Contact from "./pages/Contact";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import LegalMentions from "./pages/LegalMentions";
 import CGU from "./pages/CGU";
 import CGV from "./pages/CGV";
@@ -78,6 +80,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/panier" element={<Cart />} />
             <Route path="/commande" element={<Checkout />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/connexion" element={<Login />} />
+            <Route path="/inscription" element={<Register />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/blog/:slug" element={<SinglePost />} />

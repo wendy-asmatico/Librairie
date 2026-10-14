@@ -2,7 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const loginThunk = createAsyncThunk(
   "user/login",
-  async ({ username, password }, thunkAPI) => {
+  async ({ username, password, remember = true }, thunkAPI) => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/wp-json/jwt-auth/v1/token`,
@@ -20,6 +20,7 @@ export const loginThunk = createAsyncThunk(
       thunkAPI.dispatch(fetchCurrentUserOrdersThunk(data.token));
       return {
         token: data.token,
+        remember,
         profile: {
           email: data.user_email,
           displayName: data.user_display_name,
@@ -153,7 +154,7 @@ export const fetchCurrentUserOrdersThunk = createAsyncThunk(
 
 export const registerThunk = createAsyncThunk(
   "user/register",
-  async ({ username, email, password }, thunkAPI) => {
+  async ({ username, email, password, ...details }, thunkAPI) => {
     try {
       // Endpoint custom a exposer cote WordPress (mu-plugin), au meme titre
       // que le CORS : WordPress ne permet pas la creation de compte anonyme
@@ -164,7 +165,8 @@ export const registerThunk = createAsyncThunk(
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, email, password }),
+          // details : prénom, nom, civilité, newsletter (page Inscription)
+          body: JSON.stringify({ username, email, password, ...details }),
         },
       );
       const data = await response.json();

@@ -54,6 +54,9 @@ export default function MobileMenu({ isOpen, onClose, cartBadgeValue, token, onL
             <span>PANIER</span>
             <span>{cartBadgeValue}</span>
           </Link>
+          <Link to={token ? "/profile" : "/connexion"} onClick={onClose} className="block font-medium text-gray-800">
+            {token ? "Mon compte" : "Connexion / Inscription"}
+          </Link>
           {token && (
             <button
               onClick={() => { onLogout(); onClose(); }}

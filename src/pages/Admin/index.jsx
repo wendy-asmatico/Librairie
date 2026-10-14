@@ -18,7 +18,6 @@ import useDashboardData from "../../admin/useDashboardData";
 import { WP_ADMIN_URL } from "../../admin/api";
 import { fetchCurrentUserThunk } from "../../thunkActionsCreator/userThunks";
 import { logout } from "../../slices/userSlice";
-import { openModal } from "../../slices/modalSlice";
 
 import icSearch from "../../assets/admin/ic-search.svg";
 import icCalendar from "../../assets/admin/ic-calendar.svg";
@@ -81,13 +80,12 @@ export default function AdminDashboard() {
         title="Connexion requise"
         text="Connectez-vous avec un compte administrateur pour accéder au tableau de bord."
         action={
-          <button
-            type="button"
-            onClick={() => dispatch(openModal({ name: "auth", props: { view: "login" } }))}
+          <Link
+            to="/connexion?redirect=/admin"
             className="mt-2 cursor-pointer rounded-lg bg-gold px-5 py-3 text-[13px] font-semibold text-white hover:bg-gold-dark"
           >
             Se connecter
-          </button>
+          </Link>
         }
       />
     );

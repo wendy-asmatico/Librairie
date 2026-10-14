@@ -29,9 +29,13 @@ function headless_register_user($request)
         return new WP_Error('too_many_requests', 'Trion depuis cette adresse. Reessayez plus tard.', ['status' => 429]);
     }
 
-    $username = sanitize_user($request->get_param('username'));
     $email    = sanitize_email($request->get_param('email'));
     $password = (string) $request->get_param('password');
+    $username = sanitize_user((string) $request->get_param('username'), true);
+    if ($username === '' && is_email($email)) {
+        // Page Inscription : pas d'identifiant demandé, on le déduit de l'email
+        $username = headless_register_username_from_email($email);
+    }
 
     if (empty($username) || empty($email) || empty($password)) {
         return new WP_Error('missing_fields', 'Identifiant, email et mot de passe sont requis.', ['status' => 400]);
@@ -51,6 +55,27 @@ function headless_register_user($request)
         return new WP_Error('registration_failed', $user_id->get_error_message(), ['status' => 500]);
     }
 
+    // Champs de la page Inscription (facultatifs pour l'ancien formulaire)
+    $first_name = sanitize_text_field((string) $request->get_param('first_name'));
+    $last_name  = sanitize_text_field((string) $request->get_param('last_name'));
+    if ($first_name !== '' || $last_name !== '') {
+        wp_update_user([
+            'ID'           => $user_id,
+            'first_name'   => $first_name,
+            'last_name'    => $last_name,
+            'display_name' => trim($first_name . ' ' . $last_name) ?: $username,
+        ]);
+        update_user_meta($user_id, 'billing_first_name', $first_name);
+        update_user_meta($user_id, 'billing_last_name', $last_name);
+    }
+    update_user_meta($user_id, 'billing_email', $email);
+
+    $civility = $request->get_param('civility');
+    if (in_array($civility, ['madame', 'monsieur'], true)) {
+        update_user_meta($user_id, 'civility', $civility);
+    }
+    update_user_meta($user_id, 'newsletter_optin', filter_var($request->get_param('newsletter'), FILTER_VALIDATE_BOOLEAN) ? 1 : 0);
+
     $token_request = new WP_REST_Request('POST', '/jwt-auth/v1/token');
     $token_request->set_param('username', $username);
     $token_request->set_param('password', $password);
@@ -61,4 +86,15 @@ function headless_register_user($request)
     }
 
     return rest_ensure_response($token_response->get_data());
+}
+
+function headless_register_username_from_email($email)
+{
+    $base = sanitize_user(strstr($email, '@', true), true) ?: 'client';
+    $username = $base;
+    $suffix = 2;
+    while (username_exists($username)) {
+        $username = $base . $suffix++;
+    }
+    return $username;
 }
