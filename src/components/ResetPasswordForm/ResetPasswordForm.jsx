@@ -24,14 +24,14 @@ export default function ResetPasswordForm() {
 
   return (
     <>
-      <h1>Mot de passe oublié</h1>
-      <p className="auth-modal__subtitle">
+      <h1 className="font-['Cormorant_Garamond',serif] text-[38px] leading-[44px] font-semibold text-forest-deep">Mot de passe oublié</h1>
+      <p className="mt-2 font-sans text-sm leading-[22px] text-[#444841]">
         Recevez un lien pour réinitialiser votre mot de passe
       </p>
 
-      <form className="auth-form" onSubmit={handleSubmit} noValidate>
-        <div className="auth-form__field">
-          <label htmlFor="reset-email">Votre email</label>
+      <form className="mt-6 flex w-[440px] max-w-full flex-col gap-5 font-sans" onSubmit={handleSubmit} noValidate>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="reset-email" className="font-sans text-[13px] leading-[18px] font-semibold text-[#444841]">Votre email</label>
           <input
             id="reset-email"
             type="email"
@@ -39,20 +39,21 @@ export default function ResetPasswordForm() {
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
             required
+            className="w-full rounded-lg border border-line bg-[#f8fbf6] px-4 py-[13px] font-sans text-sm leading-5 text-[#444841] outline-none transition-colors focus:border-sage focus:ring-2 focus:ring-sage/30"
           />
         </div>
 
-        {message && <p className="auth-form__server-error">{message}</p>}
+        {message && <p className="rounded-lg bg-mint px-4 py-3 font-sans text-[13px] leading-5 text-forest-deep">{message}</p>}
 
-        <button className="auth-form__submit" type="submit">
+        <button className="cursor-pointer rounded-lg bg-gold py-4 font-sans text-sm leading-[18px] font-semibold tracking-[0.56px] text-white shadow-[0_6px_16px_-4px_rgba(120,89,26,0.25)] transition-colors hover:bg-gold-dark" type="submit">
           Envoyer le lien
         </button>
       </form>
 
-      <p className="auth-modal__footer">
+      <p className="mt-5 text-center">
         <button
           type="button"
-          className="auth-modal__link"
+          className="cursor-pointer font-sans text-xs leading-[18px] font-semibold text-gold hover:text-gold-dark"
           onClick={() => dispatch(updateModalProps({ view: "login" }))}
         >
           Retour à la connexion
