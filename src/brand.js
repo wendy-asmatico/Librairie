@@ -11,6 +11,7 @@ export const BRAND = {
   phone: "+33 1 42 68 00 00",
   phoneHref: "tel:+33142680000",
   whatsappHref: "https://wa.me/33142680000",
+  email: "contact@maktabaelhikma.fr",
   address: "14 Boulevard de la Sagesse, 75011 Paris",
   hours: "Du Mardi au Dimanche : 10h30 - 19h30",
   favicon: logoRound,

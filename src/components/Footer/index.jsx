@@ -24,7 +24,7 @@ const SERVICES = [
   { label: "Retrait gratuit à notre boutique", to: "/contact" },
   { label: "Modalités et délais d'expédition", to: "/cgv" },
   { label: "Suivre l'état de ma commande", to: "/profile" },
-  { label: "Devis & Coffrets sur mesure pro/famille", to: "/contact" },
+  { label: "Devis & Coffrets sur mesure pro/famille", to: "/contact?objet=devis" },
   { label: "Centre d'Aide & Foire aux questions", to: "/contact" },
 ];
 

@@ -31,6 +31,7 @@ import LegalMentions from "./pages/LegalMentions";
 import CGU from "./pages/CGU";
 import CGV from "./pages/CGV";
 import Error404 from "./pages/Error404";
+import AdminDashboard from "./pages/Admin";
 
 import Layout from "./components/Layout/layout";
 import ThemeApplier from "./components/ThemeApplier";
@@ -63,6 +64,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <ThemeApplier />
 
         <Routes>
+          {/* Espace administrateur : sa propre mise en page (sans en-tête ni pied de boutique) */}
+          <Route path="/admin" element={<AdminDashboard />} />
+
           {/* Layout parent qui englobe toutes les pages */}
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
