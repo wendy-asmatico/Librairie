@@ -1,7 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { deleteCurrentUserThunk } from "../../thunkActionsCreator/userThunks";
-import "./index.css";
 
 export default function DeleteAccountButton() {
   const dispatch = useDispatch();
@@ -33,16 +32,17 @@ export default function DeleteAccountButton() {
   };
 
   return (
-    <div className="delete-account-section">
+    <div>
       <button
+        type="button"
         onClick={handleDelete}
         disabled={loading}
-        style={{ backgroundColor: "red", color: "white" }}
+        className="min-h-11 rounded-control border border-danger px-5 text-sm font-semibold text-danger transition-colors hover:bg-danger hover:text-white disabled:opacity-60"
       >
         {loading ? "Suppression en cours..." : "Supprimer mon compte"}
       </button>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-danger">{error}</p>}
     </div>
   );
 }

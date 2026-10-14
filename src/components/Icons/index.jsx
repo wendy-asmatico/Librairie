@@ -52,6 +52,42 @@ export const LockIcon = (props) => (
   </Icon>
 );
 
+export const HeartIcon = (props) => (
+  <Icon {...props}>
+    <path d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.3 4.3 0 0 1 12 6.5a4.3 4.3 0 0 1 8.8 2.3Z" />
+  </Icon>
+);
+
+export const MapPinIcon = (props) => (
+  <Icon {...props}>
+    <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+    <circle cx="12" cy="10" r="2.5" />
+  </Icon>
+);
+
+export const PackageIcon = (props) => (
+  <Icon {...props}>
+    <path d="m12 3 9 5v8l-9 5-9-5V8l9-5Z" />
+    <path d="m3.5 8.5 8.5 5 8.5-5M12 13.5V21M7.5 5.5l9 5" />
+  </Icon>
+);
+
+export const UserIcon = (props) => (
+  <Icon {...props}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0 1 16 0" />
+  </Icon>
+);
+
+export const ViewGridIcon = (props) => (
+  <Icon {...props}>
+    <rect x="3" y="3" width="8" height="8" rx="1" />
+    <rect x="13" y="3" width="8" height="5" rx="1" />
+    <rect x="13" y="10" width="8" height="11" rx="1" />
+    <rect x="3" y="13" width="8" height="8" rx="1" />
+  </Icon>
+);
+
 export const MinusIcon = (props) => (
   <Icon {...props}>
     <path d="M5 12h14" />
