@@ -1,6 +1,6 @@
 import "./index.css";
-import active from "./review-active.svg";
-import inactive from "./review-inactive.svg";
+import active from "../../assets/icons/common/rating-star-active.svg";
+import inactive from "../../assets/icons/common/rating-star-inactive.svg";
 
 const AverageRating = ({ avgRating = 0, totalReviews = 0 }) => {
   const normalizedRating = Math.max(0, Math.min(Number(avgRating) || 0, 5));

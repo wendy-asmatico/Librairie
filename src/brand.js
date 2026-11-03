@@ -8,9 +8,9 @@ export const BRAND = {
   tagline: "Librairie & boutique islamique",
   description:
     "Librairie et boutique islamique : Corans, livres, vêtements, parfums et coffrets cadeaux. Retrait gratuit en boutique.",
-  phone: "+33 1 42 68 00 00",
-  phoneHref: "tel:+33142680000",
-  whatsappHref: "https://wa.me/33142680000",
+  phone: "+33 7 83 76 84 17",
+  phoneHref: "tel:+33783768417",
+  whatsappHref: "https://wa.me/33783768417",
   email: "contact@maktabaelhikma.fr",
   address: "14 Boulevard de la Sagesse, 75011 Paris",
   hours: "Du Mardi au Dimanche : 10h30 - 19h30",

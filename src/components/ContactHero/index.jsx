@@ -1,5 +1,5 @@
 import heroImage from "../../assets/contact/hero.jpg";
-import icArrow from "../../assets/contact/ic-arrow.svg";
+import icArrow from "../../assets/icons/common/arrow-right-white.svg";
 import icWhatsapp from "../../assets/contact/ic-whatsapp-gold.svg";
 import { BRAND } from "../../brand";
 

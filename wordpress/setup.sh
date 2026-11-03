@@ -20,7 +20,7 @@ wp rewrite structure '/%postname%/' --hard
 wp rewrite flush --hard
 
 echo "→ Extensions (cf. README)"
-wp plugin install woocommerce woocommerce-gateway-stripe woocommerce-services jwt-authentication-for-wp-rest-api --activate
+wp plugin install advanced-custom-fields woocommerce woocommerce-gateway-stripe woocommerce-services jwt-authentication-for-wp-rest-api --activate
 wp plugin delete hello akismet || true
 wp language plugin install woocommerce fr_FR || true
 
