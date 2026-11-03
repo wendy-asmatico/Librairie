@@ -53,22 +53,27 @@ function headless_register_user($request)
         return new WP_Error('too_many_requests', 'Trop de tentatives d’inscription depuis cette adresse. Réessayez dans une heure.', ['status' => 429]);
     }
 
-    $email    = sanitize_email($request->get_param('email'));
-    $password = (string) $request->get_param('password');
-    $username = sanitize_user((string) $request->get_param('username'), true);
-    if ($username === '' && is_email($email)) {
-        // Maquette Inscription : pas d'identifiant demandé, on le déduit de l'email
-        $username = headless_register_username_from_email($email);
-    }
+    $json_params = $request->get_json_params();
+    $json_params = is_array($json_params) ? $json_params : [];
+    $email       = sanitize_email($json_params['email'] ?? $request->get_param('email'));
+    $password    = (string) ($json_params['password'] ?? $request->get_param('password'));
+    $username    = sanitize_user((string) ($json_params['username'] ?? $request->get_param('username')), true);
 
-    if (empty($username) || empty($email) || empty($password)) {
-        return new WP_Error('missing_fields', 'Identifiant, email et mot de passe sont requis.', ['status' => 400]);
+    if (empty($email)) {
+        return new WP_Error('missing_email', 'L’adresse email est requise.', ['status' => 400]);
+    }
+    if (empty($password)) {
+        return new WP_Error('missing_password', 'Le mot de passe est requis.', ['status' => 400]);
     }
     if (!is_email($email)) {
         return new WP_Error('invalid_email', 'Adresse email invalide.', ['status' => 400]);
     }
     if (strlen($password) < 8) {
         return new WP_Error('weak_password', 'Le mot de passe doit contenir au moins 8 caracteres.', ['status' => 400]);
+    }
+    if ($username === '') {
+        // Le formulaire ne demande pas d’identifiant : on le déduit de l’adresse email.
+        $username = headless_register_username_from_email($email);
     }
     // Messages précis : la connexion indique déjà si un identifiant ou un email existe
     if (username_exists($username)) {
