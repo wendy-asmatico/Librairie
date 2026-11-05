@@ -228,6 +228,11 @@ function headless_contact_submit($request)
     }
 
     $store_email = get_option('woocommerce_email_from_address') ?: get_option('admin_email');
+    $store_email = sanitize_email((string) $store_email);
+    if (!is_email($store_email)) {
+        return new WP_Error('contact_mail_recipient_invalid', 'Adresse e-mail de destination invalide. Vérifiez les réglages WooCommerce/WordPress.', ['status' => 500]);
+    }
+
     $lines = [
         'Objet : ' . $label,
         'Nom : ' . $name,
@@ -242,13 +247,25 @@ function headless_contact_submit($request)
     $lines[] = '';
     $lines[] = $message;
 
-    wp_mail(
+    $sent = wp_mail(
         $store_email,
         '[Contact] ' . $label . ' — ' . $name,
         implode("\n", $lines),
-        ['Reply-To: ' . $name . ' <' . $email . '>'],
+        [
+            'Content-Type: text/plain; charset=UTF-8',
+            'Reply-To: ' . $name . ' <' . $email . '>',
+        ],
         $attachment ? [$attachment['file']] : []
     );
+
+    if (!$sent) {
+        update_post_meta($post_id, 'contact_mail_error', 'wp_mail_failed');
+        return new WP_Error(
+            'contact_mail_failed',
+            'Votre message a bien été enregistré, mais l\'e-mail n\'a pas pu être envoyé. Vérifiez la configuration e-mail du serveur.',
+            ['status' => 502]
+        );
+    }
 
     return rest_ensure_response(['success' => true, 'id' => $post_id]);
 }

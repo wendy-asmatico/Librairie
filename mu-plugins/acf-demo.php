@@ -52,6 +52,12 @@ add_action('rest_api_init', function () {
         'callback'            => 'headless_contact_info_settings',
         'permission_callback' => '__return_true',
     ]);
+
+    register_rest_route('custom/v1', '/topbar-settings', [
+        'methods'             => 'GET',
+        'callback'            => 'headless_topbar_settings',
+        'permission_callback' => '__return_true',
+    ]);
 });
 
 add_filter('acf/location/rule_types', function ($choices) {
@@ -64,6 +70,7 @@ add_filter('acf/location/rule_values/page_slug', function ($choices) {
     $choices['reglages-catalogue'] = 'Réglages catalogue';
     $choices['reglages-enfants'] = 'Réglages enfants';
     $choices['reglages-contact'] = 'Réglages contact';
+    $choices['reglages-header'] = 'Réglages header';
     return $choices;
 });
 
@@ -75,13 +82,23 @@ add_filter('acf/location/rule_match/page_slug', function ($match, $rule, $screen
 }, 10, 3);
 
 add_action('init', function () {
+    if (!get_page_by_path('reglages-header', OBJECT, 'page')) {
+        wp_insert_post([
+            'post_title'   => 'Réglages header',
+            'post_name'    => 'reglages-header',
+            'post_type'    => 'page',
+            'post_status'  => 'publish',
+            'post_content' => '',
+        ]);
+    }
+
     if (!get_page_by_path('reglages-contact', OBJECT, 'page')) {
         wp_insert_post([
-            'post_title'  => 'Réglages contact',
-            'post_name'   => 'reglages-contact',
-            'post_type'   => 'page',
-            'post_status' => 'publish',
-            'post_content'=> '',
+            'post_title'   => 'Réglages contact',
+            'post_name'    => 'reglages-contact',
+            'post_type'    => 'page',
+            'post_status'  => 'publish',
+            'post_content' => '',
         ]);
     }
 });
@@ -290,7 +307,7 @@ add_action('acf/init', function () {
     $contact_fields = [
         ['contact_phone_kicker', 'Carte téléphone — Intitulé', 'SERVICE CLIENT', 'text'],
         ['contact_phone', 'Carte téléphone — Numéro', '+33 1 42 68 00 00', 'text'],
-        ['contact_phone_href', 'Carte téléphone — Lien', 'tel:+33142680000', 'url'],
+        ['contact_phone_href', 'Carte téléphone — Lien', 'tel:+33142680000', 'text'],
         ['contact_phone_note', 'Carte téléphone — Note', 'Du mardi au dimanche · 10h30 – 19h30', 'text'],
         ['contact_email_kicker', 'Carte email — Intitulé', 'PAR EMAIL', 'text'],
         ['contact_email', 'Carte email — Adresse', 'contact@maktabaelhikma.fr', 'email'],
@@ -299,19 +316,19 @@ add_action('acf/init', function () {
         ['contact_whatsapp_title', 'WhatsApp — Titre', 'Un conseil immédiat ?', 'text'],
         ['contact_whatsapp_description', 'WhatsApp — Description', 'Une photo d’un livre, une question sur la taille d’un qamis ou une idée de coffret : un libraire vous répond en direct sur WhatsApp.', 'textarea'],
         ['contact_whatsapp_button_text', 'WhatsApp — Bouton', 'Écrire sur WhatsApp', 'text'],
-        ['contact_whatsapp_url', 'WhatsApp — Lien', 'https://wa.me/33142680000', 'url'],
+        ['contact_whatsapp_url', 'WhatsApp — Lien', 'https://wa.me/33142680000', 'text'],
         ['contact_faq_kicker', 'FAQ — Intitulé', 'QUESTIONS FRÉQUENTES', 'text'],
         ['contact_faq_title', 'FAQ — Titre', 'Votre réponse est peut-être déjà ici', 'text'],
         ['contact_faq_1_label', 'FAQ 1 — Question', 'Modalités et délais d’expédition', 'text'],
-        ['contact_faq_1_url', 'FAQ 1 — Lien', '/cgv', 'url'],
+        ['contact_faq_1_url', 'FAQ 1 — Lien', '/cgv', 'text'],
         ['contact_faq_2_label', 'FAQ 2 — Question', 'Suivre l’état de ma commande', 'text'],
-        ['contact_faq_2_url', 'FAQ 2 — Lien', '/profile', 'url'],
+        ['contact_faq_2_url', 'FAQ 2 — Lien', '/profile', 'text'],
         ['contact_faq_3_label', 'FAQ 3 — Question', 'Retrait gratuit en boutique', 'text'],
         ['contact_faq_3_url', 'FAQ 3 — Lien', '#boutique', 'text'],
         ['contact_faq_4_label', 'FAQ 4 — Question', 'Retours & droit de rétractation', 'text'],
-        ['contact_faq_4_url', 'FAQ 4 — Lien', '/cgv', 'url'],
+        ['contact_faq_4_url', 'FAQ 4 — Lien', '/cgv', 'text'],
         ['contact_faq_all_text', 'FAQ — Texte du lien centre d’aide', 'Voir tout le Centre d’aide →', 'text'],
-        ['contact_faq_all_url', 'FAQ — Lien centre d’aide', '/cgv', 'url'],
+        ['contact_faq_all_url', 'FAQ — Lien centre d’aide', '/cgv', 'text'],
     ];
 
     $contact_acf_fields = [];
@@ -333,6 +350,41 @@ add_action('acf/init', function () {
             'param'    => 'page_slug',
             'operator' => '==',
             'value'    => 'reglages-contact',
+        ]]],
+        'position' => 'normal',
+        'style'    => 'default',
+    ]);
+
+    $topbar_fields = [
+        ['topbar_left_main_text', 'Topbar — Texte gauche principal', 'Livraison sous 1 semaine ou', 'text'],
+        ['topbar_left_highlight_text', 'Topbar — Texte gauche mis en avant', 'Retrait gratuit en boutique', 'text'],
+        ['topbar_left_secondary_text', 'Topbar — Texte gauche secondaire', 'Paiement 100% sécurisé', 'text'],
+        ['topbar_phone_label', 'Topbar — Libellé téléphone', 'Service client :', 'text'],
+        ['topbar_phone_value', 'Topbar — Numéro téléphone', '+33 1 42 68 00 00', 'text'],
+        ['topbar_phone_href', 'Topbar — Lien téléphone', 'tel:+33142680000', 'text'],
+        ['topbar_whatsapp_label', 'Topbar — Libellé WhatsApp', 'WhatsApp Conseil Direct', 'text'],
+        ['topbar_whatsapp_url', 'Topbar — Lien WhatsApp', 'https://wa.me/33142680000', 'text'],
+    ];
+
+    $topbar_acf_fields = [];
+    foreach ($topbar_fields as [$name, $label, $default, $type]) {
+        $topbar_acf_fields[] = [
+            'key'           => 'field_' . $name,
+            'label'         => $label,
+            'name'          => $name,
+            'type'          => $type,
+            'default_value' => $default,
+        ];
+    }
+
+    acf_add_local_field_group([
+        'key'      => 'group_topbar_settings',
+        'title'    => 'Topbar du header',
+        'fields'   => $topbar_acf_fields,
+        'location' => [[[
+            'param'    => 'page_slug',
+            'operator' => '==',
+            'value'    => 'reglages-header',
         ]]],
         'position' => 'normal',
         'style'    => 'default',
@@ -659,17 +711,95 @@ function headless_contact_info_settings()
         'faq_3_label', 'faq_3_url', 'faq_4_label', 'faq_4_url',
         'faq_all_text', 'faq_all_url',
     ];
-    $url_fields = ['phone_href', 'whatsapp_url', 'faq_1_url', 'faq_2_url', 'faq_4_url', 'faq_all_url'];
+    $url_fields = ['whatsapp_url'];
 
     $content = [];
     foreach ($fields as $field) {
         $value = (string) get_field('contact_' . $field, $page->ID);
+        if ($field === 'phone_href') {
+            $content[$field] = headless_normalize_phone_href($value);
+            continue;
+        }
+
+        if (in_array($field, ['faq_1_url', 'faq_2_url', 'faq_3_url', 'faq_4_url', 'faq_all_url'], true)) {
+            $content[$field] = headless_sanitize_contact_link($value);
+            continue;
+        }
+
         $content[$field] = in_array($field, $url_fields, true)
             ? esc_url_raw($value)
             : sanitize_textarea_field($value);
     }
-    // Autorise l’ancre interne #boutique pour la FAQ sur la boutique locale.
-    $content['faq_3_url'] = sanitize_text_field((string) get_field('contact_faq_3_url', $page->ID));
 
     return rest_ensure_response($content);
+}
+
+function headless_topbar_settings()
+{
+    if (!function_exists('get_field')) {
+        return new WP_Error(
+            'acf_not_active',
+            'Advanced Custom Fields doit être activé pour afficher ces réglages.',
+            ['status' => 503]
+        );
+    }
+
+    $page = get_page_by_path('reglages-header', OBJECT, 'page');
+    if (!$page || $page->post_status !== 'publish') {
+        return new WP_Error(
+            'topbar_settings_not_found',
+            'La page publiée « Réglages header » est introuvable.',
+            ['status' => 404]
+        );
+    }
+
+    $content = [
+        'left_main_text' => sanitize_text_field((string) get_field('topbar_left_main_text', $page->ID)),
+        'left_highlight_text' => sanitize_text_field((string) get_field('topbar_left_highlight_text', $page->ID)),
+        'left_secondary_text' => sanitize_text_field((string) get_field('topbar_left_secondary_text', $page->ID)),
+        'phone_label' => sanitize_text_field((string) get_field('topbar_phone_label', $page->ID)),
+        'phone_value' => sanitize_text_field((string) get_field('topbar_phone_value', $page->ID)),
+        'phone_href' => headless_normalize_phone_href((string) get_field('topbar_phone_href', $page->ID)),
+        'whatsapp_label' => sanitize_text_field((string) get_field('topbar_whatsapp_label', $page->ID)),
+        'whatsapp_url' => esc_url_raw((string) get_field('topbar_whatsapp_url', $page->ID)),
+    ];
+
+    return rest_ensure_response($content);
+}
+
+function headless_normalize_phone_href($value)
+{
+    $value = trim((string) $value);
+    if ($value === '') {
+        return '';
+    }
+
+    if (stripos($value, 'tel:') === 0) {
+        return sanitize_text_field($value);
+    }
+
+    if (preg_match('/^[0-9+\-\s().]{1,30}$/', $value)) {
+        $normalized = preg_replace('/[^0-9+]/', '', $value);
+        return 'tel:' . $normalized;
+    }
+
+    return esc_url_raw($value);
+}
+
+function headless_sanitize_contact_link($value)
+{
+    $value = trim((string) $value);
+    if ($value === '') {
+        return '';
+    }
+
+    if ($value[0] === '#') {
+        return sanitize_text_field($value);
+    }
+
+    if ($value[0] === '/') {
+        return sanitize_text_field($value);
+    }
+
+    return esc_url_raw($value);
 }

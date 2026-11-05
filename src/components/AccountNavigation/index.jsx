@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "../../slices/userSlice";
 import {
@@ -14,6 +13,7 @@ const sections = [
   { id: "profile", label: "Mes informations", Icon: UserIcon },
   { id: "addresses", label: "Mes adresses", Icon: MapPinIcon },
   { id: "orders", label: "Mes commandes", Icon: PackageIcon },
+  { id: "wishlist", label: "Mes favoris", Icon: HeartIcon },
 ];
 
 export default function AccountNavigation({ activeSection, onSelect }) {
@@ -41,13 +41,7 @@ export default function AccountNavigation({ activeSection, onSelect }) {
             </button>
           );
         })}
-        <Link
-          to="/wishlist"
-          className="flex shrink-0 items-center gap-3 rounded-control px-3 py-3 text-sm font-medium text-ink-soft transition-colors hover:bg-mint hover:text-forest"
-        >
-          <HeartIcon size={18} />
-          Mes favoris
-        </Link>
+
         <button
           type="button"
           onClick={() => dispatch(logout())}
