@@ -52,6 +52,12 @@ add_action('rest_api_init', function () {
         'callback'            => 'headless_contact_info_settings',
         'permission_callback' => '__return_true',
     ]);
+
+    register_rest_route('custom/v1', '/topbar-settings', [
+        'methods'             => 'GET',
+        'callback'            => 'headless_topbar_settings',
+        'permission_callback' => '__return_true',
+    ]);
 });
 
 add_filter('acf/location/rule_types', function ($choices) {
@@ -64,6 +70,7 @@ add_filter('acf/location/rule_values/page_slug', function ($choices) {
     $choices['reglages-catalogue'] = 'Réglages catalogue';
     $choices['reglages-enfants'] = 'Réglages enfants';
     $choices['reglages-contact'] = 'Réglages contact';
+    $choices['reglages-header'] = 'Réglages header';
     return $choices;
 });
 
@@ -75,13 +82,23 @@ add_filter('acf/location/rule_match/page_slug', function ($match, $rule, $screen
 }, 10, 3);
 
 add_action('init', function () {
+    if (!get_page_by_path('reglages-header', OBJECT, 'page')) {
+        wp_insert_post([
+            'post_title'   => 'Réglages header',
+            'post_name'    => 'reglages-header',
+            'post_type'    => 'page',
+            'post_status'  => 'publish',
+            'post_content' => '',
+        ]);
+    }
+
     if (!get_page_by_path('reglages-contact', OBJECT, 'page')) {
         wp_insert_post([
-            'post_title'  => 'Réglages contact',
-            'post_name'   => 'reglages-contact',
-            'post_type'   => 'page',
-            'post_status' => 'publish',
-            'post_content'=> '',
+            'post_title'   => 'Réglages contact',
+            'post_name'    => 'reglages-contact',
+            'post_type'    => 'page',
+            'post_status'  => 'publish',
+            'post_content' => '',
         ]);
     }
 });
@@ -333,6 +350,41 @@ add_action('acf/init', function () {
             'param'    => 'page_slug',
             'operator' => '==',
             'value'    => 'reglages-contact',
+        ]]],
+        'position' => 'normal',
+        'style'    => 'default',
+    ]);
+
+    $topbar_fields = [
+        ['topbar_left_main_text', 'Topbar — Texte gauche principal', 'Livraison sous 1 semaine ou', 'text'],
+        ['topbar_left_highlight_text', 'Topbar — Texte gauche mis en avant', 'Retrait gratuit en boutique', 'text'],
+        ['topbar_left_secondary_text', 'Topbar — Texte gauche secondaire', 'Paiement 100% sécurisé', 'text'],
+        ['topbar_phone_label', 'Topbar — Libellé téléphone', 'Service client :', 'text'],
+        ['topbar_phone_value', 'Topbar — Numéro téléphone', '+33 1 42 68 00 00', 'text'],
+        ['topbar_phone_href', 'Topbar — Lien téléphone', 'tel:+33142680000', 'text'],
+        ['topbar_whatsapp_label', 'Topbar — Libellé WhatsApp', 'WhatsApp Conseil Direct', 'text'],
+        ['topbar_whatsapp_url', 'Topbar — Lien WhatsApp', 'https://wa.me/33142680000', 'text'],
+    ];
+
+    $topbar_acf_fields = [];
+    foreach ($topbar_fields as [$name, $label, $default, $type]) {
+        $topbar_acf_fields[] = [
+            'key'           => 'field_' . $name,
+            'label'         => $label,
+            'name'          => $name,
+            'type'          => $type,
+            'default_value' => $default,
+        ];
+    }
+
+    acf_add_local_field_group([
+        'key'      => 'group_topbar_settings',
+        'title'    => 'Topbar du header',
+        'fields'   => $topbar_acf_fields,
+        'location' => [[[
+            'param'    => 'page_slug',
+            'operator' => '==',
+            'value'    => 'reglages-header',
         ]]],
         'position' => 'normal',
         'style'    => 'default',
@@ -678,6 +730,39 @@ function headless_contact_info_settings()
             ? esc_url_raw($value)
             : sanitize_textarea_field($value);
     }
+
+    return rest_ensure_response($content);
+}
+
+function headless_topbar_settings()
+{
+    if (!function_exists('get_field')) {
+        return new WP_Error(
+            'acf_not_active',
+            'Advanced Custom Fields doit être activé pour afficher ces réglages.',
+            ['status' => 503]
+        );
+    }
+
+    $page = get_page_by_path('reglages-header', OBJECT, 'page');
+    if (!$page || $page->post_status !== 'publish') {
+        return new WP_Error(
+            'topbar_settings_not_found',
+            'La page publiée « Réglages header » est introuvable.',
+            ['status' => 404]
+        );
+    }
+
+    $content = [
+        'left_main_text' => sanitize_text_field((string) get_field('topbar_left_main_text', $page->ID)),
+        'left_highlight_text' => sanitize_text_field((string) get_field('topbar_left_highlight_text', $page->ID)),
+        'left_secondary_text' => sanitize_text_field((string) get_field('topbar_left_secondary_text', $page->ID)),
+        'phone_label' => sanitize_text_field((string) get_field('topbar_phone_label', $page->ID)),
+        'phone_value' => sanitize_text_field((string) get_field('topbar_phone_value', $page->ID)),
+        'phone_href' => headless_normalize_phone_href((string) get_field('topbar_phone_href', $page->ID)),
+        'whatsapp_label' => sanitize_text_field((string) get_field('topbar_whatsapp_label', $page->ID)),
+        'whatsapp_url' => esc_url_raw((string) get_field('topbar_whatsapp_url', $page->ID)),
+    ];
 
     return rest_ensure_response($content);
 }
