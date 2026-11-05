@@ -40,7 +40,7 @@ export default function useRayonNav(onNavigate) {
         ...(item.sort ? { orderby: "date", order: "desc" } : {}),
       }),
     );
-    navigate("/catalogue");
+    navigate(item.sort ? "/catalogue" : `/catalogue?category=${encodeURIComponent(item.slug || "")}`);
   };
 
   return { items: NAV_ITEMS, isActive, goTo };

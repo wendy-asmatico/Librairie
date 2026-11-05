@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 import { setFilters } from "../../slices/filtersSlice";
 import { decodeHtml } from "../../utils/decodeHtml";
@@ -13,6 +14,7 @@ const CRUMB_BTN =
 
 export default function CatalogueCategories() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const categories = useSelector((state) => state.categories.items);
   const current = useSelector((state) => state.filters.category);
 
@@ -32,14 +34,18 @@ export default function CatalogueCategories() {
       active ? "border-sage bg-sage text-white" : "border-line bg-white text-ink hover:bg-ivory"
     }`;
 
-  const select = (id) => dispatch(setFilters({ category: id ? String(id) : "" }));
+  const select = (id, slug = "") => {
+    dispatch(setFilters({ category: id ? String(id) : "" }));
+    const nextCategory = slug || "";
+    navigate(nextCategory ? `/catalogue?category=${encodeURIComponent(nextCategory)}` : "/catalogue");
+  };
 
   return (
     <nav className="mx-auto mb-6 flex max-w-[1184px] flex-col gap-3" aria-label="Catégories">
       {rayon && (
         <ol className="m-0 flex list-none flex-wrap items-center gap-1.5 p-0">
           <li className="flex items-center gap-1.5">
-            <button type="button" className={CRUMB_BTN} onClick={() => select("")}>
+            <button type="button" className={CRUMB_BTN} onClick={() => select("", "")}>
               Tout le catalogue
             </button>
           </li>
@@ -53,7 +59,7 @@ export default function CatalogueCategories() {
       {path.length > 0 && (
         <ol className="m-0 flex list-none flex-wrap items-center gap-1.5 p-0">
           <li className="flex items-center gap-1.5">
-            <button type="button" className={CRUMB_BTN} onClick={() => select("")}>
+            <button type="button" className={CRUMB_BTN} onClick={() => select("", "")}>
               Tout le catalogue
             </button>
           </li>
@@ -63,7 +69,7 @@ export default function CatalogueCategories() {
               {i === path.length - 1 ? (
                 <strong aria-current="page" className="font-sans text-[13px] leading-[18px] font-bold text-forest">{decodeHtml(cat.name)}</strong>
               ) : (
-                <button type="button" className={CRUMB_BTN} onClick={() => select(cat.id)}>
+                <button type="button" className={CRUMB_BTN} onClick={() => select(cat.id, cat.slug)}>
                   {decodeHtml(cat.name)}
                 </button>
               )}
@@ -75,7 +81,7 @@ export default function CatalogueCategories() {
       {options.length > 0 && (
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:p-0 [&::-webkit-scrollbar]:hidden">
           {!currentCat && (
-            <button type="button" className={chip(true)} onClick={() => select("")}>
+            <button type="button" className={chip(true)} onClick={() => select("", "")}>
               Tout
             </button>
           )}
@@ -85,7 +91,7 @@ export default function CatalogueCategories() {
               type="button"
               className={chip(isSelected(cat, current))}
               aria-pressed={isSelected(cat, current)}
-              onClick={() => select(cat.id)}
+              onClick={() => select(cat.id, cat.slug)}
             >
               {decodeHtml(cat.name)}
               {typeof cat.count === "number" && (
