@@ -187,15 +187,14 @@ export default function AdminDashboard() {
             <img src={btnNotifications} alt="" className="absolute inset-[-2.38%_-4.76%_-7.14%_-4.76%] max-w-none" />
           </a>
 
-          <a
-            href={`${WP_ADMIN_URL}/post-new.php?post_type=product`}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => dispatch(openModal({ name: "modalAddProduct" }))}
             className="flex items-center gap-2 rounded-lg bg-gold px-[18px] py-3 text-[13px] leading-[18px] font-semibold tracking-[0.52px] text-white transition-colors hover:bg-gold-dark"
           >
             <img src={icPlus} alt="" className="size-[15px]" />
             Ajouter un produit
-          </a>
+          </button>
         </header>
 
         {error && (

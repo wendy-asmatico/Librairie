@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { WP_ADMIN_URL } from "../../admin/api";
 import { avatarBg, customerName, initials, isPickup, money, shortDate } from "../../admin/format";
 import { decodeHtml } from "../../utils/decodeHtml";
@@ -44,8 +44,19 @@ const FILTERS = [
 const TH = "text-[10px] leading-[14px] font-bold tracking-[0.8px] text-muted uppercase";
 
 // Dernières commandes — maquette 210:3
-export default function LatestOrders({ orders, search }) {
-  const [filter, setFilter] = useState("all");
+export default function LatestOrders({
+  orders,
+  search,
+  maxRows = 6,
+  showAllLink = true,
+  linkToWp = true,
+  initialFilter = "all",
+}) {
+  const [filter, setFilter] = useState(initialFilter);
+
+  useEffect(() => {
+    setFilter(initialFilter);
+  }, [initialFilter]);
   const term = search.trim().toLowerCase();
   const rows = orders
     .filter(FILTERS.find((f) => f.key === filter).test)
@@ -62,7 +73,7 @@ export default function LatestOrders({ orders, search }) {
         .toLowerCase();
       return hay.includes(term);
     })
-    .slice(0, 6);
+    .slice(0, maxRows);
 
   return (
     <div className="flex flex-col gap-4 overflow-hidden rounded-2xl border border-line bg-white px-6 pt-6 pb-3 font-sans shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
@@ -86,14 +97,16 @@ export default function LatestOrders({ orders, search }) {
             </button>
           ))}
         </div>
-        <a
-          href={`${WP_ADMIN_URL}/admin.php?page=wc-orders`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-xs leading-4 font-semibold text-gold hover:underline"
-        >
-          Tout voir →
-        </a>
+        {showAllLink && (
+          <a
+            href={`${WP_ADMIN_URL}/admin.php?page=wc-orders`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs leading-4 font-semibold text-gold hover:underline"
+          >
+            Tout voir →
+          </a>
+        )}
       </div>
 
       <div className="-mx-6 overflow-x-auto px-6">
@@ -115,16 +128,11 @@ export default function LatestOrders({ orders, search }) {
             const st = statusOf(o);
             const pickup = isPickup(o);
             const items = o.line_items.map((l) => decodeHtml(l.name)).join(", ");
-            return (
-              <a
-                key={o.id}
-                href={`${WP_ADMIN_URL}/admin.php?page=wc-orders&action=edit&id=${o.id}`}
-                target="_blank"
-                rel="noreferrer"
-                className={`flex items-center gap-3 p-3 transition-colors hover:bg-ivory ${
-                  i < rows.length - 1 ? "border-b border-[#eef2ea]" : ""
-                }`}
-              >
+            const rowClass = `flex items-center gap-3 p-3 transition-colors ${
+              linkToWp ? "hover:bg-ivory" : ""
+            } ${i < rows.length - 1 ? "border-b border-[#eef2ea]" : ""}`;
+            const rowContent = (
+              <>
                 <span className="w-[88px] text-xs leading-4 font-semibold text-gold">#{o.number}</span>
                 <span className="flex min-w-0 flex-1 items-center gap-2.5">
                   <span
@@ -151,6 +159,26 @@ export default function LatestOrders({ orders, search }) {
                     {st.label}
                   </span>
                 </span>
+              </>
+            );
+
+            if (!linkToWp) {
+              return (
+                <div key={o.id} className={rowClass}>
+                  {rowContent}
+                </div>
+              );
+            }
+
+            return (
+              <a
+                key={o.id}
+                href={`${WP_ADMIN_URL}/admin.php?page=wc-orders&action=edit&id=${o.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className={rowClass}
+              >
+                {rowContent}
               </a>
             );
           })}

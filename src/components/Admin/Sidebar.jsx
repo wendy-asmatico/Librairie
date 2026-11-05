@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { WP_ADMIN_URL } from "../../admin/api";
 import { initials } from "../../admin/format";
 
@@ -19,20 +19,23 @@ import dotOnline from "../../assets/admin/dot-online.svg";
 import icExternal from "../../assets/admin/ic-external.svg";
 import icLogout from "../../assets/admin/ic-logout.svg";
 
-// Les écrans autres que le tableau de bord ouvrent l'admin WooCommerce
+// Les écrans non encore refaits en React ouvrent l'admin WooCommerce
 const wp = (path) => `${WP_ADMIN_URL}/${path}`;
 
 export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) {
+  const location = useLocation();
+  const currentRoute = `${location.pathname}${location.search}`;
+
   const groups = [
     {
       title: "Pilotage",
       items: [
-        { label: "Tableau de bord", icon: icDashboard, active: true },
-        { label: "Commandes", icon: icOrders, href: wp("admin.php?page=wc-orders"), badge: badges.orders },
+        { label: "Tableau de bord", icon: icDashboard, to: "/admin" },
+        { label: "Commandes", icon: icOrders, to: "/admin/commandes", badge: badges.orders },
         {
           label: "Retraits boutique",
           icon: icPickup,
-          href: wp("admin.php?page=wc-orders&status=wc-processing"),
+          to: "/admin/commandes?filter=pickup",
           badge: badges.pickups,
         },
       ],
@@ -115,12 +118,13 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
               {group.title}
             </p>
             {group.items.map((item) => {
+              const isActive = item.to ? currentRoute === item.to : false;
               const content = (
                 <>
                   <img src={item.icon} alt="" className="size-[18px] shrink-0" />
                   <span
                     className={`flex-1 text-sm leading-5 ${
-                      item.active ? "font-bold text-forest" : "font-semibold text-leaf-soft"
+                      isActive ? "font-bold text-forest" : "font-semibold text-leaf-soft"
                     }`}
                   >
                     {item.label}
@@ -142,7 +146,7 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
                 </>
               );
               const base = "flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 transition-colors";
-              if (item.active) {
+              if (isActive) {
                 return (
                   <span key={item.label} className={`${base} bg-sage`} aria-current="page">
                     {content}
@@ -154,6 +158,13 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
                   <span key={item.label} className={`${base} cursor-not-allowed opacity-60`} title="Bientôt disponible">
                     {content}
                   </span>
+                );
+              }
+              if (item.to) {
+                return (
+                  <Link key={item.label} to={item.to} className={`${base} hover:bg-white/10`}>
+                    {content}
+                  </Link>
                 );
               }
               return (
