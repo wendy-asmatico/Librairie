@@ -33,8 +33,6 @@ import CGU from "./pages/CGU";
 import CGV from "./pages/CGV";
 import Error404 from "./pages/Error404";
 import AdminDashboard from "./pages/Admin";
-import AcfExample from "./pages/AcfExample";
-import AcfComponentExample from "./pages/AcfComponentExample";
 
 import Layout from "./components/Layout/layout";
 import ThemeApplier from "./components/ThemeApplier";
@@ -77,8 +75,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/catalogue" element={<Store />} />
             <Route path="/enfants" element={<Kids />} />
             <Route path="/mentions-legales" element={<LegalMentions />} />
-            <Route path="/exemple-acf" element={<AcfExample />} />
-            <Route path="/composant-acf" element={<AcfComponentExample />} />
             <Route path="/cgu" element={<CGU />} />
             <Route path="/cgv" element={<CGV />} />
             <Route path="/panier" element={<Cart />} />
