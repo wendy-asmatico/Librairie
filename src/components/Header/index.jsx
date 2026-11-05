@@ -90,7 +90,10 @@ export default function Header() {
               </button>
             )}
 
-            <Link to="/wishlist" className="relative p-1 text-gray-900 hover:text-[#785E1A]">
+            <Link
+              to={token ? "/profile?section=wishlist" : "/catalogue"}
+              className="relative p-1 text-gray-900 hover:text-[#785E1A]"
+            >
               <img src={heartIcon} alt="" className="w-6 h-6" />
               {wishlistItems.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-[#785E1A] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">

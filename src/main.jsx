@@ -85,7 +85,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/blog/:slug" element={<SinglePost />} />
             <Route path="/success/:orderId" element={<Success />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/wishlist" element={<Wishlist />} />
             <Route path="*" element={<Error404 />} />
           </Route>
         </Routes>
