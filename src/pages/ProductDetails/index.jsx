@@ -47,7 +47,7 @@ export default function ProductDetails() {
 
   return (
     <main>
-      <div className="product-details-page">
+      <div className="product-details-page ">
         <Product product={productToDisplay} />
         <SimilarProducts
           currentProduct={productToDisplay}

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import Loader from "../Loader";
-import "./index.css";
 import active from "./review-active.svg";
 import inactive from "./review-inactive.svg";
 
@@ -43,7 +42,6 @@ const Review = ({ productId }) => {
       .then((response) => {
         if (!response.ok) throw new Error("Erreur réseau");
 
-        // WooCommerce renvoie le total des pages dans les headers
         const totalPagesHeader = response.headers.get("X-WP-TotalPages");
         if (totalPagesHeader) {
           setTotalPages(parseInt(totalPagesHeader, 10));
@@ -55,12 +53,11 @@ const Review = ({ productId }) => {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   };
-  // 1. Relance le fetch à chaque fois que le produit OU la page change
+
   useEffect(() => {
     fetchReviews();
   }, [productId, currentPage]);
 
-  // 2. Remet la page à 1 uniquement si on change de produit
   useEffect(() => {
     setCurrentPage(1);
   }, [productId]);
@@ -212,27 +209,30 @@ const Review = ({ productId }) => {
     }
   };
 
-  const renderStars = (rating = 0) => {
-    const normalizedRating = Math.max(0, Math.min(Number(rating) || 0, 5));
+  const renderStars = (starRating = 0) => {
+    const normalizedRating = Math.max(0, Math.min(Number(starRating) || 0, 5));
     const fullStars = Math.round(normalizedRating);
 
-    return [1, 2, 3, 4, 5].map((star) => (
-      <img
-        key={star}
-        className="review-star-icon"
-        src={star <= fullStars ? active : inactive}
-        alt="avis"
-      />
-    ));
+    return (
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <img
+            key={star}
+            className="h-4 w-4 object-contain"
+            src={star <= fullStars ? active : inactive}
+            alt="étoile"
+          />
+        ))}
+      </div>
+    );
   };
-
-  // --- Calculs pour la pagination ---
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
+
   const getPaginationRange = (current, total) => {
-    const delta = 1; // Nombre de pages affichées autour de la page active
+    const delta = 1;
     const range = [];
     const rangeWithDots = [];
     let l;
@@ -261,41 +261,65 @@ const Review = ({ productId }) => {
 
     return rangeWithDots;
   };
+
   return (
-    <div id="reviews-section" className="review-list">
-      <h2>Avis</h2>
+    <section id="reviews-section" className="border-t border-b border-line font-sans max-w-7xl mx-auto px-gutter pt-5 mt-10 pb-10">
+      <h2 className="text-title font-serif font-medium text-ink mb-6">
+        Avis clients
+      </h2>
 
-      {/* --- BLOC NOUVEL AVIS --- */}
-      <div className="add-review-section">
+      {/* --- BLOC NOUVEL AVIS / FORMULAIRE --- */}
+      <div className="mb-8 rounded-card bg-mint-soft border border-line p-5">
         {!user ? (
-          <p className="review-info">ℹ️ Connectez-vous pour ajouter un avis.</p>
+          <p className="text-caption text-ink-muted flex items-center gap-2">
+            <span>ℹ️</span> Connectez-vous pour ajouter un avis.
+          </p>
         ) : checkingPurchase ? (
-          <p className="review-info">Vérification de vos achats...</p>
+          <div className="flex items-center gap-3 py-2 text-caption text-ink-muted">
+            <Loader size="sm" />
+            <span>Vérification de vos achats...</span>
+          </div>
         ) : hasPurchased ? (
-          <form onSubmit={handleSubmitReview} className="review-form">
-            <h3>Rédiger un avis </h3>
+          <form onSubmit={handleSubmitReview} className="space-y-4">
+            <h3 className="text-md font-serif font-medium text-ink">
+              Rédiger un avis
+            </h3>
 
-            {submitSuccess && <p>Merci ! Votre avis a été publié.</p>}
-            {submitError && <p>{submitError}</p>}
+            {submitSuccess && (
+              <p className="text-caption text-success font-medium bg-mint p-3 rounded-control border border-line">
+                ✓ Merci ! Votre avis a été publié.
+              </p>
+            )}
+            {submitError && (
+              <p className="text-caption text-danger font-medium bg-sand p-3 rounded-control border border-line">
+                {submitError}
+              </p>
+            )}
 
-            <div>
-              <div className="review-rating">
-                <label>Note : </label>
+            <div className="space-y-1">
+              <label className="block text-2xs font-semibold text-ink-soft uppercase tracking-wider">
+                Votre note
+              </label>
 
+              <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <img
+                  <button
                     type="button"
-                    className="review-star-button"
                     key={star}
                     onClick={() => setRating(star)}
                     aria-label={`Choisir ${star} étoiles`}
-                    src={star <= rating ? active : inactive}
-                    alt="avis"
-                  />
+                    className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                  >
+                    <img
+                      className="h-5 w-5 object-contain"
+                      src={star <= rating ? active : inactive}
+                      alt={`${star} étoile(s)`}
+                    />
+                  </button>
                 ))}
               </div>
               {!rating && (
-                <p className="review-helper-text">
+                <p className="text-2xs text-ink-muted">
                   Choisissez une note de 1 à 5.
                 </p>
               )}
@@ -304,7 +328,7 @@ const Review = ({ productId }) => {
             <div>
               <textarea
                 rows="3"
-                className="review-textarea"
+                className="w-full rounded-control border border-line bg-white p-3 text-caption text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest"
                 placeholder="Votre avis sur ce produit..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
@@ -312,75 +336,101 @@ const Review = ({ productId }) => {
               />
             </div>
 
-            <button type="submit" disabled={submitting}>
+            <button
+              type="submit"
+              disabled={submitting || !rating}
+              className="bg-forest hover:bg-forest-deep disabled:bg-line disabled:text-muted text-white font-medium py-2.5 px-6 rounded-control text-caption shadow-raised transition-colors cursor-pointer disabled:cursor-not-allowed"
+            >
               {submitting ? "Envoi..." : "Publier l'avis"}
             </button>
           </form>
         ) : (
-          <p className="review-info">
-            🔒 Seuls les clients ayant acheté cet article peuvent laisser un
-            avis.
+          <p className="text-caption text-ink-muted flex items-center gap-2">
+            <span>🔒</span> Seuls les clients ayant acheté cet article peuvent laisser un avis.
           </p>
         )}
       </div>
 
       {/* --- LISTE DES AVIS --- */}
-      {/* {loading && <Loader size="lg" />} */}
-      {error && <p className="review-error">Erreur : {error}</p>}
-      {!loading && !error && reviews.length === 0 && <p>Aucun avis trouvé.</p>}
-      <div className="reviews-block">
-        {reviews.map((review) => (
-          <article key={review.id || review.review_id} className="review-item">
-            <div className="review-stars">{renderStars(review.rating)}</div>
-            <div className="review-meta">
-              <strong>
-                {review.reviewer ?? "Anonyme"}
-                {" - "}
-              </strong>
-              <span>
-                {review.date_created
-                  ? new Date(review.date_created).toLocaleDateString("fr-FR")
-                  : ""}
-              </span>
-            </div>
-            <div
-              className="review-content"
-              dangerouslySetInnerHTML={{
-                __html: review.review || "",
-              }}
-            />
-          </article>
-        ))}
-      </div>
+      {loading && (
+        <div className="flex justify-center py-8">
+          <Loader size="md" />
+        </div>
+      )}
+
+      {error && (
+        <p className="text-caption text-danger bg-sand p-3 rounded-control border border-line mb-4">
+          Erreur : {error}
+        </p>
+      )}
+
+      {!loading && !error && reviews.length === 0 && (
+        <p className="text-caption text-ink-muted italic py-4">
+          Aucun avis trouvé pour ce produit.
+        </p>
+      )}
+
+      {!loading && reviews.length > 0 && (
+        <div className="space-y-4">
+          {reviews.map((review) => (
+            <article
+              key={review.id || review.review_id}
+              className="rounded-card border border-line bg-white p-4 space-y-2 shadow-card"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-caption text-ink">
+                    {review.reviewer ?? "Anonyme"}
+                  </span>
+                  <span className="text-2xs text-muted">
+                    {review.date_created
+                      ? new Date(review.date_created).toLocaleDateString("fr-FR")
+                      : ""}
+                  </span>
+                </div>
+                {renderStars(review.rating)}
+              </div>
+
+              <div
+                className="prose prose-sm max-w-none text-caption text-ink-soft leading-relaxed"
+                dangerouslySetInnerHTML={{
+                  __html: review.review || "",
+                }}
+              />
+            </article>
+          ))}
+        </div>
+      )}
+
       {/* --- BARRE DE PAGINATION --- */}
       {totalPages > 1 && (
-        <div className="pagination">
+        <div className="mt-8 flex items-center justify-center gap-2 text-2xs">
           {currentPage > 1 ? (
             <a
-              className="pageChange"
               href="#reviews-section"
               onClick={(e) => {
                 e.preventDefault();
                 handlePageChange(currentPage - 1);
               }}
+              className="px-3 py-1.5 rounded-control border border-line bg-white text-ink hover:bg-mint-soft transition-colors"
             >
               Précédent
             </a>
           ) : (
-            <a className="pageChange inactive">Précédent</a>
+            <span className="px-3 py-1.5 rounded-control border border-line bg-sand text-muted cursor-not-allowed">
+              Précédent
+            </span>
           )}
 
           {getPaginationRange(currentPage, totalPages).map((page, index) => {
-            // Affichage des points de suspension
             if (page === "...") {
               return (
-                <span key={`dots-${index}`} className="pagination-dots">
+                <span key={`dots-${index}`} className="px-2 text-muted">
                   ...
                 </span>
               );
             }
 
-            // Affichage des numéros de page
             return (
               <a
                 key={page}
@@ -389,7 +439,11 @@ const Review = ({ productId }) => {
                   e.preventDefault();
                   handlePageChange(page);
                 }}
-                className={currentPage === page ? "active" : ""}
+                className={`px-3 py-1.5 rounded-control font-medium transition-colors ${
+                  currentPage === page
+                    ? "bg-forest text-white"
+                    : "border border-line bg-white text-ink hover:bg-mint-soft"
+                }`}
               >
                 {page}
               </a>
@@ -398,21 +452,23 @@ const Review = ({ productId }) => {
 
           {currentPage < totalPages ? (
             <a
-              className="pageChange"
               href="#reviews-section"
               onClick={(e) => {
                 e.preventDefault();
                 handlePageChange(currentPage + 1);
               }}
+              className="px-3 py-1.5 rounded-control border border-line bg-white text-ink hover:bg-mint-soft transition-colors"
             >
               Suivant
             </a>
           ) : (
-            <a className="pageChange inactive">Suivant</a>
+            <span className="px-3 py-1.5 rounded-control border border-line bg-sand text-muted cursor-not-allowed">
+              Suivant
+            </span>
           )}
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
