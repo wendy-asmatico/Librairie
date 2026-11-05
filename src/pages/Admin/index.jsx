@@ -232,7 +232,7 @@ export default function AdminDashboard() {
             </section>
 
             {/* Graphiques — 209:2 */}
-            <section className="grid gap-5 xl:grid-cols-[1fr_380px]">
+            <section className="grid gap-5 xl:grid-cols-[1fr_520px]">
               <OrdersChart daily={data.daily} total={data.kpis.orders.value} days={days} />
               <CategoryBreakdown rayons={data.rayons} />
             </section>

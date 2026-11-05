@@ -8,6 +8,44 @@ add_action('rest_api_init', function () {
     ]);
 });
 
+if (!function_exists('headless_front_base_url')) {
+    function headless_front_base_url()
+    {
+        $configured = '';
+        if (defined('HEADLESS_FRONTEND_URL') && is_string(HEADLESS_FRONTEND_URL)) {
+            $configured = trim(HEADLESS_FRONTEND_URL);
+        }
+        if ($configured === '') {
+            $configured = trim((string) get_option('headless_frontend_url', ''));
+        }
+
+        if ($configured !== '' && wp_http_validate_url($configured)) {
+            $configured = untrailingslashit($configured);
+            return preg_match('#/ecom$#', $configured) ? $configured : $configured . '/ecom';
+        }
+
+        $origin = isset($_SERVER['HTTP_ORIGIN']) ? esc_url_raw((string) $_SERVER['HTTP_ORIGIN']) : '';
+        if ($origin !== '' && wp_http_validate_url($origin)) {
+            $origin = untrailingslashit($origin);
+            return preg_match('#/ecom$#', $origin) ? $origin : $origin . '/ecom';
+        }
+
+        return untrailingslashit(home_url('/ecom'));
+    }
+}
+
+if (!function_exists('headless_front_url')) {
+    function headless_front_url($path = '/')
+    {
+        $base = headless_front_base_url();
+        $path = (string) $path;
+        if ($path === '' || $path === '/') {
+            return $base;
+        }
+        return $base . '/' . ltrim($path, '/');
+    }
+}
+
 function headless_reset_password($request)
 {
     $email = sanitize_email($request->get_param('email'));
@@ -28,7 +66,7 @@ function headless_reset_password($request)
         return new WP_Error('key_error', 'Erreur lors de la génération du lien.', ['status' => 500]);
     }
 
-    $reset_link = "http://localhost:5173/new-password?login=" . rawurlencode($user->user_login) . "&key=" . rawurlencode($key);
+    $reset_link = headless_front_url('/new-password') . '?login=' . rawurlencode($user->user_login) . '&key=' . rawurlencode($key);
 
 
     wp_mail(

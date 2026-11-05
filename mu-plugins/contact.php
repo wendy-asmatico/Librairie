@@ -23,6 +23,44 @@ const HEADLESS_CONTACT_MIMES    = [
     'pdf'      => 'application/pdf',
 ];
 
+if (!function_exists('headless_front_base_url')) {
+    function headless_front_base_url()
+    {
+        $configured = '';
+        if (defined('HEADLESS_FRONTEND_URL') && is_string(HEADLESS_FRONTEND_URL)) {
+            $configured = trim(HEADLESS_FRONTEND_URL);
+        }
+        if ($configured === '') {
+            $configured = trim((string) get_option('headless_frontend_url', ''));
+        }
+
+        if ($configured !== '' && wp_http_validate_url($configured)) {
+            $configured = untrailingslashit($configured);
+            return preg_match('#/ecom$#', $configured) ? $configured : $configured . '/ecom';
+        }
+
+        $origin = isset($_SERVER['HTTP_ORIGIN']) ? esc_url_raw((string) $_SERVER['HTTP_ORIGIN']) : '';
+        if ($origin !== '' && wp_http_validate_url($origin)) {
+            $origin = untrailingslashit($origin);
+            return preg_match('#/ecom$#', $origin) ? $origin : $origin . '/ecom';
+        }
+
+        return untrailingslashit(home_url('/ecom'));
+    }
+}
+
+if (!function_exists('headless_front_url')) {
+    function headless_front_url($path = '/')
+    {
+        $base = headless_front_base_url();
+        $path = (string) $path;
+        if ($path === '' || $path === '/') {
+            return $base;
+        }
+        return $base . '/' . ltrim($path, '/');
+    }
+}
+
 add_action('init', function () {
     register_post_type('contact_message', [
         'labels'          => [
@@ -56,6 +94,29 @@ add_action('rest_api_init', function () {
         'permission_callback' => function () {
             return current_user_can('manage_woocommerce');
         },
+    ]);
+
+    register_rest_route('custom/v1', '/quotes', [
+        'methods'             => 'GET',
+        'callback'            => 'headless_quote_list',
+        'permission_callback' => function () {
+            return current_user_can('manage_woocommerce');
+        },
+    ]);
+
+    register_rest_route('custom/v1', '/quotes/(?P<id>\d+)/validate', [
+        'methods'             => 'POST',
+        'callback'            => 'headless_quote_validate',
+        'permission_callback' => function () {
+            return current_user_can('manage_woocommerce');
+        },
+        'args'                => [
+            'id' => [
+                'validate_callback' => function ($param) {
+                    return (int) $param > 0;
+                },
+            ],
+        ],
     ]);
 });
 
@@ -98,6 +159,281 @@ function headless_contact_list_messages($request)
         'unread' => (int) $unread->found_posts,
         'items'  => $items,
     ]);
+}
+
+function headless_quote_list($request)
+{
+    $limit = max(1, min(100, (int) ($request->get_param('per_page') ?: 50)));
+    $status = sanitize_key((string) $request->get_param('status'));
+
+    $meta_query = [[
+        'key'     => 'contact_subject',
+        'value'   => ['devis', 'coffret'],
+        'compare' => 'IN',
+    ]];
+
+    if ($status === 'pending' || $status === 'validated') {
+        $meta_query[] = [
+            'key'   => 'contact_quote_status',
+            'value' => $status,
+        ];
+    }
+
+    $query = new WP_Query([
+        'post_type'      => 'contact_message',
+        'post_status'    => 'private',
+        'posts_per_page' => $limit,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'meta_query'     => $meta_query,
+    ]);
+    $posts = $query->posts;
+
+    $items = array_map(function ($post) {
+        $status = get_post_meta($post->ID, 'contact_quote_status', true);
+        $order_id = (int) get_post_meta($post->ID, 'contact_quote_order_id', true);
+        $subject = (string) get_post_meta($post->ID, 'contact_subject', true);
+        return [
+            'id'          => $post->ID,
+            'date'        => get_post_time('c', true, $post),
+            'firstname'   => get_post_meta($post->ID, 'contact_firstname', true),
+            'lastname'    => get_post_meta($post->ID, 'contact_lastname', true),
+            'email'       => get_post_meta($post->ID, 'contact_email', true),
+            'phone'       => get_post_meta($post->ID, 'contact_phone', true),
+            'subject'     => $subject,
+            'subject_label' => HEADLESS_CONTACT_SUBJECTS[$subject] ?? $subject,
+            'message'     => (string) $post->post_content,
+            'attachment'  => get_post_meta($post->ID, 'contact_attachment', true),
+            'quote_status'=> $status ?: 'pending',
+            'order_id'    => $order_id ?: null,
+            'order_edit_url' => $order_id ? admin_url('admin.php?page=wc-orders&action=edit&id=' . $order_id) : '',
+        ];
+    }, $posts);
+
+    return rest_ensure_response([
+        'total' => (int) $query->found_posts,
+        'items' => $items,
+    ]);
+}
+
+function headless_quote_validate($request)
+{
+    if (!function_exists('wc_create_order')) {
+        return new WP_Error('woocommerce_missing', 'WooCommerce doit être actif pour créer une commande.', ['status' => 503]);
+    }
+
+    $quote_id = (int) $request->get_param('id');
+    $quote = get_post($quote_id);
+    if (!$quote || $quote->post_type !== 'contact_message' || $quote->post_status !== 'private') {
+        return new WP_Error('quote_not_found', 'Devis introuvable.', ['status' => 404]);
+    }
+
+    $subject = (string) get_post_meta($quote_id, 'contact_subject', true);
+    if (!in_array($subject, ['devis', 'coffret'], true)) {
+        return new WP_Error('quote_invalid_subject', 'Ce message n’est pas un devis/coffret.', ['status' => 400]);
+    }
+
+    $existing_order_id = (int) get_post_meta($quote_id, 'contact_quote_order_id', true);
+    if ($existing_order_id > 0) {
+        return new WP_Error('quote_already_validated', 'Ce devis a déjà été validé en commande.', ['status' => 409]);
+    }
+
+    $amount = (float) $request->get_param('amount');
+    if ($amount <= 0) {
+        return new WP_Error('invalid_amount', 'Le montant du devis doit être supérieur à 0.', ['status' => 400]);
+    }
+
+    $message = sanitize_textarea_field((string) $request->get_param('message'));
+    $firstname = sanitize_text_field((string) get_post_meta($quote_id, 'contact_firstname', true));
+    $lastname = sanitize_text_field((string) get_post_meta($quote_id, 'contact_lastname', true));
+    $email = sanitize_email((string) get_post_meta($quote_id, 'contact_email', true));
+    $phone = sanitize_text_field((string) get_post_meta($quote_id, 'contact_phone', true));
+
+    $customer = headless_quote_resolve_customer($email, $firstname, $lastname, $phone);
+    if (is_wp_error($customer)) {
+        return $customer;
+    }
+
+    try {
+        $order = wc_create_order();
+        if (!$order) {
+            throw new Exception('Impossible de créer la commande WooCommerce.');
+        }
+        $order->set_customer_id((int) $customer['user_id']);
+
+        $item = new WC_Order_Item_Product();
+        $item->set_name('Coffret personnalisé (devis #' . $quote_id . ')');
+        $item->set_quantity(1);
+        $item->set_subtotal($amount);
+        $item->set_total($amount);
+        $order->add_item($item);
+
+        $order->set_address([
+            'first_name' => $firstname,
+            'last_name'  => $lastname,
+            'email'      => $email,
+            'phone'      => $phone,
+        ], 'billing');
+
+        $note_lines = [
+            'Commande créée depuis devis #' . $quote_id,
+            'Message du client : ' . (string) $quote->post_content,
+        ];
+        if ($message !== '') {
+            $note_lines[] = 'Note admin : ' . $message;
+        }
+        $order->set_customer_note(implode("\n\n", $note_lines));
+        $order->calculate_totals(false);
+        $order->update_status('pending', 'Commande créée depuis devis #' . $quote_id, true);
+        $order->save();
+    } catch (Throwable $error) {
+        return new WP_Error('quote_order_creation_failed', $error->getMessage(), ['status' => 500]);
+    }
+
+    update_post_meta($quote_id, 'contact_quote_status', 'validated');
+    update_post_meta($quote_id, 'contact_quote_order_id', $order->get_id());
+    update_post_meta($quote_id, 'contact_quote_customer_id', (int) $customer['user_id']);
+
+    $mail_sent = headless_quote_send_customer_email($order, [
+        'quote_id' => $quote_id,
+        'email' => $email,
+        'firstname' => $firstname,
+        'lastname' => $lastname,
+        'customer_created' => (bool) $customer['created'],
+        'user' => $customer['user'],
+        'amount' => $amount,
+    ]);
+    if (!$mail_sent) {
+        update_post_meta($quote_id, 'contact_quote_mail_error', 'wp_mail_failed');
+    }
+
+    return rest_ensure_response([
+        'success'       => true,
+        'order_id'      => $order->get_id(),
+        'order_edit_url'=> admin_url('admin.php?page=wc-orders&action=edit&id=' . $order->get_id()),
+        'customer_id'   => (int) $customer['user_id'],
+        'customer_created' => (bool) $customer['created'],
+        'mail_sent'     => (bool) $mail_sent,
+    ]);
+}
+
+function headless_quote_resolve_customer($email, $firstname, $lastname, $phone)
+{
+    if (!is_email($email)) {
+        return new WP_Error('quote_customer_email_invalid', 'Adresse e-mail client invalide pour créer la commande.', ['status' => 400]);
+    }
+
+    $user = get_user_by('email', $email);
+    $created = false;
+
+    if (!$user) {
+        $username = headless_quote_username_from_email($email);
+        $password = wp_generate_password(20, true, true);
+
+        if (function_exists('wc_create_new_customer')) {
+            $user_id = wc_create_new_customer($email, $username, $password, [
+                'first_name' => $firstname,
+                'last_name'  => $lastname,
+            ]);
+        } else {
+            $user_id = wp_create_user($username, $password, $email);
+            if (!is_wp_error($user_id)) {
+                $wp_user = new WP_User($user_id);
+                $wp_user->set_role('customer');
+            }
+        }
+
+        if (is_wp_error($user_id)) {
+            return new WP_Error('quote_customer_create_failed', $user_id->get_error_message(), ['status' => 500]);
+        }
+
+        $user = get_user_by('id', (int) $user_id);
+        $created = true;
+    }
+
+    if (!$user) {
+        return new WP_Error('quote_customer_missing', 'Impossible de relier la commande à un compte client.', ['status' => 500]);
+    }
+
+    update_user_meta($user->ID, 'billing_email', $email);
+    if ($firstname !== '') {
+        update_user_meta($user->ID, 'billing_first_name', $firstname);
+    }
+    if ($lastname !== '') {
+        update_user_meta($user->ID, 'billing_last_name', $lastname);
+    }
+    if ($phone !== '') {
+        update_user_meta($user->ID, 'billing_phone', $phone);
+    }
+
+    return [
+        'user_id' => (int) $user->ID,
+        'user'    => $user,
+        'created' => $created,
+    ];
+}
+
+function headless_quote_username_from_email($email)
+{
+    $base = sanitize_user(strstr($email, '@', true), true) ?: 'client';
+    $username = $base;
+    $suffix = 2;
+    while (username_exists($username)) {
+        $username = $base . $suffix++;
+    }
+    return $username;
+}
+
+function headless_quote_send_customer_email($order, $args)
+{
+    $quote_id = (int) ($args['quote_id'] ?? 0);
+    $email = sanitize_email((string) ($args['email'] ?? ''));
+    $firstname = sanitize_text_field((string) ($args['firstname'] ?? ''));
+    $lastname = sanitize_text_field((string) ($args['lastname'] ?? ''));
+    $customer_created = !empty($args['customer_created']);
+    $user = $args['user'] ?? null;
+    $amount = (float) ($args['amount'] ?? 0);
+
+    if (!is_email($email) || !$order) {
+        return false;
+    }
+
+    $full_name = trim($firstname . ' ' . $lastname);
+    $account_link = headless_front_url('/profile?section=orders');
+    $shop_link = headless_front_url('/');
+    $payment_link = headless_front_url('/profile?section=orders');
+
+    $amount_label = number_format_i18n($amount, 2) . ' ' . get_woocommerce_currency_symbol($order->get_currency());
+
+    $lines = [
+        'Assalamu alaykum ' . ($full_name !== '' ? $full_name : ''),
+        '',
+        'Votre devis #' . $quote_id . ' a été validé.',
+        'Une commande n°' . $order->get_order_number() . ' a été créée pour un montant de ' . $amount_label . '.',
+        '',
+    ];
+
+    if ($customer_created && $user instanceof WP_User) {
+        $reset_key = get_password_reset_key($user);
+        if (is_wp_error($reset_key)) {
+            return false;
+        }
+        $reset_link = headless_front_url('/new-password') . '?login=' . rawurlencode($user->user_login) . '&key=' . rawurlencode($reset_key);
+        $lines[] = 'Un compte client a été créé avec cette adresse e-mail.';
+        $lines[] = 'Définissez votre mot de passe ici : ' . $reset_link;
+    } else {
+        $lines[] = 'Connectez-vous à votre compte avec cette adresse e-mail.';
+    }
+
+    $lines[] = 'Espace client (paiement de la commande) : ' . $payment_link;
+    $lines[] = 'Boutique : ' . $shop_link;
+
+    return wp_mail(
+        $email,
+        'Votre devis est validé — commande ' . $order->get_order_number(),
+        implode("\n", $lines),
+        ['Content-Type: text/plain; charset=UTF-8']
+    );
 }
 
 // Administration WordPress : détail lisible du message, marqué comme lu à l'ouverture
@@ -220,6 +556,7 @@ function headless_contact_submit($request)
             'contact_order'      => $order,
             'contact_attachment' => $attachment ? $attachment['url'] : '',
             'contact_read'       => 0,
+            'contact_quote_status' => in_array($subject, ['devis', 'coffret'], true) ? 'pending' : '',
         ],
     ], true);
 

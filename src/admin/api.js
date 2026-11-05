@@ -36,6 +36,39 @@ export async function wcCreate(path, token, payload = {}) {
   return data;
 }
 
+export async function wcUpdate(path, token, payload = {}) {
+  const response = await fetch(`${API}/wc/v3${path}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} sur ${path}`);
+  }
+  return data;
+}
+
+export async function wcRemove(path, token, params = {}) {
+  const query = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ""),
+  ).toString();
+  const response = await fetch(`${API}/wc/v3${path}${query ? `?${query}` : ""}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} sur ${path}`);
+  }
+  return data;
+}
+
 export async function wpUploadMedia(file, token) {
   const body = new FormData();
   body.append("file", file, file.name);
@@ -59,6 +92,22 @@ export async function customFetch(path, token, params = {}) {
   const query = new URLSearchParams(params).toString();
   const response = await fetch(`${API}/custom/v1${path}${query ? `?${query}` : ""}`, {
     headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} sur ${path}`);
+  }
+  return data;
+}
+
+export async function customCreate(path, token, payload = {}) {
+  const response = await fetch(`${API}/custom/v1${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
   });
   const data = await response.json().catch(() => null);
   if (!response.ok) {

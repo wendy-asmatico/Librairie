@@ -83,10 +83,24 @@ function headless_register_user($request)
         return new WP_Error('email_exists', 'Un compte existe déjà avec cette adresse email : connectez-vous.', ['status' => 409]);
     }
 
-    $user_id = wp_create_user($username, $password, $email);
+    if (function_exists('wc_create_new_customer')) {
+        $user_id = wc_create_new_customer($email, $username, $password);
+    } else {
+        $user_id = wp_create_user($username, $password, $email);
+    }
     if (is_wp_error($user_id)) {
         return new WP_Error('registration_failed', $user_id->get_error_message(), ['status' => 500]);
     }
+
+    $role = get_role('customer') ? 'customer' : 'subscriber';
+    $wp_user = new WP_User((int) $user_id);
+    if (!$wp_user->exists()) {
+        return new WP_Error('registration_failed', 'Compte créé mais introuvable.', ['status' => 500]);
+    }
+    if (!in_array($role, $wp_user->roles, true)) {
+        $wp_user->set_role($role);
+    }
+
     headless_register_rate_limit_hit();
 
     // Champs de la maquette Inscription (facultatifs)

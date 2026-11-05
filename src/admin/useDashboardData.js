@@ -61,34 +61,26 @@ export default function useDashboardData(token, days) {
       const newCustomers = customers.items.filter((c) => inRange(c.date_created, from));
       const prevCustomers = customers.items.filter((c) => inRange(c.date_created, prevFrom, from));
 
-      // Répartition par rayon (catégorie de 1er niveau des produits vendus)
-      const productIds = [...new Set(valid.flatMap((o) => o.line_items.map((l) => l.product_id)))];
+      // Répartition des produits publiés par rayon (catégorie racine)
       let rayons = [];
-      if (productIds.length) {
-        const [{ items: sold }, { items: cats }] = await Promise.all([
-          wcFetchAll("/products", token, { include: productIds.slice(0, 100).join(",") }),
-          wcFetchAll("/products/categories", token, { hide_empty: false }),
-        ]);
-        const catById = Object.fromEntries(cats.map((c) => [c.id, c]));
-        const topLevel = (id) => {
-          let c = catById[id];
-          while (c && c.parent) c = catById[c.parent];
-          return c;
-        };
-        const productRayon = Object.fromEntries(
-          sold.map((p) => [p.id, decodeHtml(topLevel(p.categories?.[0]?.id)?.name || "Autres")]),
-        );
-        const counts = {};
-        valid.forEach((o) => {
-          const names = new Set(o.line_items.map((l) => productRayon[l.product_id] || "Autres"));
-          names.forEach((n) => (counts[n] = (counts[n] || 0) + 1));
-        });
-        const sum = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
-        rayons = Object.entries(counts)
-          .map(([name, count]) => ({ name, count, share: (count / sum) * 100 }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 6);
-      }
+      const { items: cats } = await wcFetchAll("/products/categories", token, { hide_empty: false });
+      const catById = Object.fromEntries(cats.map((c) => [c.id, c]));
+      const topLevel = (id) => {
+        let c = catById[id];
+        while (c && c.parent) c = catById[c.parent];
+        return c;
+      };
+      const counts = {};
+      products.items.forEach((product) => {
+        const root = topLevel(product.categories?.[0]?.id);
+        const name = decodeHtml(root?.name || "Autres");
+        counts[name] = (counts[name] || 0) + 1;
+      });
+      const sum = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+      rayons = Object.entries(counts)
+        .map(([name, count]) => ({ name, count, share: (count / sum) * 100 }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8);
 
       // Stock faible
       const lowStock = products.items

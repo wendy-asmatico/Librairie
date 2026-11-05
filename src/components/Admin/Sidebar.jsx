@@ -7,9 +7,7 @@ import icDashboard from "../../assets/admin/nav-dashboard.svg";
 import icOrders from "../../assets/admin/nav-orders.svg";
 import icPickup from "../../assets/admin/nav-pickup.svg";
 import icProducts from "../../assets/admin/nav-products.svg";
-import icCategories from "../../assets/admin/nav-categories.svg";
 import icGifts from "../../assets/admin/nav-gifts.svg";
-import icStock from "../../assets/admin/nav-stock.svg";
 import icClients from "../../assets/admin/nav-clients.svg";
 import icMessages from "../../assets/admin/nav-messages.svg";
 import icReviews from "../../assets/admin/nav-reviews.svg";
@@ -43,14 +41,8 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
     {
       title: "Catalogue",
       items: [
-        { label: "Produits", icon: icProducts, href: wp("edit.php?post_type=product") },
-        {
-          label: "Rayons & catégories",
-          icon: icCategories,
-          href: wp("edit-tags.php?taxonomy=product_cat&post_type=product"),
-        },
-        { label: "Coffrets & devis", icon: icGifts, soon: true },
-        { label: "Stocks", icon: icStock, href: wp("edit.php?post_type=product&stock_status=instock") },
+        { label: "Produits", icon: icProducts, to: "/admin/produits" },
+        { label: "Coffrets & devis", icon: icGifts, to: "/admin/devis", badge: badges.quotes },
       ],
     },
     {
