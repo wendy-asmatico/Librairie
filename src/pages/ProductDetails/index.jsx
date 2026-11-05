@@ -9,7 +9,6 @@ import SimilarProducts from "../../components/SimilarProducts";
 import Review from "../../components/Review";
 import Loader from "../../components/Loader";
 
-import "./index.css";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -48,7 +47,7 @@ export default function ProductDetails() {
 
   return (
     <main>
-      <div className="product-details-page">
+      <div className="product-details-page ">
         <Product product={productToDisplay} />
         <SimilarProducts
           currentProduct={productToDisplay}

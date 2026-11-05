@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 
 import Feed from "../../components/Feed";
 import CatalogueHero from "../../components/CatalogueHero";
@@ -15,6 +16,7 @@ import { rayonBySlug } from "../../brand";
 
 export default function Store() {
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
   const filters = useSelector((state) => state.filters);
   const categories = useSelector((state) => state.categories.items);
   const { list, loading } = useSelector((state) => state.products);
@@ -29,6 +31,23 @@ export default function Store() {
   useEffect(() => {
     if (categories.length === 0) dispatch(fetchCategoriesThunk());
   }, [dispatch, categories.length]);
+
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    if (!categoryParam) return;
+
+    const hasSameValue = String(filters.category ?? "") === String(categoryParam);
+    if (hasSameValue) return;
+
+    dispatch(setFilters({ category: categoryParam, search: "" }));
+  }, [dispatch, filters.category, searchParams]);
+
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    if (!categoryParam && filters.category) {
+      setSearchParams({ category: filters.category }, { replace: true });
+    }
+  }, [filters.category, searchParams, setSearchParams]);
 
   // Un changement de rayon affiche sa bannière avant les résultats filtrés.
   useEffect(() => {
