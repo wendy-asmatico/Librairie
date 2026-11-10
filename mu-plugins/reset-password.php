@@ -8,6 +8,20 @@ add_action('rest_api_init', function () {
     ]);
 });
 
+if (!function_exists('headless_is_valid_frontend_url')) {
+    function headless_is_valid_frontend_url($url)
+    {
+        $parts = wp_parse_url($url);
+
+        return is_array($parts)
+            && isset($parts['scheme'], $parts['host'])
+            && in_array(strtolower($parts['scheme']), ['http', 'https'], true)
+            && $parts['host'] !== ''
+            && !isset($parts['user'])
+            && !isset($parts['pass']);
+    }
+}
+
 if (!function_exists('headless_front_base_url')) {
     function headless_front_base_url()
     {
@@ -19,7 +33,7 @@ if (!function_exists('headless_front_base_url')) {
             $configured = trim((string) get_option('headless_frontend_url', ''));
         }
 
-        if ($configured !== '' && wp_http_validate_url($configured)) {
+        if ($configured !== '' && headless_is_valid_frontend_url($configured)) {
             $configured = untrailingslashit($configured);
             return preg_match('#/ecom$#', $configured) ? $configured : $configured . '/ecom';
         }
@@ -28,6 +42,11 @@ if (!function_exists('headless_front_base_url')) {
         if ($origin !== '' && wp_http_validate_url($origin)) {
             $origin = untrailingslashit($origin);
             return preg_match('#/ecom$#', $origin) ? $origin : $origin . '/ecom';
+        }
+
+        $local_fallback = 'http://localhost:1573/ecom';
+        if (in_array(wp_get_environment_type(), ['local', 'development'], true)) {
+            return untrailingslashit($local_fallback);
         }
 
         return untrailingslashit(home_url('/ecom'));
