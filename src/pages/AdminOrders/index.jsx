@@ -9,11 +9,12 @@ import Modal from "../../components/Modal";
 import Toast from "../../components/Toast";
 import Seo from "../../components/Seo";
 
-import { wcFetch } from "../../admin/api";
+import { customCreate, wcFetch } from "../../admin/api";
 import { isPickup } from "../../admin/format";
 import { fetchCurrentUserThunk } from "../../thunkActionsCreator/userThunks";
 import { logout } from "../../slices/userSlice";
 import { openModal } from "../../slices/modalSlice";
+import { showToast } from "../../slices/toastSlice";
 
 function Gate({ title, text, action }) {
   return (
@@ -42,6 +43,8 @@ export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [state, setState] = useState({ loading: true, error: null, orders: [] });
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [updateError, setUpdateError] = useState(null);
 
   const isAdmin = profile?.roles?.some((r) => ["administrator", "shop_manager"].includes(r));
   const initialFilter = searchParams.get("filter") === "pickup" ? "pickup" : "all";
@@ -69,6 +72,30 @@ export default function AdminOrders() {
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  const updateStatus = async (order, status) => {
+    const action = status === "shipped" ? "expédiée" : "terminée";
+    if (!window.confirm(`Marquer la commande n°${order.number} comme ${action} ?`)) return;
+    setUpdateError(null);
+    setUpdatingOrderId(order.id);
+    try {
+      const result = await customCreate(`/admin/orders/${order.id}/status`, token, {
+        status,
+        expected_status: order.status,
+      });
+      setState((current) => ({
+        ...current,
+        orders: current.orders.map((item) =>
+          item.id === order.id ? { ...item, status: result.status } : item,
+        ),
+      }));
+      dispatch(showToast(`Commande n°${order.number} marquée ${action}.`));
+    } catch (error) {
+      setUpdateError(`Impossible de modifier la commande n°${order.number} : ${error.message}`);
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
 
   const badges = useMemo(() => {
     const toPrepare = state.orders.filter((o) => o.status === "processing").length;
@@ -156,12 +183,18 @@ export default function AdminOrders() {
           <button
             type="button"
             onClick={loadOrders}
+            disabled={updatingOrderId != null}
             className="cursor-pointer rounded-lg bg-gold px-[18px] py-3 text-[13px] leading-[18px] font-semibold tracking-[0.52px] text-white transition-colors hover:bg-gold-dark"
           >
             Actualiser
           </button>
         </header>
 
+        {updateError && (
+          <div role="alert" className="mb-6 rounded-xl border border-[#f8dcd5] bg-[#fff5f2] px-4 py-3 text-sm text-[#8a2c1b]">
+            {updateError}
+          </div>
+        )}
         {state.error && (
           <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-[#f8dcd5] bg-[#fff5f2] px-4 py-3 text-sm text-[#8a2c1b]">
             <span>Impossible de charger les commandes : {state.error}</span>
@@ -184,6 +217,8 @@ export default function AdminOrders() {
               showAllLink={false}
               linkToWp={false}
               initialFilter={initialFilter}
+              onUpdateStatus={updateStatus}
+              updatingOrderId={updatingOrderId}
             />
           </div>
         )}

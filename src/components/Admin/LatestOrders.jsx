@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { WP_ADMIN_URL } from "../../admin/api";
 import { avatarBg, customerName, initials, isPickup, money, shortDate } from "../../admin/format";
 import { decodeHtml } from "../../utils/decodeHtml";
@@ -20,7 +21,9 @@ function statusOf(order) {
     case "completed":
       return pickup
         ? { label: "Retirée", icon: stReady, cls: "bg-leaf-soft text-forest-deep" }
-        : { label: "Expédiée", icon: stShipped, cls: "bg-[#eceee9] text-ink" };
+        : { label: "Terminée", icon: stReady, cls: "bg-leaf-soft text-forest-deep" };
+    case "shipped":
+      return { label: "Expédiée", icon: stShipped, cls: "bg-[#eceee9] text-ink" };
     case "on-hold":
       return { label: "En attente", icon: stProcessing, cls: "bg-[#eceee9] text-ink" };
     case "pending":
@@ -31,7 +34,7 @@ function statusOf(order) {
     case "refunded":
       return { label: "Remboursée", icon: stCancelled, cls: "bg-[#f8dcd5] text-[#8a2c1b]" };
     default:
-      return { label: "Payée", icon: stPaid, cls: "bg-mint text-forest-deep" };
+      return { label: order.status || "Statut inconnu", icon: stPaid, cls: "bg-mint text-forest-deep" };
   }
 }
 
@@ -51,6 +54,8 @@ export default function LatestOrders({
   showAllLink = true,
   linkToWp = true,
   initialFilter = "all",
+  onUpdateStatus,
+  updatingOrderId,
 }) {
   const [filter, setFilter] = useState(initialFilter);
 
@@ -98,19 +103,17 @@ export default function LatestOrders({
           ))}
         </div>
         {showAllLink && (
-          <a
-            href={`${WP_ADMIN_URL}/admin.php?page=wc-orders`}
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            to="/admin/commandes"
             className="text-xs leading-4 font-semibold text-gold hover:underline"
           >
             Tout voir →
-          </a>
+          </Link>
         )}
       </div>
 
       <div className="-mx-6 overflow-x-auto px-6">
-        <div className="min-w-[760px]">
+        <div className={onUpdateStatus ? "min-w-[960px]" : "min-w-[760px]"}>
           <div className="flex items-center gap-3 rounded-lg bg-[#f8fbf6] px-3 py-2.5">
             <span className={`w-[88px] ${TH}`}>N°</span>
             <span className={`flex-1 ${TH}`}>Client</span>
@@ -118,6 +121,7 @@ export default function LatestOrders({
             <span className={`w-24 ${TH}`}>Mode</span>
             <span className={`w-[76px] text-right ${TH}`}>Montant</span>
             <span className={`w-[150px] ${TH}`}>Statut</span>
+            {onUpdateStatus && <span className={`w-[180px] ${TH}`}>Action</span>}
           </div>
 
           {rows.length === 0 && (
@@ -159,6 +163,25 @@ export default function LatestOrders({
                     {st.label}
                   </span>
                 </span>
+                {onUpdateStatus && (
+                  <span className="w-[180px]">
+                    {(o.status === "processing" || o.status === "shipped") && (
+                      <button
+                        type="button"
+                        disabled={updatingOrderId != null}
+                        onClick={() => onUpdateStatus(o, o.status === "processing" && !pickup ? "shipped" : "completed")}
+                        aria-label={`${o.status === "processing" && !pickup ? "Marquer comme expédiée" : "Marquer comme terminée"} la commande ${o.number}`}
+                        className="rounded-md border border-line-strong px-2.5 py-1.5 text-xs font-semibold text-forest hover:bg-mint disabled:opacity-50"
+                      >
+                        {updatingOrderId === o.id
+                          ? "Enregistrement…"
+                          : o.status === "processing" && !pickup
+                            ? "Marquer expédiée"
+                            : pickup ? "Remise au client" : "Marquer terminée"}
+                      </button>
+                    )}
+                  </span>
+                )}
               </>
             );
 

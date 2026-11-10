@@ -5,6 +5,7 @@ import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { closeModal } from "../../slices/modalSlice";
 import { fetchCurrentUserOrdersThunk } from "../../thunkActionsCreator/userThunks";
 import { confirmPayment } from "./confirmPayment";
+import { PICKUP_ADDRESS } from "../../utils/pickup";
 
 const money = (amount, currency = "EUR") =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency }).format(
@@ -31,9 +32,16 @@ export default function PayPendingOrderForm({ orderId }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [deliveryLoading, setDeliveryLoading] = useState(false);
+  const [deliveryMode, setDeliveryMode] = useState(null);
+  const [deliveryKey, setDeliveryKey] = useState(null);
 
   const user = useSelector((state) => state.user);
   const order = orders?.find((o) => o.id === orderId);
+  const [delivery, setDelivery] = useState(() => ({
+    mode: order?.delivery_mode || "delivery",
+    total: order?.total,
+  }));
 
   const [address, setAddress] = useState(() => ({
     first_name: order?.billing?.first_name || user?.customer?.billing?.firstName || "",
@@ -44,9 +52,42 @@ export default function PayPendingOrderForm({ orderId }) {
     country: order?.billing?.country || user?.customer?.billing?.country || "FR",
     email: order?.billing?.email || user?.profile?.email || "",
   }));
+  const currentDeliveryKey = JSON.stringify({
+    mode: deliveryMode,
+    country: deliveryMode === "delivery" ? address.country : null,
+    postcode: deliveryMode === "delivery" ? address.postcode : null,
+  });
 
   const handleAddressChange = (e) =>
     setAddress((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const changeDelivery = async (mode) => {
+    setDeliveryLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/wp-json/custom/v1/orders/${orderId}/delivery`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({ mode, country: address.country, postcode: address.postcode }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Impossible de modifier le mode de réception.");
+      setDelivery({ mode: data.mode, total: data.total });
+      setDeliveryKey(JSON.stringify({ mode, country: mode === "delivery" ? address.country : null, postcode: mode === "delivery" ? address.postcode : null }));
+      dispatch(fetchCurrentUserOrdersThunk());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeliveryLoading(false);
+    }
+  };
 
   if (!order) {
     return <p className="text-sm text-danger">Commande introuvable.</p>;
@@ -62,6 +103,10 @@ export default function PayPendingOrderForm({ orderId }) {
 
     if (!["pending", "failed"].includes(order.status)) {
       setError("Cette commande ne peut pas être payée.");
+      return;
+    }
+    if (!deliveryMode || deliveryKey !== currentDeliveryKey) {
+      setError("Confirmez le mode de réception et son montant avant de payer.");
       return;
     }
 
@@ -92,7 +137,12 @@ export default function PayPendingOrderForm({ orderId }) {
             "Content-Type": "application/json",
             ...(token && { Authorization: `Bearer ${token}` }),
           },
-          body: JSON.stringify({ payment_method_id: paymentMethod.id, address }),
+          body: JSON.stringify({
+            payment_method_id: paymentMethod.id,
+            address,
+            expected_total: delivery.total,
+            delivery_mode: deliveryMode,
+          }),
         },
       );
 
@@ -132,14 +182,28 @@ export default function PayPendingOrderForm({ orderId }) {
           Commande n°{order.number ?? order.id}
         </p>
         <p className="mt-1 text-2xl font-semibold text-forest">
-          Montant : {money(order.total, order.currency)}
+          {deliveryKey === currentDeliveryKey ? "Montant" : "Montant avant confirmation de la livraison"} : {money(delivery.total, order.currency)}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
+        <fieldset className="flex flex-col gap-3" disabled={deliveryLoading || loading}>
+          <legend className="mb-2 text-sm font-semibold">Mode de réception</legend>
+          <label className="flex items-start gap-2 text-sm">
+            <input type="radio" name="delivery_mode" checked={deliveryMode === "delivery"} onChange={() => { setDeliveryMode("delivery"); setDeliveryKey(null); }} />
+            <span>Livraison à domicile</span>
+          </label>
+          <label className="flex items-start gap-2 text-sm">
+            <input type="radio" name="delivery_mode" checked={deliveryMode === "pickup"} onChange={() => { setDeliveryMode("pickup"); setDeliveryKey(null); }} />
+            <span>Retrait gratuit en boutique — {PICKUP_ADDRESS}</span>
+          </label>
+          <label className="flex items-start gap-2 text-sm text-ink-muted"><input type="radio" disabled /> Livraison en point relais — bientôt disponible</label>
+          {deliveryLoading && <p className="text-sm text-ink-muted">Mise à jour du montant…</p>}
+        </fieldset>
+
         <fieldset className="grid grid-cols-2 gap-4">
           <legend className="mb-2 text-sm font-semibold">
-            Adresse de livraison et de facturation
+            {deliveryMode === "pickup" ? "Adresse de facturation" : "Adresse de livraison et de facturation"}
           </legend>
           {ADDRESS_FIELDS.map(({ name, label, type, full }) => (
             <label
@@ -158,6 +222,12 @@ export default function PayPendingOrderForm({ orderId }) {
             </label>
           ))}
         </fieldset>
+
+        {deliveryMode && (
+          <button type="button" onClick={() => changeDelivery(deliveryMode)} disabled={deliveryLoading || loading} className="rounded-md border border-line-strong px-4 py-2 text-sm font-semibold text-forest disabled:opacity-50">
+            Confirmer le mode de réception et actualiser le montant
+          </button>
+        )}
 
         <div className="flex flex-col gap-2">
           <label htmlFor="card-element" className="text-sm font-semibold">
@@ -192,7 +262,7 @@ export default function PayPendingOrderForm({ orderId }) {
 
         <button
           type="submit"
-          disabled={!stripe || loading}
+          disabled={!stripe || loading || deliveryLoading}
           className="w-full rounded-md bg-forest px-6 py-3.5 font-semibold text-white transition-colors hover:bg-forest-deep disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Traitement..." : "Payer maintenant"}
@@ -201,7 +271,7 @@ export default function PayPendingOrderForm({ orderId }) {
         <button
           type="button"
           onClick={() => dispatch(closeModal())}
-          disabled={loading}
+          disabled={loading || deliveryLoading}
           className="w-full rounded-md border border-line-strong px-6 py-3.5 font-semibold text-ink-soft transition-colors hover:bg-mint disabled:opacity-50"
         >
           Annuler

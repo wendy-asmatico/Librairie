@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCurrentUserOrdersThunk } from "../../thunkActionsCreator/userThunks";
+import { PICKUP_ADDRESS } from "../../utils/pickup";
 
 const money = (amount, currency = "EUR") =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency }).format(
@@ -37,7 +38,7 @@ export default function Success() {
   }, [orderId, token, dispatch]);
 
   const verifiedOrder = token && !verification.loading && !verification.error && order;
-  const confirmed = !token || (verifiedOrder && ["processing", "completed"].includes(order.status));
+  const confirmed = !token || (verifiedOrder && ["processing", "shipped", "completed"].includes(order.status));
   const pending = verifiedOrder && order.status === "on-hold";
 
   return (
@@ -82,6 +83,12 @@ export default function Success() {
             <span>Total</span>
             <span>{money(order.total, order.currency)}</span>
           </p>
+          {order.shipping_method && (
+            <p className="mt-4 text-sm text-ink-muted">
+              Mode de réception : {order.shipping_method}
+              {order.delivery_mode === "pickup" && ` — ${PICKUP_ADDRESS}`}
+            </p>
+          )}
           {order.billing?.address_1 && (
             <p className="mt-4 text-sm text-ink-muted">
               Adresse : {order.billing.first_name} {order.billing.last_name},{" "}

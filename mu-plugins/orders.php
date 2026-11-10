@@ -26,6 +26,14 @@ add_action('rest_api_init', function () {
             ],
         ],
     ]);
+
+    register_rest_route('custom/v1', '/orders/(?P<order_id>\d+)/delivery', [
+        'methods'             => 'POST',
+        'callback'            => 'headless_set_order_delivery',
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
+    ]);
 });
 
 function headless_get_current_user_orders($request)
@@ -49,6 +57,8 @@ function headless_get_current_user_orders($request)
             'date'     => $order->get_date_created() ? $order->get_date_created()->date('c') : null,
             'total'    => $order->get_total(),
             'currency' => $order->get_currency(),
+            'delivery_mode' => headless_order_has_store_pickup($order) ? 'pickup' : 'delivery',
+            'shipping_method' => $order->get_shipping_method(),
             'billing'  => [
                 'first_name' => $order->get_billing_first_name(),
                 'last_name'  => $order->get_billing_last_name(),
@@ -69,6 +79,19 @@ function headless_get_current_user_orders($request)
     }, $orders);
 
     return rest_ensure_response($data);
+}
+
+function headless_order_has_store_pickup($order)
+{
+    if ($order->get_meta('_headless_store_pickup')) {
+        return true;
+    }
+    foreach ($order->get_shipping_methods() as $item) {
+        if (strpos($item->get_method_id(), 'local_pickup') !== false || strpos($item->get_method_id(), 'pickup_location') !== false) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function headless_pay_pending_order($request)
@@ -106,14 +129,45 @@ function headless_pay_pending_order($request)
         return new WP_Error('missing_payment_method', 'L\'identifiant du moyen de paiement est requis.', ['status' => 400]);
     }
 
+    if (!isset($json_params['expected_total']) || !is_numeric($json_params['expected_total'])
+        || wc_format_decimal($json_params['expected_total'], wc_get_price_decimals()) !== wc_format_decimal($order->get_total(), wc_get_price_decimals())) {
+        return new WP_Error('order_total_changed', 'Le montant de la commande a changé. Rechargez la page avant de payer.', ['status' => 409]);
+    }
+    $current_mode = headless_order_has_store_pickup($order) ? 'pickup' : 'delivery';
+    if (($json_params['delivery_mode'] ?? '') !== $current_mode) {
+        return new WP_Error('delivery_mode_changed', 'Le mode de réception a changé. Rechargez la page avant de payer.', ['status' => 409]);
+    }
+
     $address = headless_sanitize_order_address($json_params['address'] ?? []);
     if (is_wp_error($address)) {
         return $address;
     }
+    if (!$order->get_meta('_headless_delivery_confirmed')) {
+        return new WP_Error('delivery_not_confirmed', 'Veuillez choisir et confirmer le mode de réception.', ['status' => 409]);
+    }
+    if ($current_mode === 'delivery') {
+        $destination = $order->get_meta('_headless_delivery_destination');
+        if (!is_array($destination) || $destination['country'] !== $address['country']
+            || $destination['postcode'] !== $address['postcode']) {
+            return new WP_Error('delivery_address_changed', 'Veuillez recalculer la livraison pour cette adresse.', ['status' => 409]);
+        }
+    }
 
-    // Même adresse pour la facturation et la livraison, comme le formulaire de paiement
     $order->set_address($address, 'billing');
-    $order->set_address(array_diff_key($address, ['email' => 1]), 'shipping');
+    if (headless_order_has_store_pickup($order)) {
+        $order->set_address([
+            'first_name' => $address['first_name'],
+            'last_name'  => $address['last_name'],
+            'address_1'  => '14 Boulevard de la Sagesse',
+            'address_2'  => '',
+            'postcode'   => '13002',
+            'city'       => 'Marseille',
+            'state'      => '',
+            'country'    => 'FR',
+        ], 'shipping');
+    } else {
+        $order->set_address(array_diff_key($address, ['email' => 1]), 'shipping');
+    }
     $order->save();
 
     try {
@@ -135,6 +189,85 @@ function headless_pay_pending_order($request)
     } catch (Exception $e) {
         return new WP_Error('payment_error', $e->getMessage(), ['status' => 500]);
     }
+}
+
+function headless_set_order_delivery($request)
+{
+    $order = wc_get_order((int) $request->get_param('order_id'));
+    if (!$order) {
+        return new WP_Error('order_not_found', 'Commande introuvable.', ['status' => 404]);
+    }
+    if ((int) $order->get_customer_id() !== get_current_user_id()) {
+        return new WP_Error('forbidden', 'Vous n\'avez pas accès à cette commande.', ['status' => 403]);
+    }
+    if (!$order->needs_payment()) {
+        return new WP_Error('order_not_payable', 'Cette commande ne peut pas être modifiée.', ['status' => 400]);
+    }
+
+    $mode = $request->get_param('mode');
+    if (!in_array($mode, ['pickup', 'delivery'], true)) {
+        return new WP_Error('invalid_delivery_mode', 'Mode de réception invalide.', ['status' => 400]);
+    }
+    $item = new WC_Order_Item_Shipping();
+    if ($mode === 'pickup') {
+        $item->set_method_title('Retrait gratuit en boutique');
+        $item->set_method_id('local_pickup');
+        $item->set_total(0);
+        $item->add_meta_data('Adresse de retrait', HEADLESS_PICKUP_ADDRESS, true);
+        $order->update_meta_data('_headless_store_pickup', 'yes');
+        $order->delete_meta_data('_headless_delivery_destination');
+    } else {
+        if ($order->get_currency() !== 'EUR') {
+            return new WP_Error('delivery_currency_unavailable', 'Le tarif de livraison est disponible uniquement en euros.', ['status' => 503]);
+        }
+        $destination = [
+            'country' => strtoupper(sanitize_text_field((string) $request->get_param('country'))),
+            'postcode' => sanitize_text_field((string) $request->get_param('postcode')),
+        ];
+        $weight = 0;
+        $missing_weight = false;
+        $quote = false;
+        foreach ($order->get_items() as $line) {
+            $product = $line->get_product();
+            if (!$product) {
+                $quote = true;
+                continue;
+            }
+            if (!$product->needs_shipping()) {
+                continue;
+            }
+            $product_weight = $product->get_weight();
+            if ($product_weight === '' || !is_numeric($product_weight) || (float) $product_weight <= 0) {
+                $missing_weight = true;
+            } else {
+                $weight += wc_get_weight((float) $product_weight, 'kg') * $line->get_quantity();
+            }
+        }
+        $rate = headless_delivery_rate($destination, $weight, $missing_weight, $quote);
+        if (is_wp_error($rate)) {
+            return $rate;
+        }
+        $item->set_method_title($rate->get_label());
+        $item->set_method_id($rate->get_method_id());
+        $item->set_total($rate->get_cost());
+        $item->set_taxes(['total' => $rate->get_taxes()]);
+        $order->delete_meta_data('_headless_store_pickup');
+        $order->update_meta_data('_headless_delivery_destination', $destination);
+    }
+    foreach ($order->get_shipping_methods() as $existing) {
+        $order->remove_item($existing->get_id());
+    }
+    $order->add_item($item);
+    $order->update_meta_data('_headless_delivery_confirmed', 'yes');
+    $order->delete_meta_data('_headless_previous_shipping');
+    $order->update_taxes();
+    $order->calculate_totals(false);
+
+    return rest_ensure_response([
+        'mode'     => $mode,
+        'total'    => $order->get_total(),
+        'currency' => $order->get_currency(),
+    ]);
 }
 
 function headless_sanitize_order_address($raw)
@@ -195,7 +328,7 @@ function headless_process_pending_order_payment($order, $payment_method_id)
         $order = wc_get_order($order->get_id());
         $redirect = $result['redirect'] ?? '';
 
-        if ($order && in_array($order->get_status(), ['processing', 'completed', 'on-hold'], true)) {
+        if ($order && in_array($order->get_status(), ['processing', 'shipped', 'completed', 'on-hold'], true)) {
             return [
                 'requires_action' => false,
                 'payment_action'  => null,

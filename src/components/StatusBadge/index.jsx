@@ -1,6 +1,7 @@
 const labels = {
   pending: "En attente de paiement",
   processing: "En préparation",
+  shipped: "Expédiée",
   "on-hold": "En attente",
   completed: "Terminée",
   cancelled: "Annulée",

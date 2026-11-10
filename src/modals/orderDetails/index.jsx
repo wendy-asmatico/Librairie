@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import SucessMessage from "../../components/SucessMessage";
+import { PICKUP_ADDRESS } from "../../utils/pickup";
 import "./index.css";
 
 // 1. Cache externe pour persister entre les rendus
@@ -11,6 +12,9 @@ export default function OrderDetails() {
   const modalProps = useSelector((state) => state.modal.modalProps);
   const orderId = typeof modalProps === "object" ? modalProps?.id : modalProps;
   const token = useSelector((state) => state.user.token);
+  const order = useSelector((state) =>
+    state.user.orders.find((item) => String(item.id) === String(orderId)),
+  );
 
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -83,7 +87,7 @@ export default function OrderDetails() {
   if (!detail) return null;
 
   const current = detail;
-  const isPaid = ["processing", "completed"].includes(current.status);
+  const isPaid = ["processing", "shipped", "completed"].includes(current.status);
   const label = current.number ?? current.id;
   const statusText = isPaid
     ? "Paiement confirmé pour la commande n°"
@@ -126,26 +130,19 @@ export default function OrderDetails() {
 
       {detail.shipping_address && (
         <>
-          <h3>Adresse de livraison</h3>
+          <h3>{order?.delivery_mode === "pickup" ? "Retrait en boutique" : "Adresse de livraison"}</h3>
 
-          <p>
-            {detail.shipping_address.first_name}{" "}
-            {detail.shipping_address.last_name}
-          </p>
-
-          <p>{detail.shipping_address.address_1}</p>
-
-          {detail.shipping_address.address_2 && (
-            <p>{detail.shipping_address.address_2}</p>
+          {order?.delivery_mode === "pickup" ? (
+            <p>{PICKUP_ADDRESS}</p>
+          ) : (
+            <>
+              <p>{detail.shipping_address.first_name} {detail.shipping_address.last_name}</p>
+              <p>{detail.shipping_address.address_1}</p>
+              {detail.shipping_address.address_2 && <p>{detail.shipping_address.address_2}</p>}
+              <p>{detail.shipping_address.postcode} {detail.shipping_address.city}</p>
+              <p>{detail.shipping_address.state} {detail.shipping_address.country}</p>
+            </>
           )}
-
-          <p>
-            {detail.shipping_address.postcode} {detail.shipping_address.city}
-          </p>
-
-          <p>
-            {detail.shipping_address.state} {detail.shipping_address.country}
-          </p>
 
           <p>
             Livraison :{" "}
