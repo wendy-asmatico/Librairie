@@ -102,6 +102,19 @@ de domaine se font dans ce service.
 ## Tableau de bord administrateur
 
 `/admin` (ex. http://localhost:5173/ecom/admin) : réservé aux comptes `administrator` / `shop_manager`.
+Le lien « Administration » du pied de page est visible pour ces deux rôles.
+Dans « Équipe », ils peuvent créer un gestionnaire ou un administrateur via
+`mu-plugins/staff.php`. Le nouveau compte reçoit un e-mail WordPress pour définir
+son mot de passe ; configurez l'envoi d'e-mails du serveur. Si l'envoi échoue,
+le compte reste créé et il faut utiliser la réinitialisation du mot de passe.
+Un administrateur a tous les droits WordPress : permettre aux gestionnaires d'en
+créer leur donne indirectement accès à ces droits. La liste de l'équipe permet
+aux administrateurs de retirer les droits d'un autre membre (son compte devient
+client) ou de le supprimer en réattribuant ses contenus WordPress à l'administrateur
+connecté. Ces actions ne sont pas disponibles sur WordPress multisite et ne
+permettent pas d'agir sur son propre compte. Les sessions WordPress du membre
+sont fermées lors du retrait des droits ; un jeton JWT existant conserve cependant
+la connexion au compte client jusqu'à son expiration.
 Connectez-vous sur le site avec un compte admin, puis ouvrez la page. Les données viennent de l'API WooCommerce (`wc/v3`) avec le jeton JWT.
 La recherche du tableau de bord parcourt les commandes par numéro, nom ou e-mail
 du client et nom de produit commandé, indépendamment de la période sélectionnée.

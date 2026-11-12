@@ -62,6 +62,7 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
       title: "Boutique",
       items: [
         { label: "Promotions", icon: icPromos, to: "/admin/promotions" },
+        { label: "Équipe", icon: icClients, to: "/admin/equipe" },
         { label: "Paramètres", icon: icSettings, href: wp("admin.php?page=wc-settings") },
       ],
     },
@@ -113,7 +114,14 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
               const isActive = item.to ? currentRoute === item.to || (item.to === "/admin/messages" && location.pathname === item.to) : false;
               const content = (
                 <>
-                  <img src={item.icon} alt="" className="size-[18px] shrink-0" />
+                  <span
+                    aria-hidden="true"
+                    className={`size-[18px] shrink-0 bg-current ${isActive ? "text-forest" : "text-leaf-soft"}`}
+                    style={{
+                      WebkitMask: `url("${item.icon}") center / contain no-repeat`,
+                      mask: `url("${item.icon}") center / contain no-repeat`,
+                    }}
+                  />
                   <span
                     className={`flex-1 text-sm leading-5 ${
                       isActive ? "font-bold text-forest" : "font-semibold text-leaf-soft"

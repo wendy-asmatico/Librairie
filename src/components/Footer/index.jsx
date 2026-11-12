@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { setFilters } from "../../slices/filtersSlice";
+import { fetchCurrentUserThunk } from "../../thunkActionsCreator/userThunks";
 import { BRAND, rayonBySlug } from "../../brand";
 import logoRound from "../../assets/images/logo-round.jpg";
 import icPin from "../../assets/images/ic-pin.svg";
@@ -33,6 +35,12 @@ const LINK =
 export default function Footer() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { token, profile } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (token && !profile?.roles) dispatch(fetchCurrentUserThunk());
+  }, [dispatch, token, profile?.roles]);
+
   const openRayon = (slug) => {
     const page = rayonBySlug(slug)?.to;
     if (page) {
@@ -129,6 +137,11 @@ export default function Footer() {
           <Link to="/cgv">CGV &amp; Rétractation</Link>
           <Link to="/cgu">CGU</Link>
           <Link to="/politique-de-confidentialite">Politique de confidentialité</Link>
+          {token && profile?.roles?.some((role) => ["administrator", "shop_manager"].includes(role)) && (
+            <Link to="/admin" className="rounded-lg border border-line px-3 py-2 font-semibold text-forest hover:bg-mint">
+              Administration
+            </Link>
+          )}
         </div>
         <span className="text-[11px] leading-4 font-semibold tracking-[0.66px] text-muted">
           Paiement sécurisé
