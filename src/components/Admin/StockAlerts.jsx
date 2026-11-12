@@ -1,4 +1,4 @@
-import { WP_ADMIN_URL } from "../../admin/api";
+import { Link } from "react-router-dom";
 import { decodeHtml } from "../../utils/decodeHtml";
 import warnRed from "../../assets/admin/warn-red.svg";
 import warnGold from "../../assets/admin/warn-gold.svg";
@@ -12,14 +12,12 @@ export default function StockAlerts({ products }) {
           <p className="text-[11px] leading-4 font-bold tracking-[0.55px] text-gold uppercase">Alerte stock</p>
           <p className="font-serif text-xl leading-7 font-bold text-forest-deep">Bientôt en rupture</p>
         </div>
-        <a
-          href={`${WP_ADMIN_URL}/edit.php?post_type=product`}
-          target="_blank"
-          rel="noreferrer"
+        <Link
+          to="/admin/produits?filter=stock"
           className="text-xs leading-4 font-semibold text-gold hover:underline"
         >
           Gérer →
-        </a>
+        </Link>
       </div>
 
       {products.length === 0 ? (
@@ -28,11 +26,9 @@ export default function StockAlerts({ products }) {
         products.slice(0, 4).map((p) => {
           const critical = p.stock_quantity <= 2;
           return (
-            <a
+            <Link
               key={p.id}
-              href={`${WP_ADMIN_URL}/post.php?post=${p.id}&action=edit`}
-              target="_blank"
-              rel="noreferrer"
+              to={`/admin/produits/${p.id}`}
               className="flex items-center gap-3 rounded-lg transition-colors hover:bg-ivory"
             >
               {p.images?.[0]?.src ? (
@@ -54,7 +50,7 @@ export default function StockAlerts({ products }) {
                 <img src={critical ? warnRed : warnGold} alt="" className="size-[11px]" />
                 {p.stock_quantity} restant{p.stock_quantity > 1 ? "s" : ""}
               </span>
-            </a>
+            </Link>
           );
         })
       )}

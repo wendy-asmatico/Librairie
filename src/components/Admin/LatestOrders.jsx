@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { WP_ADMIN_URL } from "../../admin/api";
 import { avatarBg, customerName, initials, isPickup, money, shortDate } from "../../admin/format";
 import { decodeHtml } from "../../utils/decodeHtml";
 
@@ -13,7 +12,7 @@ import stShipped from "../../assets/admin/status-shipped.svg";
 import stCancelled from "../../assets/admin/status-cancelled.svg";
 
 // Statut WooCommerce → pastille de la maquette
-function statusOf(order) {
+export function statusOf(order) {
   const pickup = isPickup(order);
   switch (order.status) {
     case "processing":
@@ -46,13 +45,18 @@ const FILTERS = [
 
 const TH = "text-[10px] leading-[14px] font-bold tracking-[0.8px] text-muted uppercase";
 
+const normalizeSearch = (value) => decodeHtml(String(value || ""))
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .toLowerCase();
+
 // Dernières commandes — maquette 210:3
 export default function LatestOrders({
   orders,
   search,
   maxRows = 6,
   showAllLink = true,
-  linkToWp = true,
+  title = "Dernières commandes",
   initialFilter = "all",
   onUpdateStatus,
   updatingOrderId,
@@ -62,20 +66,18 @@ export default function LatestOrders({
   useEffect(() => {
     setFilter(initialFilter);
   }, [initialFilter]);
-  const term = search.trim().toLowerCase();
+  const term = normalizeSearch(search.trim()).replace(/^#/, "");
   const rows = orders
     .filter(FILTERS.find((f) => f.key === filter).test)
     .filter((o) => {
       if (!term) return true;
-      const hay = [
+      const hay = normalizeSearch([
         o.number,
         o.billing?.first_name,
         o.billing?.last_name,
         o.billing?.email,
         ...o.line_items.map((l) => l.name),
-      ]
-        .join(" ")
-        .toLowerCase();
+      ].join(" "));
       return hay.includes(term);
     })
     .slice(0, maxRows);
@@ -85,7 +87,7 @@ export default function LatestOrders({
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-1 flex-col gap-0.5">
           <p className="text-[11px] leading-4 font-bold tracking-[0.55px] text-gold uppercase">Commandes</p>
-          <p className="font-serif text-[22px] leading-[30px] font-bold text-forest-deep">Dernières commandes</p>
+          <p className="font-serif text-[22px] leading-[30px] font-bold text-forest-deep">{title}</p>
         </div>
         <div className="flex gap-1.5" role="group" aria-label="Filtrer les commandes">
           {FILTERS.map((f) => (
@@ -132,11 +134,10 @@ export default function LatestOrders({
             const st = statusOf(o);
             const pickup = isPickup(o);
             const items = o.line_items.map((l) => decodeHtml(l.name)).join(", ");
-            const rowClass = `flex items-center gap-3 p-3 transition-colors ${
-              linkToWp ? "hover:bg-ivory" : ""
-            } ${i < rows.length - 1 ? "border-b border-[#eef2ea]" : ""}`;
+            const rowClass = `flex items-center gap-3 p-3 transition-colors ${i < rows.length - 1 ? "border-b border-[#eef2ea]" : ""}`;
             const rowContent = (
               <>
+                <Link to={`/admin/commandes/${o.id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded hover:bg-ivory focus-visible:outline-2 focus-visible:outline-gold" aria-label={`Voir la commande ${o.number}`}>
                 <span className="w-[88px] text-xs leading-4 font-semibold text-gold">#{o.number}</span>
                 <span className="flex min-w-0 flex-1 items-center gap-2.5">
                   <span
@@ -163,6 +164,7 @@ export default function LatestOrders({
                     {st.label}
                   </span>
                 </span>
+                </Link>
                 {onUpdateStatus && (
                   <span className="w-[180px]">
                     {(o.status === "processing" || o.status === "shipped") && (
@@ -185,24 +187,10 @@ export default function LatestOrders({
               </>
             );
 
-            if (!linkToWp) {
-              return (
-                <div key={o.id} className={rowClass}>
-                  {rowContent}
-                </div>
-              );
-            }
-
             return (
-              <a
-                key={o.id}
-                href={`${WP_ADMIN_URL}/admin.php?page=wc-orders&action=edit&id=${o.id}`}
-                target="_blank"
-                rel="noreferrer"
-                className={rowClass}
-              >
+              <div key={o.id} className={rowClass}>
                 {rowContent}
-              </a>
+              </div>
             );
           })}
         </div>

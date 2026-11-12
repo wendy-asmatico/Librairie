@@ -35,6 +35,8 @@ import Error404 from "./pages/Error404";
 import AdminDashboard from "./pages/Admin";
 import AdminOrders from "./pages/AdminOrders";
 import AdminProducts from "./pages/AdminProducts";
+import AdminOrderDetail from "./pages/AdminOrderDetail";
+import AdminProductDetail from "./pages/AdminProductDetail";
 import AdminQuotes from "./pages/AdminQuotes";
 import AdminRelations from "./pages/AdminRelations";
 import AdminPromotions from "./pages/AdminPromotions";
@@ -73,7 +75,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           {/* Espace administrateur : sa propre mise en page (sans en-tête ni pied de boutique) */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/commandes" element={<AdminOrders />} />
+          <Route path="/admin/commandes/:id" element={<AdminOrderDetail />} />
           <Route path="/admin/produits" element={<AdminProducts />} />
+          <Route path="/admin/produits/:id" element={<AdminProductDetail />} />
           <Route path="/admin/devis" element={<AdminQuotes />} />
           <Route path="/admin/clients" element={<AdminRelations key="clients" section="clients" />} />
           <Route path="/admin/messages" element={<AdminRelations key="messages" section="messages" />} />

@@ -215,7 +215,6 @@ export default function AdminOrders() {
               search={search}
               maxRows={100}
               showAllLink={false}
-              linkToWp={false}
               initialFilter={initialFilter}
               onUpdateStatus={updateStatus}
               updatingOrderId={updatingOrderId}

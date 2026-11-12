@@ -60,6 +60,9 @@ Admin : http://localhost:8080/wp-admin (identifiant `admin`, mot de passe `makta
 
 `/admin` (ex. http://localhost:5173/ecom/admin) : réservé aux comptes `administrator` / `shop_manager`.
 Connectez-vous sur le site avec un compte admin, puis ouvrez la page. Les données viennent de l'API WooCommerce (`wc/v3`) avec le jeton JWT.
+La recherche du tableau de bord parcourt les commandes par numéro, nom ou e-mail
+du client et nom de produit commandé, indépendamment de la période sélectionnée.
+Les filtres « Toutes », « À préparer » et « Retraits » restent applicables.
 Les sections « Clients », « Messages » et « Avis clients » proposent des listes
 consultables et paginées dans le tableau de bord. Les clients sont les comptes
 WooCommerce ayant le rôle client ; les commandes invitées ne créent pas de compte.
@@ -94,3 +97,9 @@ puis terminée une fois remise au client. Pour un retrait, elle est directement
 marquée terminée lors de la remise. Le statut WooCommerce « Expédiée » est
 enregistré par `mu-plugins/order-shipping-status.php` et n'envoie pas d'e-mail
 automatique ; le passage à « Terminée » conserve les notifications WooCommerce.
+Les fiches de commande et de produit sont accessibles depuis le tableau de bord
+et leurs listes respectives. La fiche de commande permet de modifier les
+coordonnées sans recalculer les montants, frais ou taxes, ni modifier une
+étiquette déjà créée. La fiche produit permet de modifier une quantité dont le
+stock est suivi directement ; les autres réglages restent dans « Produits ».
+Ces actions nécessitent `mu-plugins/admin-details.php` sur WordPress.

@@ -474,7 +474,7 @@ export default function AdminProducts() {
                         : "Non géré";
                     return (
                       <tr key={product.id} className="border-t border-[#eef2ea]">
-                        <td className="px-4 py-3 text-sm font-semibold text-ink">{productName}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-ink"><Link to={`/admin/produits/${product.id}`} className="text-gold hover:underline">{productName}</Link></td>
                         <td className="px-4 py-3 text-sm text-ink">{product.sku || "—"}</td>
                         <td className="px-4 py-3 text-sm text-ink">{product.regular_price ? `${product.regular_price} €` : "—"}</td>
                         <td className="px-4 py-3 text-sm text-ink">{stockLabel}</td>
