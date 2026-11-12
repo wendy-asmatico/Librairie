@@ -338,7 +338,14 @@ function RegisterCard() {
         >
           Conditions générales de vente
         </Link>{" "}
-        et la Politique de confidentialité RGPD. *
+        et la{" "}
+        <Link
+          to="/politique-de-confidentialite"
+          onClick={() => dispatch(closeModal())}
+          className="font-semibold text-gold underline hover:text-gold-dark"
+        >
+          Politique de confidentialité
+        </Link>. *
       </AccountCheckbox>
 
       <button

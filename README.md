@@ -25,6 +25,36 @@ Le front utilise la variable suivante :
 3. renseignez le fichier wp-config.php.
 4. copiez le dossier /mu-plugins dans /wp-content.
 
+### Pages légales
+
+Les quatre pages sont affichées directement par le front-end, sans page WordPress
+ni ACF. Les textes provisoires sont définis dans les fichiers suivants :
+
+| Page | Fichier | Adresse sur le site |
+| --- | --- | --- |
+| Mentions légales | `src/pages/LegalMentions/index.jsx` | `/mentions-legales` |
+| CGV et rétractation | `src/pages/CGV/index.jsx` | `/cgv` |
+| CGU | `src/pages/CGU/index.jsx` | `/cgu` |
+| Politique de confidentialité | `src/pages/PrivacyPolicy/index.jsx` | `/politique-de-confidentialite` |
+
+Complétez et faites valider ces textes avant la mise en ligne : l'identité
+juridique, les conditions commerciales et les traitements de données doivent
+correspondre à la boutique réelle. Les pages affichent un avertissement tant
+que leur contenu reste provisoire.
+
+Le centre d'aide `/centre-aide`, accessible depuis la page contact et le pied de
+page, présente les questions fréquentes et renvoie vers le formulaire de contact.
+Avec ACF gratuit activé et `mu-plugins/acf-demo.php` déployé, les questions et
+réponses sont modifiables dans **Pages → Réglages contact → Centre d'aide —
+questions et réponses**. Les six premières questions sont proposées par défaut ;
+quatre emplacements supplémentaires sont disponibles. Chaque question possède
+une réponse et un lien interne facultatif (par exemple `/contact`), avec son
+libellé. Videz la question ou la réponse pour masquer un emplacement. Enregistrez
+la page et rechargez le centre d'aide pour voir les changements. Si les réglages
+sont indisponibles, le site affiche un avertissement et les réponses générales.
+Dans les réglages ACF de contact, l'ancienne valeur `/cgv` du lien centre d'aide
+est redirigée vers `/centre-aide` ; les autres liens configurés sont conservés.
+
 ### Retrait en boutique
 
 Dans WooCommerce, activez la méthode « Point de vente » / « Retrait sur place »
