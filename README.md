@@ -79,6 +79,12 @@ Les filtres « Toutes », « À préparer » et « Retraits » restent applicabl
 Les sections « Clients », « Messages » et « Avis clients » proposent des listes
 consultables et paginées dans le tableau de bord. Les clients sont les comptes
 WooCommerce ayant le rôle client ; les commandes invitées ne créent pas de compte.
+Dans l'espace client, sélectionner une commande affiche sa progression selon son
+statut WooCommerce. Les retraits suivent les étapes validation, préparation et
+remise en boutique ; les livraisons ajoutent l'étape expédition. Aucune date de
+livraison estimée ni aucun numéro de suivi ne sont fournis. Le lien « Détails »
+ouvre une fiche en lecture seule avec les produits, montants et coordonnées de la
+commande ; WordPress vérifie qu'elle appartient au client connecté.
 Un message est marqué comme lu lorsqu'il est ouvert. Sa suppression le place
 dans la corbeille WordPress ; pour une demande de devis ou de coffret, elle le
 retire uniquement de la boîte de messages afin de conserver le devis. Les autres

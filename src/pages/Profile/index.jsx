@@ -7,6 +7,7 @@ import AccountOrders from "../../components/AccountOrders";
 import AccountOverview from "../../components/AccountOverview";
 import AccountProfileForm from "../../components/AccountProfileForm";
 import WishlistSection from "../Wishlist";
+import StoreLocation from "../../components/StoreLocation";
 import DeleteAccountButton from "../../components/DeleteAccountButton";
 import Seo from "../../components/Seo";
 import {
@@ -127,6 +128,8 @@ export default function Profile() {
           {section === "wishlist" && <WishlistSection />}
         </main>
       </div>
+
+       <StoreLocation />
     </div>
   );
 }

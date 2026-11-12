@@ -23,6 +23,7 @@ import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 import NewPassword from "./pages/NewPassword";
 import Profile from "./pages/Profile";
+import CustomerOrderDetail from "./pages/CustomerOrderDetail";
 import Wishlist from "./pages/Wishlist";
 import BlogPage from "./pages/Blog";
 import SinglePost from "./pages/SinglePost";
@@ -101,6 +102,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/blog/:slug" element={<SinglePost />} />
             <Route path="/success/:orderId" element={<Success />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/commandes/:id" element={<CustomerOrderDetail />} />
             <Route path="*" element={<Error404 />} />
           </Route>
         </Routes>
