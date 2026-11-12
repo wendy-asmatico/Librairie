@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -7,8 +7,10 @@ import Loader from "../../components/Loader";
 import Modal from "../../components/Modal";
 import Toast from "../../components/Toast";
 import Seo from "../../components/Seo";
+import ProductImages, { moveMainImage } from "../../components/Admin/ProductImages";
+import ProductTax, { hasProductTaxClass, useProductTaxClasses } from "../../components/Admin/ProductTax";
 
-import { wcFetchAll, wcRemove, wcUpdate } from "../../admin/api";
+import { wcFetchAll, wcRemove, wcUpdate, wpUploadMedia } from "../../admin/api";
 import { decodeHtml } from "../../utils/decodeHtml";
 import { fetchCurrentUserThunk } from "../../thunkActionsCreator/userThunks";
 import { logout } from "../../slices/userSlice";
@@ -38,11 +40,16 @@ const EMPTY_EDIT_FORM = {
   name: "",
   sku: "",
   regularPrice: "",
+  taxStatus: "taxable",
+  taxClass: "",
+  originalTaxClass: "",
   stockQuantity: "",
   status: "draft",
   shortDescription: "",
   description: "",
   categoryIds: [],
+  images: [],
+  imagesChanged: false,
 };
 
 const FILTERS = [
@@ -63,6 +70,11 @@ export default function AdminProducts() {
   const dispatch = useDispatch();
   const token = useSelector((state) => state.user.token);
   const profile = useSelector((state) => state.user.profile);
+  const isAdmin = profile?.roles?.some((r) => ["administrator", "shop_manager"].includes(r));
+  const taxClasses = useProductTaxClasses(isAdmin ? token : null);
+  const { isOpen: modalOpen, modalName } = useSelector((state) => state.modal);
+  const wasAddingProduct = useRef(false);
+  const imageSequence = useRef(0);
   const [searchParams] = useSearchParams();
 
   const [search, setSearch] = useState("");
@@ -71,9 +83,8 @@ export default function AdminProducts() {
   const [state, setState] = useState({ loading: true, error: null, products: [], categories: [] });
   const [editForm, setEditForm] = useState(EMPTY_EDIT_FORM);
   const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
-
-  const isAdmin = profile?.roles?.some((r) => ["administrator", "shop_manager"].includes(r));
 
   useEffect(() => {
     if (token && !profile?.roles) dispatch(fetchCurrentUserThunk());
@@ -85,7 +96,7 @@ export default function AdminProducts() {
     try {
       const [products, categories] = await Promise.all([
         wcFetchAll("/products", token, { per_page: 100, status: "any", orderby: "date", order: "desc" }),
-        wcFetchAll("/products/categories", token, { per_page: 100, hide_empty: false, orderby: "name", order: "asc" }),
+        wcFetchAll("/products/categories", token, { per_page: 100, hide_empty: false, orderby: "name", order: "asc" }, Infinity),
       ]);
       setState({
         loading: false,
@@ -101,6 +112,15 @@ export default function AdminProducts() {
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  useEffect(() => {
+    if (modalOpen && modalName === "modalAddProduct") {
+      wasAddingProduct.current = true;
+    } else if (wasAddingProduct.current) {
+      wasAddingProduct.current = false;
+      loadProducts();
+    }
+  }, [modalOpen, modalName, loadProducts]);
 
   const categoryById = useMemo(
     () => Object.fromEntries(state.categories.map((category) => [category.id, category])),
@@ -132,22 +152,36 @@ export default function AdminProducts() {
   }, [state.products, search, filter]);
 
   const openEdit = (product) => {
+    if (saving) return;
     setEditForm({
       id: product.id,
       name: decodeHtml(product.name || ""),
       sku: product.sku || "",
       regularPrice: product.regular_price || "",
+      taxStatus: product.tax_status,
+      taxClass: product.tax_class,
+      originalTaxClass: product.tax_class,
       stockQuantity: product.manage_stock && product.stock_quantity !== null ? String(product.stock_quantity) : "",
       status: product.status || "draft",
       shortDescription: decodeHtml(product.short_description || ""),
       description: decodeHtml(product.description || ""),
       categoryIds: product.categories.map((category) => category.id),
+      images: (product.images || []).map((image) => ({
+        key: `existing-${image.id}`,
+        id: image.id,
+        src: image.src,
+        name: decodeHtml(image.name || ""),
+        alt: decodeHtml(image.alt || ""),
+      })),
+      imagesChanged: false,
     });
+    setEditError("");
   };
 
   const closeEdit = () => {
     if (saving) return;
     setEditForm(EMPTY_EDIT_FORM);
+    setEditError("");
   };
 
   const onEditField = (field) => (event) => {
@@ -164,9 +198,36 @@ export default function AdminProducts() {
     }));
   };
 
+  const addEditImages = (event) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!files.length) return;
+    const images = files.map((file) => ({
+      key: `new-${++imageSequence.current}`,
+      file,
+      name: file.name,
+    }));
+    setEditForm((current) => ({ ...current, images: [...current.images, ...images], imagesChanged: true }));
+  };
+
+  const removeEditImage = (key) => {
+    setEditForm((current) => ({
+      ...current,
+      images: current.images.filter((image) => image.key !== key),
+      imagesChanged: true,
+    }));
+  };
+
+  const setMainEditImage = (key) => {
+    setEditForm((current) => {
+      return { ...current, images: moveMainImage(current.images, key), imagesChanged: true };
+    });
+  };
+
   const saveEdit = async (event) => {
     event.preventDefault();
-    if (!token || !editForm.id) return;
+    if (!token || !editForm.id || saving) return;
+    setEditError("");
 
     const name = editForm.name.trim();
     if (!name) {
@@ -185,11 +246,20 @@ export default function AdminProducts() {
       dispatch(showToast("Le stock doit être un entier positif."));
       return;
     }
+    if (editForm.taxClass !== editForm.originalTaxClass && (taxClasses.loading || taxClasses.error)) {
+      setEditError("Rechargez les classes de TVA avant d'enregistrer la modification de la classe.");
+      return;
+    }
+    if (editForm.taxClass !== editForm.originalTaxClass && !hasProductTaxClass(taxClasses.classes, editForm.taxClass)) {
+      setEditError("La classe de TVA choisie n'est plus disponible. Sélectionnez-en une autre.");
+      return;
+    }
 
     const payload = {
       name,
       sku: editForm.sku.trim() || undefined,
       regular_price: regularPrice || "",
+      tax_status: editForm.taxStatus,
       status: editForm.status,
       short_description: editForm.shortDescription.trim() || "",
       description: editForm.description.trim() || "",
@@ -197,15 +267,32 @@ export default function AdminProducts() {
       stock_quantity: stockQuantity ? Number(stockQuantity) : null,
       categories: editForm.categoryIds.map((id) => ({ id })),
     };
+    if (editForm.taxClass !== editForm.originalTaxClass) payload.tax_class = editForm.taxClass;
 
     setSaving(true);
     try {
+      if (editForm.imagesChanged) {
+        const images = [];
+        for (const image of editForm.images) {
+          let id = image.id;
+          if (!id) {
+            const media = await wpUploadMedia(image.file, token);
+            id = media.id;
+            setEditForm((current) => ({
+              ...current,
+              images: current.images.map((item) => item.key === image.key ? { ...item, id, src: media.source_url } : item),
+            }));
+          }
+          images.push({ id });
+        }
+        payload.images = images;
+      }
       await wcUpdate(`/products/${editForm.id}`, token, payload);
       dispatch(showToast(`Produit « ${name} » mis à jour.`));
       setEditForm(EMPTY_EDIT_FORM);
       await loadProducts();
     } catch (error) {
-      dispatch(showToast(error.message || "Impossible de modifier le produit."));
+      setEditError(error.message || "Impossible de modifier le produit.");
     } finally {
       setSaving(false);
     }
@@ -398,7 +485,8 @@ export default function AdminProducts() {
                             <button
                               type="button"
                               onClick={() => openEdit(product)}
-                              className="cursor-pointer rounded-md border border-line px-2.5 py-1.5 text-xs font-semibold text-ink hover:bg-ivory"
+                              disabled={saving}
+                              className="cursor-pointer rounded-md border border-line px-2.5 py-1.5 text-xs font-semibold text-ink hover:bg-ivory disabled:cursor-not-allowed disabled:opacity-70"
                             >
                               Modifier
                             </button>
@@ -441,6 +529,7 @@ export default function AdminProducts() {
             </div>
 
             <form onSubmit={saveEdit} className="flex flex-col gap-4">
+              <fieldset disabled={saving} className="flex flex-col gap-4 disabled:opacity-70">
               <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
                 Nom du produit *
                 <input
@@ -486,6 +575,14 @@ export default function AdminProducts() {
                   />
                 </label>
               </div>
+
+              <ProductTax
+                taxStatus={editForm.taxStatus}
+                taxClass={editForm.taxClass}
+                onStatusChange={onEditField("taxStatus")}
+                onClassChange={onEditField("taxClass")}
+                taxClasses={taxClasses}
+              />
 
               <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
                 Statut
@@ -537,6 +634,11 @@ export default function AdminProducts() {
                   ))}
                 </div>
               </fieldset>
+
+              <ProductImages images={editForm.images} onAdd={addEditImages} onRemove={removeEditImage} onSetMain={setMainEditImage} />
+              </fieldset>
+
+              {editError && <p role="alert" className="rounded-lg border border-[#f8dcd5] bg-[#fff5f2] px-3 py-2 text-sm text-[#8a2c1b]">Impossible de modifier le produit : {editError}</p>}
 
               <div className="mt-1 flex items-center justify-end gap-2.5">
                 <button

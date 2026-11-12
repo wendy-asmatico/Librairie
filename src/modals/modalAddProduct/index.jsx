@@ -1,14 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { wcCreate, wcFetch, wpUploadMedia } from "../../admin/api";
+import { wcCreate, wcFetchAll, wpUploadMedia } from "../../admin/api";
 import { decodeHtml } from "../../utils/decodeHtml";
 import { closeModal } from "../../slices/modalSlice";
 import { showToast } from "../../slices/toastSlice";
+import ProductImages, { moveMainImage } from "../../components/Admin/ProductImages";
+import ProductTax, { hasProductTaxClass, useProductTaxClasses } from "../../components/Admin/ProductTax";
 
 const EMPTY_FORM = {
   name: "",
   regularPrice: "",
+  taxStatus: "taxable",
+  taxClass: "",
   sku: "",
   stockQuantity: "",
   status: "draft",
@@ -23,6 +27,8 @@ function toPrice(value) {
 export default function ModalAddProduct() {
   const dispatch = useDispatch();
   const token = useSelector((state) => state.user.token);
+  const imageSequence = useRef(0);
+  const taxClasses = useProductTaxClasses(token);
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
@@ -32,6 +38,11 @@ export default function ModalAddProduct() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryParent, setCategoryParent] = useState("0");
+  const [categorySaving, setCategorySaving] = useState(false);
+  const [categoryCreateError, setCategoryCreateError] = useState("");
   const [images, setImages] = useState([]);
 
   const updateField = (field) => (event) => {
@@ -45,10 +56,10 @@ export default function ModalAddProduct() {
     setCategoriesLoading(true);
     setCategoriesError("");
 
-    wcFetch("/products/categories", token, { per_page: 100, hide_empty: false, orderby: "name", order: "asc" })
+    wcFetchAll("/products/categories", token, { per_page: 100, hide_empty: false, orderby: "name", order: "asc" }, Infinity)
       .then((response) => {
         if (cancelled) return;
-        setCategories(response.data || []);
+        setCategories(response.items);
       })
       .catch((loadingError) => {
         if (cancelled) return;
@@ -73,13 +84,22 @@ export default function ModalAddProduct() {
   };
 
   const onImagesChange = (event) => {
-    setImages(Array.from(event.target.files || []));
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!files.length) return;
+    const newImages = files.map((file) => ({
+      key: `new-${++imageSequence.current}`,
+      file,
+      name: file.name,
+    }));
+    setImages((current) => [...current, ...newImages]);
   };
 
-  const categoriesTree = useMemo(() => {
+  const categoryOptions = useMemo(() => {
     const byParent = new Map();
+    const categoryIds = new Set(categories.map((category) => category.id));
     for (const category of categories) {
-      const parentId = Number(category.parent || 0);
+      const parentId = categoryIds.has(category.parent) ? category.parent : 0;
       if (!byParent.has(parentId)) byParent.set(parentId, []);
       byParent.get(parentId).push(category);
     }
@@ -88,14 +108,52 @@ export default function ModalAddProduct() {
       list.sort((a, b) => decodeHtml(a.name).localeCompare(decodeHtml(b.name), "fr"));
     }
 
-    return {
-      topLevel: byParent.get(0) || [],
-      childrenByParent: byParent,
+    const result = [];
+    const seen = new Set();
+    const append = (category, depth, ancestors) => {
+      if (seen.has(category.id)) return;
+      seen.add(category.id);
+      const name = decodeHtml(category.name);
+      const path = [...ancestors, name];
+      result.push({ category, depth, path: path.join(" › ") });
+      for (const child of byParent.get(category.id) || []) append(child, depth + 1, path);
     };
+    for (const category of byParent.get(0) || []) append(category, 0, []);
+    for (const category of categories) append(category, 0, []);
+    return result;
   }, [categories]);
+
+  const createCategory = async () => {
+    if (categorySaving || loading) return;
+    const name = categoryName.trim();
+    if (!name) {
+      setCategoryCreateError("Le nom de la catégorie est obligatoire.");
+      return;
+    }
+    if (!token) {
+      setCategoryCreateError("Vous devez être connecté pour créer une catégorie.");
+      return;
+    }
+    setCategoryCreateError("");
+    setCategorySaving(true);
+    try {
+      const category = await wcCreate("/products/categories", token, { name, parent: Number(categoryParent) });
+      setCategories((current) => [...current.filter((item) => item.id !== category.id), category]);
+      setSelectedCategories((current) => current.includes(category.id) ? current : [...current, category.id]);
+      setCategoryName("");
+      setCategoryParent("0");
+      setAddingCategory(false);
+      dispatch(showToast(`Catégorie « ${decodeHtml(category.name)} » créée et sélectionnée.`));
+    } catch (creationError) {
+      setCategoryCreateError(creationError.message || "Impossible de créer la catégorie.");
+    } finally {
+      setCategorySaving(false);
+    }
+  };
 
   const submit = async (event) => {
     event.preventDefault();
+    if (categorySaving || loading) return;
     setError("");
 
     const name = form.name.trim();
@@ -120,6 +178,14 @@ export default function ModalAddProduct() {
       setError("Vous devez être connecté pour créer un produit.");
       return;
     }
+    if (taxClasses.loading || taxClasses.error) {
+      setError("Chargez les classes de TVA avant de créer le produit.");
+      return;
+    }
+    if (!hasProductTaxClass(taxClasses.classes, form.taxClass)) {
+      setError("La classe de TVA choisie n'est plus disponible. Sélectionnez-en une autre.");
+      return;
+    }
 
     const payload = {
       name,
@@ -128,6 +194,8 @@ export default function ModalAddProduct() {
       short_description: form.shortDescription.trim() || undefined,
       description: form.description.trim() || undefined,
       regular_price: regularPrice || undefined,
+      tax_status: form.taxStatus,
+      tax_class: form.taxClass,
       manage_stock: Boolean(stockQuantity),
       stock_quantity: stockQuantity ? Number(stockQuantity) : undefined,
       categories: selectedCategories.map((id) => ({ id })),
@@ -139,9 +207,14 @@ export default function ModalAddProduct() {
       if (images.length) {
         setLoadingMessage("Envoi des images...");
         const uploadedImages = [];
-        for (const imageFile of images) {
-          const media = await wpUploadMedia(imageFile, token);
-          uploadedImages.push({ id: media.id });
+        for (const image of images) {
+          let id = image.id;
+          if (!id) {
+            const media = await wpUploadMedia(image.file, token);
+            id = media.id;
+            setImages((current) => current.map((item) => item.key === image.key ? { ...item, id, src: media.source_url } : item));
+          }
+          uploadedImages.push({ id });
         }
         payload.images = uploadedImages;
       }
@@ -204,6 +277,14 @@ export default function ModalAddProduct() {
           </label>
         </div>
 
+        <ProductTax
+          taxStatus={form.taxStatus}
+          taxClass={form.taxClass}
+          onStatusChange={updateField("taxStatus")}
+          onClassChange={updateField("taxClass")}
+          taxClasses={taxClasses}
+        />
+
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
             Stock
@@ -260,57 +341,50 @@ export default function ModalAddProduct() {
             <p className="px-1 py-2 text-sm text-[#8a2c1b]">{categoriesError}</p>
           ) : categories.length ? (
             <div className="max-h-40 space-y-1 overflow-auto pr-1">
-              {categoriesTree.topLevel.map((parentCategory) => (
-                <div key={parentCategory.id} className="space-y-1">
-                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 hover:bg-ivory">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(parentCategory.id)}
-                      onChange={() => toggleCategory(parentCategory.id)}
-                    />
-                    <span className="text-sm font-semibold text-ink">
-                      {decodeHtml(parentCategory.name)}
-                    </span>
-                  </label>
-
-                  {(categoriesTree.childrenByParent.get(parentCategory.id) || []).map((childCategory) => (
-                    <label
-                      key={childCategory.id}
-                      className="ml-6 flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 hover:bg-ivory"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(childCategory.id)}
-                        onChange={() => toggleCategory(childCategory.id)}
-                      />
-                      <span className="text-sm font-normal text-ink">
-                        {decodeHtml(childCategory.name)}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+              {categoryOptions.map(({ category, depth }) => (
+                <label key={category.id} style={{ paddingLeft: `${Math.min(depth, 6) * 1.5 + 0.375}rem` }} className="flex cursor-pointer items-center gap-2 rounded py-1 hover:bg-ivory">
+                  <input type="checkbox" checked={selectedCategories.includes(category.id)} onChange={() => toggleCategory(category.id)} />
+                  <span className={`text-sm text-ink ${depth === 0 ? "font-semibold" : "font-normal"}`}>{decodeHtml(category.name)}</span>
+                </label>
               ))}
             </div>
           ) : (
             <p className="px-1 py-2 text-sm text-muted">Aucune catégorie disponible.</p>
           )}
+          {!addingCategory ? (
+            <button type="button" disabled={categoriesLoading || !!categoriesError || loading} onClick={() => setAddingCategory(true)} className="self-start text-sm font-semibold text-gold hover:underline disabled:opacity-50">
+              + Créer une catégorie
+            </button>
+          ) : (
+            <div className="flex flex-col gap-3 border-t border-line pt-3">
+              <p className="text-xs text-muted">La catégorie sera créée immédiatement dans WooCommerce, même si vous annulez le produit.</p>
+              <label className="flex flex-col gap-1 text-sm font-semibold text-ink">
+                Nom de la catégorie
+                <input type="text" value={categoryName} onChange={(event) => setCategoryName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); createCategory(); } }} disabled={categorySaving || loading} className="rounded-lg border border-line px-3 py-2 text-sm font-normal outline-none focus:border-sage" />
+              </label>
+              <label className="flex flex-col gap-1 text-sm font-semibold text-ink">
+                Catégorie parente
+                <select value={categoryParent} onChange={(event) => setCategoryParent(event.target.value)} disabled={categorySaving} className="rounded-lg border border-line bg-white px-3 py-2 text-sm font-normal outline-none focus:border-sage">
+                  <option value="0">Aucune (catégorie principale)</option>
+                  {categoryOptions.map(({ category, path }) => <option key={category.id} value={category.id}>{path}</option>)}
+                </select>
+              </label>
+              {categoryCreateError && <p role="alert" className="text-sm text-[#8a2c1b]">{categoryCreateError}</p>}
+              <div className="flex flex-wrap gap-2">
+                <button type="button" disabled={categorySaving || loading} onClick={createCategory} className="rounded-lg bg-gold px-3 py-2 text-sm font-semibold text-white hover:bg-gold-dark disabled:opacity-50">{categorySaving ? "Création…" : "Créer et sélectionner"}</button>
+                <button type="button" disabled={categorySaving} onClick={() => { setAddingCategory(false); setCategoryCreateError(""); }} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-ink hover:bg-ivory disabled:opacity-50">Annuler</button>
+              </div>
+            </div>
+          )}
         </fieldset>
 
-        <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
-          Images produit
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={onImagesChange}
-            className="rounded-lg border border-line bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-sage"
-          />
-          {!!images.length && (
-            <span className="text-xs font-normal text-muted">
-              {images.length} image{images.length > 1 ? "s sélectionnées" : " sélectionnée"}
-            </span>
-          )}
-        </label>
+        <ProductImages
+          images={images}
+          onAdd={onImagesChange}
+          onRemove={(key) => setImages((current) => current.filter((image) => image.key !== key))}
+          onSetMain={(key) => setImages((current) => moveMainImage(current, key))}
+          disabled={loading}
+        />
 
         {error && (
           <p className="rounded-lg border border-[#f8dcd5] bg-[#fff5f2] px-3 py-2 text-sm text-[#8a2c1b]">
@@ -322,13 +396,14 @@ export default function ModalAddProduct() {
           <button
             type="button"
             onClick={() => dispatch(closeModal())}
+            disabled={loading}
             className="cursor-pointer rounded-lg border border-line px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-ivory"
           >
             Annuler
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || categorySaving}
             className="cursor-pointer rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? loadingMessage || "Création..." : "Créer le produit"}

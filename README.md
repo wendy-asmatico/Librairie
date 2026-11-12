@@ -60,7 +60,34 @@ Admin : http://localhost:8080/wp-admin (identifiant `admin`, mot de passe `makta
 
 `/admin` (ex. http://localhost:5173/ecom/admin) : réservé aux comptes `administrator` / `shop_manager`.
 Connectez-vous sur le site avec un compte admin, puis ouvrez la page. Les données viennent de l'API WooCommerce (`wc/v3`) avec le jeton JWT.
-Les liens du menu latéral ouvrent l'admin WordPress (`VITE_WP_ADMIN_URL`, défini dans `.env.development`).
+Les sections « Clients », « Messages » et « Avis clients » proposent des listes
+consultables et paginées dans le tableau de bord. Les clients sont les comptes
+WooCommerce ayant le rôle client ; les commandes invitées ne créent pas de compte.
+Un message est marqué comme lu lorsqu'il est ouvert. Sa suppression le place
+dans la corbeille WordPress ; pour une demande de devis ou de coffret, elle le
+retire uniquement de la boîte de messages afin de conserver le devis. Les autres
+modifications, réponses et la modération restent disponibles dans l'administration WordPress
+(`VITE_WP_ADMIN_URL`, défini dans `.env.development`).
+
+Lors de l'ajout d'un produit, une catégorie ou sous-catégorie peut être créée
+et sélectionnée directement. Elle est enregistrée immédiatement dans WooCommerce,
+même si la création du produit est ensuite annulée.
+Lors de l'ajout ou de la modification, les images peuvent être retirées du
+produit, de nouvelles images ajoutées et l'image principale choisie. Retirer une image du
+produit ne la supprime pas de la médiathèque WordPress. Les images téléversées
+avant une erreur restent également dans la médiathèque.
+La création et la modification permettent de choisir le statut fiscal et la
+classe de TVA configurée dans WooCommerce. Les taux effectifs dépendent des
+réglages fiscaux et de l'adresse applicable ; le prix saisi suit le réglage
+WooCommerce des prix HT ou TTC. Configurez et activez les taxes dans WooCommerce.
+
+La page « Promotions » permet de créer, modifier et supprimer définitivement
+les codes promo WooCommerce : type et valeur de remise, statut, expiration
+(heure configurée dans WordPress), minimum d'achat, limites d'utilisation,
+produits et catégories concernés. Sans restriction de produits ou de catégories,
+le code s'applique à tous les produits éligibles. Si les deux restrictions sont
+définies, WooCommerce vérifie chacune sur le panier. Les autres paramètres d'un
+code existant restent gérés dans WooCommerce et sont conservés à la modification.
 
 Dans « Commandes », une commande en préparation peut être marquée expédiée,
 puis terminée une fois remise au client. Pour un retrait, elle est directement

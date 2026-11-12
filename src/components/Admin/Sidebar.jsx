@@ -48,20 +48,20 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
     {
       title: "Relation client",
       items: [
-        { label: "Clients", icon: icClients, href: wp("users.php?role=customer") },
+        { label: "Clients", icon: icClients, to: "/admin/clients" },
         {
           label: "Messages",
           icon: icMessages,
-          href: wp("edit.php?post_type=contact_message"),
+          to: "/admin/messages",
           badge: badges.messages,
         },
-        { label: "Avis clients", icon: icReviews, href: wp("edit.php?post_type=product&page=product-reviews") },
+        { label: "Avis clients", icon: icReviews, to: "/admin/avis" },
       ],
     },
     {
       title: "Boutique",
       items: [
-        { label: "Promotions", icon: icPromos, href: wp("edit.php?post_type=shop_coupon") },
+        { label: "Promotions", icon: icPromos, to: "/admin/promotions" },
         { label: "Paramètres", icon: icSettings, href: wp("admin.php?page=wc-settings") },
       ],
     },
@@ -110,7 +110,7 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
               {group.title}
             </p>
             {group.items.map((item) => {
-              const isActive = item.to ? currentRoute === item.to : false;
+              const isActive = item.to ? currentRoute === item.to || (item.to === "/admin/messages" && location.pathname === item.to) : false;
               const content = (
                 <>
                   <img src={item.icon} alt="" className="size-[18px] shrink-0" />

@@ -115,6 +115,22 @@ add_action('rest_api_init', function () {
         },
     ]);
 
+    register_rest_route('custom/v1', '/contact-messages/(?P<id>\d+)/read', [
+        'methods'             => 'POST',
+        'callback'            => 'headless_contact_mark_read',
+        'permission_callback' => function () {
+            return current_user_can('manage_woocommerce');
+        },
+    ]);
+
+    register_rest_route('custom/v1', '/contact-messages/(?P<id>\d+)', [
+        'methods'             => 'DELETE',
+        'callback'            => 'headless_contact_remove_message',
+        'permission_callback' => function () {
+            return current_user_can('manage_woocommerce');
+        },
+    ]);
+
     register_rest_route('custom/v1', '/quotes', [
         'methods'             => 'GET',
         'callback'            => 'headless_quote_list',
@@ -139,24 +155,92 @@ add_action('rest_api_init', function () {
     ]);
 });
 
-function headless_contact_list_messages($request)
+function headless_contact_inbox_meta_query()
 {
-    $limit = max(1, min(20, (int) ($request->get_param('per_page') ?: 5)));
+    return [
+        'relation' => 'OR',
+        ['key' => '_contact_inbox_removed', 'compare' => 'NOT EXISTS'],
+        ['key' => '_contact_inbox_removed', 'value' => '1', 'compare' => '!='],
+    ];
+}
 
-    $posts = get_posts([
-        'post_type'      => 'contact_message',
-        'post_status'    => 'private',
-        'posts_per_page' => $limit,
-        'orderby'        => 'date',
-        'order'          => 'DESC',
-    ]);
-
-    $unread = new WP_Query([
+function headless_contact_unread_count()
+{
+    $query = new WP_Query([
         'post_type'      => 'contact_message',
         'post_status'    => 'private',
         'posts_per_page' => 1,
         'fields'         => 'ids',
-        'meta_query'     => [['key' => 'contact_read', 'value' => '0']],
+        'meta_query'     => [
+            headless_contact_inbox_meta_query(),
+            ['key' => 'contact_read', 'value' => '0'],
+        ],
+    ]);
+    return (int) $query->found_posts;
+}
+
+function headless_contact_inbox_message($id)
+{
+    $post = get_post((int) $id);
+    if (!$post || $post->post_type !== 'contact_message' || $post->post_status !== 'private' || get_post_meta($post->ID, '_contact_inbox_removed', true) === '1') {
+        return new WP_Error('message_not_found', 'Message introuvable dans la boîte de réception.', ['status' => 404]);
+    }
+    return $post;
+}
+
+function headless_contact_mark_read($request)
+{
+    $post = headless_contact_inbox_message($request->get_param('id'));
+    if (is_wp_error($post)) {
+        return $post;
+    }
+    if (get_post_meta($post->ID, 'contact_read', true) !== '1') {
+        update_post_meta($post->ID, 'contact_read', '1');
+        if (get_post_meta($post->ID, 'contact_read', true) !== '1') {
+            return new WP_Error('message_read_failed', 'Impossible de marquer ce message comme lu.', ['status' => 500]);
+        }
+    }
+    return rest_ensure_response(['id' => $post->ID, 'unread' => false, 'unread_count' => headless_contact_unread_count()]);
+}
+
+function headless_contact_remove_message($request)
+{
+    $post = headless_contact_inbox_message($request->get_param('id'));
+    if (is_wp_error($post)) {
+        return $post;
+    }
+    $subject = get_post_meta($post->ID, 'contact_subject', true);
+    if (in_array($subject, ['devis', 'coffret'], true)) {
+        update_post_meta($post->ID, '_contact_inbox_removed', '1');
+        if (get_post_meta($post->ID, '_contact_inbox_removed', true) !== '1') {
+            return new WP_Error('message_remove_failed', 'Impossible de retirer ce message de la boîte.', ['status' => 500]);
+        }
+    } else {
+        if (!EMPTY_TRASH_DAYS) {
+            return new WP_Error('message_trash_disabled', 'La corbeille WordPress est désactivée. Activez-la avant de supprimer ce message.', ['status' => 409]);
+        }
+        $result = wp_trash_post($post->ID);
+        if (!$result || is_wp_error($result) || get_post_status($post->ID) !== 'trash') {
+            return new WP_Error('message_remove_failed', 'Impossible de placer ce message dans la corbeille.', ['status' => 500]);
+        }
+    }
+    return rest_ensure_response(['id' => $post->ID, 'unread_count' => headless_contact_unread_count()]);
+}
+
+function headless_contact_list_messages($request)
+{
+    $limit = max(1, min(100, (int) ($request->get_param('per_page') ?: 5)));
+    $page = max(1, (int) ($request->get_param('page') ?: 1));
+    $search = sanitize_text_field((string) $request->get_param('search'));
+    $query = new WP_Query([
+        'post_type'      => 'contact_message',
+        'post_status'    => 'private',
+        'posts_per_page' => $limit,
+        'paged'          => $page,
+        's'              => $search,
+        'meta_query'     => headless_contact_inbox_meta_query(),
+        'orderby'        => 'date',
+        'order'          => 'DESC',
     ]);
 
     $items = array_map(function ($post) {
@@ -167,15 +251,21 @@ function headless_contact_list_messages($request)
             'firstname' => get_post_meta($post->ID, 'contact_firstname', true),
             'lastname'  => get_post_meta($post->ID, 'contact_lastname', true),
             'email'     => get_post_meta($post->ID, 'contact_email', true),
+            'phone'     => get_post_meta($post->ID, 'contact_phone', true),
+            'order'     => get_post_meta($post->ID, 'contact_order', true),
             'subject'   => HEADLESS_CONTACT_SUBJECTS[$subject] ?? $subject,
+            'is_quote'  => in_array($subject, ['devis', 'coffret'], true),
             'excerpt'   => wp_trim_words($post->post_content, 24, '…'),
+            'message'   => $post->post_content,
             'unread'    => get_post_meta($post->ID, 'contact_read', true) === '0',
             'edit_url'  => admin_url('post.php?post=' . $post->ID . '&action=edit'),
         ];
-    }, $posts);
+    }, $query->posts);
 
     return rest_ensure_response([
-        'unread' => (int) $unread->found_posts,
+        'unread' => headless_contact_unread_count(),
+        'total' => (int) $query->found_posts,
+        'total_pages' => (int) $query->max_num_pages,
         'items'  => $items,
     ]);
 }

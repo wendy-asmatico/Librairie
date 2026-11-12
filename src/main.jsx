@@ -36,6 +36,8 @@ import AdminDashboard from "./pages/Admin";
 import AdminOrders from "./pages/AdminOrders";
 import AdminProducts from "./pages/AdminProducts";
 import AdminQuotes from "./pages/AdminQuotes";
+import AdminRelations from "./pages/AdminRelations";
+import AdminPromotions from "./pages/AdminPromotions";
 
 import Layout from "./components/Layout/layout";
 import ThemeApplier from "./components/ThemeApplier";
@@ -73,6 +75,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/admin/commandes" element={<AdminOrders />} />
           <Route path="/admin/produits" element={<AdminProducts />} />
           <Route path="/admin/devis" element={<AdminQuotes />} />
+          <Route path="/admin/clients" element={<AdminRelations key="clients" section="clients" />} />
+          <Route path="/admin/messages" element={<AdminRelations key="messages" section="messages" />} />
+          <Route path="/admin/avis" element={<AdminRelations key="avis" section="avis" />} />
+          <Route path="/admin/promotions" element={<AdminPromotions />} />
 
           {/* Layout parent qui englobe toutes les pages */}
           <Route element={<Layout />}>

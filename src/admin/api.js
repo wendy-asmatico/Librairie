@@ -116,6 +116,18 @@ export async function customCreate(path, token, payload = {}) {
   return data;
 }
 
+export async function customRemove(path, token) {
+  const response = await fetch(`${API}/custom/v1${path}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} sur ${path}`);
+  }
+  return data;
+}
+
 // Récupère toutes les pages d'une liste (plafonné pour rester raisonnable)
 export async function wcFetchAll(path, token, params = {}, maxPages = 5) {
   const first = await wcFetch(path, token, { ...params, per_page: 100, page: 1 });
