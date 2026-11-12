@@ -15,6 +15,7 @@ export default function ShippingMethods() {
   const dispatch = useDispatch();
   const packages = useSelector((state) => state.cart.shipping_rates);
   const needsShipping = useSelector((state) => state.cart.needs_shipping);
+  const loading = useSelector((state) => state.cart.loading);
 
   if (!needsShipping) return null;
 
@@ -22,6 +23,14 @@ export default function ShippingMethods() {
     return (
       <p className="text-caption text-ink-muted">
         Les modes de livraison vous seront proposés à l’étape suivante.
+      </p>
+    );
+  }
+
+  if (packages.some((shippingPackage) => shippingPackage.shipping_rates.length === 0)) {
+    return (
+      <p className="text-caption text-danger">
+        Aucun mode de réception n’est disponible pour cette adresse.
       </p>
     );
   }
@@ -53,6 +62,7 @@ export default function ShippingMethods() {
               name={`shipping-rate-${shippingPackage.package_id}`}
               value={rate.rate_id}
               checked={rate.selected}
+              disabled={loading}
               onChange={() =>
                 selectRate(shippingPackage.package_id, rate.rate_id)
               }
@@ -78,6 +88,10 @@ export default function ShippingMethods() {
           </label>
         );
       })}
+      <label className="flex items-start gap-3 rounded-control border border-line bg-white px-4 py-3.5 text-ink-muted">
+        <input type="radio" disabled className="mt-px size-4.5 shrink-0" />
+        <span className="text-sm">Livraison en point relais — bientôt disponible</span>
+      </label>
     </fieldset>
   ));
 }

@@ -20,10 +20,105 @@ export async function wcFetch(path, token, params = {}) {
   };
 }
 
+export async function wcCreate(path, token, payload = {}) {
+  const response = await fetch(`${API}/wc/v3${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} sur ${path}`);
+  }
+  return data;
+}
+
+export async function wcUpdate(path, token, payload = {}) {
+  const response = await fetch(`${API}/wc/v3${path}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} sur ${path}`);
+  }
+  return data;
+}
+
+export async function wcRemove(path, token, params = {}) {
+  const query = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ""),
+  ).toString();
+  const response = await fetch(`${API}/wc/v3${path}${query ? `?${query}` : ""}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} sur ${path}`);
+  }
+  return data;
+}
+
+export async function wpUploadMedia(file, token) {
+  const body = new FormData();
+  body.append("file", file, file.name);
+
+  const response = await fetch(`${API}/wp/v2/media`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body,
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} lors de l'envoi de l'image`);
+  }
+  return data;
+}
+
 // Routes du site (mu-plugins, espace custom/v1)
 export async function customFetch(path, token, params = {}) {
   const query = new URLSearchParams(params).toString();
   const response = await fetch(`${API}/custom/v1${path}${query ? `?${query}` : ""}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} sur ${path}`);
+  }
+  return data;
+}
+
+export async function customCreate(path, token, payload = {}) {
+  const response = await fetch(`${API}/custom/v1${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Erreur ${response.status} sur ${path}`);
+  }
+  return data;
+}
+
+export async function customRemove(path, token) {
+  const response = await fetch(`${API}/custom/v1${path}`, {
+    method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await response.json().catch(() => null);
@@ -45,5 +140,7 @@ export async function wcFetchAll(path, token, params = {}, maxPages = 5) {
 }
 
 // URL de l'administration WordPress (pages non encore refaites côté front)
-export const WP_ADMIN_URL =
-  import.meta.env.VITE_WP_ADMIN_URL || `${import.meta.env.VITE_API_URL}/wp-admin`;
+const normalizeUrl = (value) => (value || "").replace(/\/+$/, "");
+const apiUrl = normalizeUrl(import.meta.env.VITE_API_URL);
+const adminUrlFromApi = apiUrl.startsWith("http") ? `${apiUrl}/wp-admin` : "/wp-admin";
+export const WP_ADMIN_URL = normalizeUrl(import.meta.env.VITE_WP_ADMIN_URL) || adminUrlFromApi;

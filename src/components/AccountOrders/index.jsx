@@ -4,6 +4,8 @@ import { openModal } from "../../slices/modalSlice";
 const statusLabels = {
   pending: "En attente de paiement",
   processing: "En préparation",
+  shipped: "Expédiée",
+  "on-hold": "En attente",
   on_hold: "En attente",
   completed: "Terminée",
   cancelled: "Annulée",
@@ -52,13 +54,24 @@ export default function AccountOrders({ limit }) {
             <span className="min-w-24 text-right text-sm font-semibold text-forest">
               {money(order.total, order.currency)}
             </span>
-            <button
-              type="button"
-              onClick={() => dispatch(openModal({ name: "orderDetails", props: order.id }))}
-              className="border-b border-secondary pb-0.5 text-sm font-semibold text-secondary hover:text-secondary-hover"
-            >
-              Détails
-            </button>
+            <div className="flex gap-2">
+              {["pending", "failed"].includes(order.status) && (
+                <button
+                  type="button"
+                  onClick={() => dispatch(openModal({ name: "payPendingOrder", props: { id: order.id } }))}
+                  className="border-b border-secondary pb-0.5 text-sm font-semibold text-secondary hover:text-secondary-hover"
+                >
+                  Payer
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => dispatch(openModal({ name: "orderDetails", props: order.id }))}
+                className="border-b border-secondary pb-0.5 text-sm font-semibold text-secondary hover:text-secondary-hover"
+              >
+                Détails
+              </button>
+            </div>
           </div>
         </article>
       ))}

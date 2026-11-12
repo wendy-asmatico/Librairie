@@ -10,6 +10,7 @@ import {
   applyCouponThunk,
   removeCouponThunk,
   selectShippingRateThunk,
+  updateCartCustomerThunk,
   toggleGiftWrapThunk,
 } from "../thunkActionsCreator/cartThunks";
 import { createOptimisticHandlers } from "../utils/optimisticFactory";
@@ -151,6 +152,9 @@ export const cartSlice = createSlice({
       })
       .addCase(selectShippingRateThunk.fulfilled, onFulfilled)
       .addCase(selectShippingRateThunk.rejected, onRejected)
+      .addCase(updateCartCustomerThunk.pending, startMutation)
+      .addCase(updateCartCustomerThunk.fulfilled, onFulfilled)
+      .addCase(updateCartCustomerThunk.rejected, onRejected)
       .addCase(toggleGiftWrapThunk.pending, (state, action) => {
         startMutation(state);
         const { itemKey, giftWrap } = action.meta.arg;

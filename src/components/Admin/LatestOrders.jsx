@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { WP_ADMIN_URL } from "../../admin/api";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { avatarBg, customerName, initials, isPickup, money, shortDate } from "../../admin/format";
 import { decodeHtml } from "../../utils/decodeHtml";
 
@@ -12,7 +12,7 @@ import stShipped from "../../assets/admin/status-shipped.svg";
 import stCancelled from "../../assets/admin/status-cancelled.svg";
 
 // Statut WooCommerce → pastille de la maquette
-function statusOf(order) {
+export function statusOf(order) {
   const pickup = isPickup(order);
   switch (order.status) {
     case "processing":
@@ -20,7 +20,9 @@ function statusOf(order) {
     case "completed":
       return pickup
         ? { label: "Retirée", icon: stReady, cls: "bg-leaf-soft text-forest-deep" }
-        : { label: "Expédiée", icon: stShipped, cls: "bg-[#eceee9] text-ink" };
+        : { label: "Terminée", icon: stReady, cls: "bg-leaf-soft text-forest-deep" };
+    case "shipped":
+      return { label: "Expédiée", icon: stShipped, cls: "bg-[#eceee9] text-ink" };
     case "on-hold":
       return { label: "En attente", icon: stProcessing, cls: "bg-[#eceee9] text-ink" };
     case "pending":
@@ -31,7 +33,7 @@ function statusOf(order) {
     case "refunded":
       return { label: "Remboursée", icon: stCancelled, cls: "bg-[#f8dcd5] text-[#8a2c1b]" };
     default:
-      return { label: "Payée", icon: stPaid, cls: "bg-mint text-forest-deep" };
+      return { label: order.status || "Statut inconnu", icon: stPaid, cls: "bg-mint text-forest-deep" };
   }
 }
 
@@ -43,33 +45,49 @@ const FILTERS = [
 
 const TH = "text-[10px] leading-[14px] font-bold tracking-[0.8px] text-muted uppercase";
 
+const normalizeSearch = (value) => decodeHtml(String(value || ""))
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .toLowerCase();
+
 // Dernières commandes — maquette 210:3
-export default function LatestOrders({ orders, search }) {
-  const [filter, setFilter] = useState("all");
-  const term = search.trim().toLowerCase();
+export default function LatestOrders({
+  orders,
+  search,
+  maxRows = 6,
+  showAllLink = true,
+  title = "Dernières commandes",
+  initialFilter = "all",
+  onUpdateStatus,
+  updatingOrderId,
+}) {
+  const [filter, setFilter] = useState(initialFilter);
+
+  useEffect(() => {
+    setFilter(initialFilter);
+  }, [initialFilter]);
+  const term = normalizeSearch(search.trim()).replace(/^#/, "");
   const rows = orders
     .filter(FILTERS.find((f) => f.key === filter).test)
     .filter((o) => {
       if (!term) return true;
-      const hay = [
+      const hay = normalizeSearch([
         o.number,
         o.billing?.first_name,
         o.billing?.last_name,
         o.billing?.email,
         ...o.line_items.map((l) => l.name),
-      ]
-        .join(" ")
-        .toLowerCase();
+      ].join(" "));
       return hay.includes(term);
     })
-    .slice(0, 6);
+    .slice(0, maxRows);
 
   return (
     <div className="flex flex-col gap-4 overflow-hidden rounded-2xl border border-line bg-white px-6 pt-6 pb-3 font-sans shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-1 flex-col gap-0.5">
           <p className="text-[11px] leading-4 font-bold tracking-[0.55px] text-gold uppercase">Commandes</p>
-          <p className="font-serif text-[22px] leading-[30px] font-bold text-forest-deep">Dernières commandes</p>
+          <p className="font-serif text-[22px] leading-[30px] font-bold text-forest-deep">{title}</p>
         </div>
         <div className="flex gap-1.5" role="group" aria-label="Filtrer les commandes">
           {FILTERS.map((f) => (
@@ -86,18 +104,18 @@ export default function LatestOrders({ orders, search }) {
             </button>
           ))}
         </div>
-        <a
-          href={`${WP_ADMIN_URL}/admin.php?page=wc-orders`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-xs leading-4 font-semibold text-gold hover:underline"
-        >
-          Tout voir →
-        </a>
+        {showAllLink && (
+          <Link
+            to="/admin/commandes"
+            className="text-xs leading-4 font-semibold text-gold hover:underline"
+          >
+            Tout voir →
+          </Link>
+        )}
       </div>
 
       <div className="-mx-6 overflow-x-auto px-6">
-        <div className="min-w-[760px]">
+        <div className={onUpdateStatus ? "min-w-[960px]" : "min-w-[760px]"}>
           <div className="flex items-center gap-3 rounded-lg bg-[#f8fbf6] px-3 py-2.5">
             <span className={`w-[88px] ${TH}`}>N°</span>
             <span className={`flex-1 ${TH}`}>Client</span>
@@ -105,6 +123,7 @@ export default function LatestOrders({ orders, search }) {
             <span className={`w-24 ${TH}`}>Mode</span>
             <span className={`w-[76px] text-right ${TH}`}>Montant</span>
             <span className={`w-[150px] ${TH}`}>Statut</span>
+            {onUpdateStatus && <span className={`w-[180px] ${TH}`}>Action</span>}
           </div>
 
           {rows.length === 0 && (
@@ -115,16 +134,10 @@ export default function LatestOrders({ orders, search }) {
             const st = statusOf(o);
             const pickup = isPickup(o);
             const items = o.line_items.map((l) => decodeHtml(l.name)).join(", ");
-            return (
-              <a
-                key={o.id}
-                href={`${WP_ADMIN_URL}/admin.php?page=wc-orders&action=edit&id=${o.id}`}
-                target="_blank"
-                rel="noreferrer"
-                className={`flex items-center gap-3 p-3 transition-colors hover:bg-ivory ${
-                  i < rows.length - 1 ? "border-b border-[#eef2ea]" : ""
-                }`}
-              >
+            const rowClass = `flex items-center gap-3 p-3 transition-colors ${i < rows.length - 1 ? "border-b border-[#eef2ea]" : ""}`;
+            const rowContent = (
+              <>
+                <Link to={`/admin/commandes/${o.id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded hover:bg-ivory focus-visible:outline-2 focus-visible:outline-gold" aria-label={`Voir la commande ${o.number}`}>
                 <span className="w-[88px] text-xs leading-4 font-semibold text-gold">#{o.number}</span>
                 <span className="flex min-w-0 flex-1 items-center gap-2.5">
                   <span
@@ -151,7 +164,33 @@ export default function LatestOrders({ orders, search }) {
                     {st.label}
                   </span>
                 </span>
-              </a>
+                </Link>
+                {onUpdateStatus && (
+                  <span className="w-[180px]">
+                    {(o.status === "processing" || o.status === "shipped") && (
+                      <button
+                        type="button"
+                        disabled={updatingOrderId != null}
+                        onClick={() => onUpdateStatus(o, o.status === "processing" && !pickup ? "shipped" : "completed")}
+                        aria-label={`${o.status === "processing" && !pickup ? "Marquer comme expédiée" : "Marquer comme terminée"} la commande ${o.number}`}
+                        className="rounded-md border border-line-strong px-2.5 py-1.5 text-xs font-semibold text-forest hover:bg-mint disabled:opacity-50"
+                      >
+                        {updatingOrderId === o.id
+                          ? "Enregistrement…"
+                          : o.status === "processing" && !pickup
+                            ? "Marquer expédiée"
+                            : pickup ? "Remise au client" : "Marquer terminée"}
+                      </button>
+                    )}
+                  </span>
+                )}
+              </>
+            );
+
+            return (
+              <div key={o.id} className={rowClass}>
+                {rowContent}
+              </div>
             );
           })}
         </div>

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { WP_ADMIN_URL } from "../../admin/api";
 import { initials } from "../../admin/format";
 
@@ -7,9 +7,7 @@ import icDashboard from "../../assets/admin/nav-dashboard.svg";
 import icOrders from "../../assets/admin/nav-orders.svg";
 import icPickup from "../../assets/admin/nav-pickup.svg";
 import icProducts from "../../assets/admin/nav-products.svg";
-import icCategories from "../../assets/admin/nav-categories.svg";
 import icGifts from "../../assets/admin/nav-gifts.svg";
-import icStock from "../../assets/admin/nav-stock.svg";
 import icClients from "../../assets/admin/nav-clients.svg";
 import icMessages from "../../assets/admin/nav-messages.svg";
 import icReviews from "../../assets/admin/nav-reviews.svg";
@@ -19,20 +17,23 @@ import dotOnline from "../../assets/admin/dot-online.svg";
 import icExternal from "../../assets/admin/ic-external.svg";
 import icLogout from "../../assets/admin/ic-logout.svg";
 
-// Les écrans autres que le tableau de bord ouvrent l'admin WooCommerce
+// Les écrans non encore refaits en React ouvrent l'admin WooCommerce
 const wp = (path) => `${WP_ADMIN_URL}/${path}`;
 
 export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) {
+  const location = useLocation();
+  const currentRoute = `${location.pathname}${location.search}`;
+
   const groups = [
     {
       title: "Pilotage",
       items: [
-        { label: "Tableau de bord", icon: icDashboard, active: true },
-        { label: "Commandes", icon: icOrders, href: wp("admin.php?page=wc-orders"), badge: badges.orders },
+        { label: "Tableau de bord", icon: icDashboard, to: "/admin" },
+        { label: "Commandes", icon: icOrders, to: "/admin/commandes", badge: badges.orders },
         {
           label: "Retraits boutique",
           icon: icPickup,
-          href: wp("admin.php?page=wc-orders&status=wc-processing"),
+          to: "/admin/commandes?filter=pickup",
           badge: badges.pickups,
         },
       ],
@@ -40,33 +41,27 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
     {
       title: "Catalogue",
       items: [
-        { label: "Produits", icon: icProducts, href: wp("edit.php?post_type=product") },
-        {
-          label: "Rayons & catégories",
-          icon: icCategories,
-          href: wp("edit-tags.php?taxonomy=product_cat&post_type=product"),
-        },
-        { label: "Coffrets & devis", icon: icGifts, soon: true },
-        { label: "Stocks", icon: icStock, href: wp("edit.php?post_type=product&stock_status=instock") },
+        { label: "Produits", icon: icProducts, to: "/admin/produits" },
+        { label: "Coffrets & devis", icon: icGifts, to: "/admin/devis", badge: badges.quotes },
       ],
     },
     {
       title: "Relation client",
       items: [
-        { label: "Clients", icon: icClients, href: wp("users.php?role=customer") },
+        { label: "Clients", icon: icClients, to: "/admin/clients" },
         {
           label: "Messages",
           icon: icMessages,
-          href: wp("edit.php?post_type=contact_message"),
+          to: "/admin/messages",
           badge: badges.messages,
         },
-        { label: "Avis clients", icon: icReviews, href: wp("edit.php?post_type=product&page=product-reviews") },
+        { label: "Avis clients", icon: icReviews, to: "/admin/avis" },
       ],
     },
     {
       title: "Boutique",
       items: [
-        { label: "Promotions", icon: icPromos, href: wp("edit.php?post_type=shop_coupon") },
+        { label: "Promotions", icon: icPromos, to: "/admin/promotions" },
         { label: "Paramètres", icon: icSettings, href: wp("admin.php?page=wc-settings") },
       ],
     },
@@ -115,12 +110,13 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
               {group.title}
             </p>
             {group.items.map((item) => {
+              const isActive = item.to ? currentRoute === item.to || (item.to === "/admin/messages" && location.pathname === item.to) : false;
               const content = (
                 <>
                   <img src={item.icon} alt="" className="size-[18px] shrink-0" />
                   <span
                     className={`flex-1 text-sm leading-5 ${
-                      item.active ? "font-bold text-forest" : "font-semibold text-leaf-soft"
+                      isActive ? "font-bold text-forest" : "font-semibold text-leaf-soft"
                     }`}
                   >
                     {item.label}
@@ -142,7 +138,7 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
                 </>
               );
               const base = "flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 transition-colors";
-              if (item.active) {
+              if (isActive) {
                 return (
                   <span key={item.label} className={`${base} bg-sage`} aria-current="page">
                     {content}
@@ -154,6 +150,13 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
                   <span key={item.label} className={`${base} cursor-not-allowed opacity-60`} title="Bientôt disponible">
                     {content}
                   </span>
+                );
+              }
+              if (item.to) {
+                return (
+                  <Link key={item.label} to={item.to} className={`${base} hover:bg-white/10`}>
+                    {content}
+                  </Link>
                 );
               }
               return (

@@ -83,10 +83,29 @@ function headless_register_user($request)
         return new WP_Error('email_exists', 'Un compte existe déjà avec cette adresse email : connectez-vous.', ['status' => 409]);
     }
 
-    $user_id = wp_create_user($username, $password, $email);
+    add_filter('woocommerce_email_enabled_customer_new_account', '__return_false');
+
+    if (function_exists('wc_create_new_customer')) {
+        $user_id = wc_create_new_customer($email, $username, $password);
+    } else {
+        $user_id = wp_create_user($username, $password, $email);
+    }
+
+    remove_filter('woocommerce_email_enabled_customer_new_account', '__return_false');
+
     if (is_wp_error($user_id)) {
         return new WP_Error('registration_failed', $user_id->get_error_message(), ['status' => 500]);
     }
+
+    $role = get_role('customer') ? 'customer' : 'subscriber';
+    $wp_user = new WP_User((int) $user_id);
+    if (!$wp_user->exists()) {
+        return new WP_Error('registration_failed', 'Compte créé mais introuvable.', ['status' => 500]);
+    }
+    if (!in_array($role, $wp_user->roles, true)) {
+        $wp_user->set_role($role);
+    }
+
     headless_register_rate_limit_hit();
 
     // Champs de la maquette Inscription (facultatifs)
@@ -110,6 +129,8 @@ function headless_register_user($request)
     }
     update_user_meta($user_id, 'newsletter_optin', filter_var($request->get_param('newsletter'), FILTER_VALIDATE_BOOLEAN) ? 1 : 0);
 
+    headless_register_send_welcome_email($user_id, $email, $username);
+
     $token_request = new WP_REST_Request('POST', '/jwt-auth/v1/token');
     $token_request->set_param('username', $username);
     $token_request->set_param('password', $password);
@@ -131,4 +152,36 @@ function headless_register_username_from_email($email)
         $username = $base . $suffix++;
     }
     return $username;
+}
+
+function headless_register_send_welcome_email($user_id, $email, $username)
+{
+    if (!function_exists('headless_front_url')) {
+        return false;
+    }
+
+    $user = new WP_User($user_id);
+
+    if (!$user->exists()) {
+        return false;
+    }
+
+    $reset_key = get_password_reset_key($user);
+
+    if (is_wp_error($reset_key)) {
+        return false;
+    }
+
+    $reset_link = headless_front_url('/new-password') . '?login=' . rawurlencode($username) . '&key=' . rawurlencode($reset_key);
+
+    $subject = 'Bienvenue sur notre boutique !';
+
+    $message = "Bienvenue,\n\n";
+    $message .= "Votre compte a ete cree avec succes.\n\n";
+    $message .= "Pour definir votre mot de passe, cliquez sur le lien ci-dessous :\n";
+    $message .= $reset_link . "\n\n";
+    $message .= "Ce lien est valide pendant 24 heures.\n\n";
+    $message .= "Cordialement,\nL'equipe";
+
+    return wp_mail($email, $subject, $message);
 }

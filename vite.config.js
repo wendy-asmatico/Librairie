@@ -10,6 +10,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     base: "/ecom",
     server: {
+      port: 1573,
+      strictPort: true,
       proxy: {
         "/woo-api": {
           target: apiUrl.origin,

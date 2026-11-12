@@ -100,7 +100,7 @@ const Review = ({ productId }) => {
         if (Array.isArray(userOrders) && userOrders.length > 0) {
           const purchased = userOrders.some((order) => {
             const status = order?.status?.toLowerCase?.() || "";
-            const isCompleted = ["completed", "processing", "paid"].includes(
+            const isCompleted = ["completed", "processing", "shipped", "paid"].includes(
               status,
             );
             const hasProduct = [
@@ -132,7 +132,7 @@ const Review = ({ productId }) => {
           const orders = await response.json();
           const purchased = orders.some((order) => {
             const status = order?.status?.toLowerCase?.() || "";
-            const isCompleted = ["completed", "processing", "paid"].includes(
+            const isCompleted = ["completed", "processing", "shipped", "paid"].includes(
               status,
             );
             const hasProduct = [
