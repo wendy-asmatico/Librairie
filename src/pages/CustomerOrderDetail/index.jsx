@@ -65,7 +65,7 @@ export default function CustomerOrderDetail() {
 
   const order = state.order;
   return (
-    <main className="mx-auto max-w-5xl px-gutter py-10 pb-16 text-ink">
+    <div className="mx-auto max-w-5xl px-gutter py-10 pb-16 text-ink">
       <Seo title="Détail de ma commande" noIndex />
       <Link to="/profile?section=orders" className="text-sm font-semibold text-secondary hover:underline">
         ← Retour à mes commandes
@@ -136,6 +136,6 @@ export default function CustomerOrderDetail() {
           </section>
         </div>
       )}
-    </main>
+    </div>
   );
 }

@@ -46,7 +46,7 @@ export default function ProductDetails() {
   const bg = matchedCategory?.image?.src;
 
   return (
-    <main>
+    <div>
       <div className="product-details-page ">
         <Product product={productToDisplay} />
         <SimilarProducts
@@ -60,6 +60,6 @@ export default function ProductDetails() {
           style={{ "--cat-bg": bg ? `url(${bg})` : "none" }}
         ></div>
       </div>
-    </main>
+    </div>
   );
 }

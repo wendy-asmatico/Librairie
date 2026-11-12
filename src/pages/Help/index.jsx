@@ -104,7 +104,7 @@ export default function Help() {
 
   const displayedQuestions = faq.error ? questions : faq.items;
   return (
-    <main className="bg-white text-ink">
+    <div className="bg-white text-ink">
       <Seo title="Centre d’aide et questions fréquentes" />
       <header className="border-b border-line bg-mint">
         <div className="mx-auto max-w-4xl px-gutter py-10 sm:py-14">
@@ -145,6 +145,6 @@ export default function Help() {
           </Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

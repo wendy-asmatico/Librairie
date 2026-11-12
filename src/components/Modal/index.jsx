@@ -61,7 +61,7 @@ export default function Modal() {
                 : "top-[1lvh] right-[1lvh] text-[5lvh]"
             }`}
             onClick={handleClose}
-            aria-label="Close"
+            aria-label="Fermer"
           >
             ✕
           </button>

@@ -42,7 +42,7 @@ export default function Success() {
   const pending = verifiedOrder && order.status === "on-hold";
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-6 py-16 text-ink">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-6 py-16 text-ink">
       <div className="text-center">
         {confirmed && (
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-mint text-3xl text-forest">
@@ -123,6 +123,6 @@ export default function Success() {
           Continuer mes achats
         </Link>
       </div>
-    </main>
+    </div>
   );
 }

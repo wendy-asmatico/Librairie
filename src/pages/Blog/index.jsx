@@ -2,8 +2,8 @@ import Blog from "../../components/Blog";
 
 export default function BlogPage() {
   return (
-    <main>
+    <div>
       <Blog />
-    </main>
+    </div>
   );
 }
