@@ -48,13 +48,26 @@ et un compte configurés : l'option reste indisponible jusque-là.
 
 Un WordPress + WooCommerce prêt à l'emploi est fourni dans `wordpress/` :
 
-1. Lancez Docker Desktop, puis : `cd wordpress && docker compose up -d`
-2. Première fois seulement : `./setup.sh` (installe WordPress en français, WooCommerce, Stripe, Tax, JWT et crée les catégories de la boutique)
-3. Créez un fichier `.env.production.local` à la racine avec `VITE_API_URL=http://localhost:8080`, puis relancez `npm run dev`
+1. Configurez la newsletter si vous souhaitez l'activer : copiez
+   `wordpress/.env.example` en `wordpress/.env`, puis renseignez la clé API
+   Brevo et l'identifiant de la liste de contacts. Le fichier `.env` n'est pas
+   versionné. Sans ces valeurs, les inscriptions au compte fonctionnent toujours,
+   mais une demande d'abonnement à la newsletter affichera un avertissement.
+2. Lancez Docker Desktop, puis : `cd wordpress && docker compose up -d`
+3. Première fois seulement : `./setup.sh` (installe WordPress en français, WooCommerce, Stripe, Tax, JWT et crée les catégories de la boutique)
+4. Créez un fichier `.env.production.local` à la racine avec `VITE_API_URL=http://localhost:8080`, puis relancez `npm run dev`
 
 Admin : http://localhost:8080/wp-admin (identifiant `admin`, mot de passe `maktaba2026`). Les `mu-plugins` du projet sont montés automatiquement.
 
-4. Optionnel : `./seed.sh` ajoute des données de démo (livres de la maquette avec couvertures, clients, 140 commandes sur 60 jours).
+5. Optionnel : `./seed.sh` ajoute des données de démo (livres de la maquette avec couvertures, clients, 140 commandes sur 60 jours).
+
+Le formulaire newsletter de la page d'accueil inscrit l'adresse saisie à la liste
+configurée dans Brevo. La case newsletter du formulaire de création de compte
+ajoute également l'adresse consentante à cette liste. Les clés `BREVO_API_KEY` et
+`BREVO_NEWSLETTER_LIST_ID` doivent aussi être définies comme constantes dans
+`wp-config.php` pour une installation WordPress hors Docker. Les campagnes
+s'envoient ensuite depuis Brevo ; la configuration de l'expéditeur et la validation
+de domaine se font dans ce service.
 
 ## Tableau de bord administrateur
 

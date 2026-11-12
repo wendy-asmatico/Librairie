@@ -205,6 +205,7 @@ export const registerThunk = createAsyncThunk(
       thunkAPI.dispatch(fetchCurrentUserOrdersThunk(data.token));
       return {
         token: data.token,
+        newsletterSubscribed: data.newsletter_subscribed !== false,
         profile: {
           email: data.user_email,
           displayName: data.user_display_name,

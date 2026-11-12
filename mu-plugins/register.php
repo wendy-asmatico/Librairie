@@ -127,7 +127,20 @@ function headless_register_user($request)
     if (in_array($civility, ['madame', 'monsieur'], true)) {
         update_user_meta($user_id, 'civility', $civility);
     }
-    update_user_meta($user_id, 'newsletter_optin', filter_var($request->get_param('newsletter'), FILTER_VALIDATE_BOOLEAN) ? 1 : 0);
+    $newsletter_optin = filter_var($request->get_param('newsletter'), FILTER_VALIDATE_BOOLEAN);
+    update_user_meta($user_id, 'newsletter_optin', $newsletter_optin ? 1 : 0);
+    $newsletter_subscribed = null;
+    if ($newsletter_optin) {
+        $newsletter_result = headless_newsletter_subscribe($email, $first_name, $last_name);
+        if (is_wp_error($newsletter_result)) {
+            $error_data = $newsletter_result->get_error_data();
+            $error_detail = isset($error_data['status']) ? 'HTTP ' . (int) $error_data['status'] : $newsletter_result->get_error_code();
+            error_log(sprintf('[newsletter] Brevo subscription failed (%s).', $error_detail));
+            $newsletter_subscribed = false;
+        } else {
+            $newsletter_subscribed = true;
+        }
+    }
 
     headless_register_send_welcome_email($user_id, $email, $username);
 
@@ -140,7 +153,9 @@ function headless_register_user($request)
         return new WP_Error('token_generation_failed', 'Compte cree, mais la connexion automatique a echoue.', ['status' => 500]);
     }
 
-    return rest_ensure_response($token_response->get_data());
+    $response_data = $token_response->get_data();
+    $response_data['newsletter_subscribed'] = $newsletter_subscribed;
+    return rest_ensure_response($response_data);
 }
 
 function headless_register_username_from_email($email)
