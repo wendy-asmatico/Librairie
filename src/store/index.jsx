@@ -7,7 +7,6 @@ import { categoriesSlice } from "../slices/categoriesSlice";
 import { filtersSlice } from "../slices/filtersSlice";
 import { userSlice } from "../slices/userSlice";
 import { pagesSlice } from "../slices/pagesSlice";
-import { blogSlice } from "../slices/blogSlice";
 import { siteSlice } from "../slices/siteSlice";
 import { toastSlice } from "../slices/toastSlice";
 import { modalSlice } from "../slices/modalSlice";
@@ -25,7 +24,6 @@ const store = configureStore({
     spotlight: spotlightSlice.reducer,
     filters: filtersSlice.reducer,
     pages: pagesSlice.reducer,
-    blog: blogSlice.reducer,
     site: siteSlice.reducer,
     toast: toastSlice.reducer,
     modal: modalSlice.reducer,

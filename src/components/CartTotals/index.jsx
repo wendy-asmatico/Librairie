@@ -69,7 +69,7 @@ export default function CartTotals() {
       <dl className="mt-4.5 border-t border-line-strong pt-4.5">
         <div className="flex items-baseline justify-between gap-3">
           <dt className="flex flex-col gap-1.5">
-            <span className="text-md leading-none font-bold text-ink">Total</span>
+            <span className="text-md leading-none font-bold text-ink">{summary.pendingShipping ? "Total hors livraison" : "Total"}</span>
             <span className="text-xs leading-none text-ink-muted">TVA incluse</span>
           </dt>
           <dd className="font-serif text-amount font-semibold whitespace-nowrap text-ink">

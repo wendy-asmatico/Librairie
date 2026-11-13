@@ -14,6 +14,7 @@ import {
   toggleGiftWrapThunk,
 } from "../thunkActionsCreator/cartThunks";
 import { createOptimisticHandlers } from "../utils/optimisticFactory";
+import { DELIVERY_MODES, selectedDeliveryMode } from "../utils/deliveryModes";
 
 const { takeSnapshot, onFulfilled, onRejected } = createOptimisticHandlers({
   keys: [
@@ -52,6 +53,7 @@ export const cartSlice = createSlice({
     totals: null,
     shipping_rates: [],
     needs_shipping: false,
+    receptionMode: null,
     cross_sells: [],
     extensions: {},
     nonce:
@@ -62,7 +64,11 @@ export const cartSlice = createSlice({
     loading: false,
     error: null,
   },
-  reducers: {},
+  reducers: {
+    setReceptionMode(state, action) {
+      state.receptionMode = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(initializeCartThunk.pending, (state) => {
@@ -125,7 +131,10 @@ export const cartSlice = createSlice({
         state.items = [];
         state.totals = null;
       })
-      .addCase(emptyCartThunk.fulfilled, onFulfilled)
+      .addCase(emptyCartThunk.fulfilled, (state, action) => {
+        onFulfilled(state, action);
+        state.receptionMode = null;
+      })
       .addCase(emptyCartThunk.rejected, onRejected)
       .addCase(applyCouponThunk.pending, (state) => {
         state.loading = true;
@@ -188,6 +197,8 @@ export const toRestorableCartItem = (item) => ({
 });
 
 export const selectCartItems = (state) => state.cart.items;
+export const selectReceptionMode = (state) =>
+  state.cart.receptionMode || selectedDeliveryMode(state.cart.shipping_rates);
 
 export const selectCartItemCount = createSelector([selectCartItems], (items) =>
   items.reduce((count, item) => count + (Number(item.quantity) || 0), 0),
@@ -211,14 +222,16 @@ export const selectCartSummary = createSelector(
     (state) => state.cart.coupons,
     (state) => state.cart.shipping_rates,
     (state) => state.cart.needs_shipping,
+    selectReceptionMode,
     selectCartItemCount,
   ],
-  (totals, fees, coupons, shippingPackages, needsShipping, itemCount) => {
+  (totals, fees, coupons, shippingPackages, needsShipping, receptionMode, itemCount) => {
     if (!totals) return null;
 
     const selectedRates = shippingPackages.flatMap((pkg) =>
       pkg.shipping_rates.filter((rate) => rate.selected),
     );
+    const pendingShipping = needsShipping && receptionMode && receptionMode !== selectedDeliveryMode(shippingPackages);
 
     return {
       currency: totals,
@@ -239,13 +252,15 @@ export const selectCartSummary = createSelector(
       shipping: needsShipping
         ? {
             label:
-              selectedRates.length === 1 ? selectedRates[0].name : "Livraison",
-            amount: selectedRates.length
+              pendingShipping ? DELIVERY_MODES.find((mode) => mode.id === receptionMode)?.label || "Livraison"
+                : selectedRates.length === 1 ? selectedRates[0].name : "Livraison",
+            amount: selectedRates.length && !pendingShipping
               ? sumAmounts(totals.total_shipping, totals.total_shipping_tax)
               : null,
           }
         : null,
-      total: Number(totals.total_price),
+      total: Number(totals.total_price) - (pendingShipping ? sumAmounts(totals.total_shipping, totals.total_shipping_tax) : 0),
+      pendingShipping: Boolean(pendingShipping),
     };
   },
 );

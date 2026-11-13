@@ -6,6 +6,8 @@ import { closeModal } from "../../slices/modalSlice";
 import { fetchCurrentUserOrdersThunk } from "../../thunkActionsCreator/userThunks";
 import { confirmPayment } from "./confirmPayment";
 import { PICKUP_ADDRESS } from "../../utils/pickup";
+import RelayFields from "../../components/RelayFields";
+import { paymentCard, paymentInput, paymentPrimary, paymentSecondary } from "../../components/PaymentForm/styles";
 
 const money = (amount, currency = "EUR") =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency }).format(
@@ -35,6 +37,7 @@ export default function PayPendingOrderForm({ orderId }) {
   const [deliveryLoading, setDeliveryLoading] = useState(false);
   const [deliveryMode, setDeliveryMode] = useState(null);
   const [deliveryKey, setDeliveryKey] = useState(null);
+  const [relayAddress, setRelayAddress] = useState({ company: "", address_1: "", postcode: "", city: "", country: "FR" });
 
   const user = useSelector((state) => state.user);
   const order = orders?.find((o) => o.id === orderId);
@@ -56,6 +59,7 @@ export default function PayPendingOrderForm({ orderId }) {
     mode: deliveryMode,
     country: deliveryMode === "delivery" ? address.country : null,
     postcode: deliveryMode === "delivery" ? address.postcode : null,
+    relay: deliveryMode?.startsWith("relay_") ? relayAddress : null,
   });
 
   const handleAddressChange = (e) =>
@@ -74,13 +78,13 @@ export default function PayPendingOrderForm({ orderId }) {
             "Content-Type": "application/json",
             ...(token && { Authorization: `Bearer ${token}` }),
           },
-          body: JSON.stringify({ mode, country: address.country, postcode: address.postcode }),
+          body: JSON.stringify({ mode, country: address.country, postcode: address.postcode, relay_address: relayAddress }),
         },
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Impossible de modifier le mode de réception.");
       setDelivery({ mode: data.mode, total: data.total });
-      setDeliveryKey(JSON.stringify({ mode, country: mode === "delivery" ? address.country : null, postcode: mode === "delivery" ? address.postcode : null }));
+      setDeliveryKey(JSON.stringify({ mode, country: mode === "delivery" ? address.country : null, postcode: mode === "delivery" ? address.postcode : null, relay: mode.startsWith("relay_") ? relayAddress : null }));
       dispatch(fetchCurrentUserOrdersThunk());
     } catch (err) {
       setError(err.message);
@@ -172,7 +176,7 @@ export default function PayPendingOrderForm({ orderId }) {
   };
 
   return (
-    <div className="w-100 text-ink">
+    <div className="w-full max-w-[25rem] text-ink">
       <h3 className="font-serif text-3xl font-semibold text-forest">
         Payer la commande
       </h3>
@@ -187,7 +191,7 @@ export default function PayPendingOrderForm({ orderId }) {
       </div>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
-        <fieldset className="flex flex-col gap-3" disabled={deliveryLoading || loading}>
+        <fieldset className="flex flex-col gap-3 accent-forest" disabled={deliveryLoading || loading}>
           <legend className="mb-2 text-sm font-semibold">Mode de réception</legend>
           <label className="flex items-start gap-2 text-sm">
             <input type="radio" name="delivery_mode" checked={deliveryMode === "delivery"} onChange={() => { setDeliveryMode("delivery"); setDeliveryKey(null); }} />
@@ -197,34 +201,44 @@ export default function PayPendingOrderForm({ orderId }) {
             <input type="radio" name="delivery_mode" checked={deliveryMode === "pickup"} onChange={() => { setDeliveryMode("pickup"); setDeliveryKey(null); }} />
             <span>Retrait gratuit en boutique — {PICKUP_ADDRESS}</span>
           </label>
-          <label className="flex items-start gap-2 text-sm text-ink-muted"><input type="radio" disabled /> Livraison en point relais — bientôt disponible</label>
+          <label className="flex items-start gap-2 text-sm">
+            <input type="radio" name="delivery_mode" checked={deliveryMode === "relay_mondial"} onChange={() => { setDeliveryMode("relay_mondial"); setDeliveryKey(null); }} />
+            <span>Point relais Mondial Relay</span>
+          </label>
           {deliveryLoading && <p className="text-sm text-ink-muted">Mise à jour du montant…</p>}
         </fieldset>
 
         <fieldset className="grid grid-cols-2 gap-4">
           <legend className="mb-2 text-sm font-semibold">
-            {deliveryMode === "pickup" ? "Adresse de facturation" : "Adresse de livraison et de facturation"}
+            {deliveryMode === "delivery" ? "Adresse de livraison et de facturation" : "Adresse de facturation"}
           </legend>
           {ADDRESS_FIELDS.map(({ name, label, type, full }) => (
             <label
               key={name}
               className={`flex flex-col gap-1 text-sm ${full ? "col-span-2" : ""}`}
             >
-              <span className="text-ink-muted">{label}</span>
+              <span className="font-semibold text-ink">{label}</span>
               <input
                 name={name}
                 type={type || "text"}
                 value={address[name]}
                 onChange={handleAddressChange}
                 required
-                className="rounded-md border border-line-strong bg-white px-3 py-2.5 text-ink"
+                className={paymentInput}
               />
             </label>
           ))}
         </fieldset>
 
+        {deliveryMode?.startsWith("relay_") && (
+          <RelayFields
+            address={relayAddress}
+            onChange={(event) => setRelayAddress((previous) => ({ ...previous, [event.target.name]: event.target.value }))}
+          />
+        )}
+
         {deliveryMode && (
-          <button type="button" onClick={() => changeDelivery(deliveryMode)} disabled={deliveryLoading || loading} className="rounded-md border border-line-strong px-4 py-2 text-sm font-semibold text-forest disabled:opacity-50">
+          <button type="button" onClick={() => changeDelivery(deliveryMode)} disabled={deliveryLoading || loading} className={`${paymentSecondary} text-sm`}>
             Confirmer le mode de réception et actualiser le montant
           </button>
         )}
@@ -233,7 +247,7 @@ export default function PayPendingOrderForm({ orderId }) {
           <label htmlFor="card-element" className="text-sm font-semibold">
             Carte bancaire
           </label>
-          <div className="min-h-12 rounded-md border border-line-strong bg-white px-4 py-3.5">
+          <div className={paymentCard}>
             <CardElement
               id="card-element"
               options={{
@@ -242,7 +256,7 @@ export default function PayPendingOrderForm({ orderId }) {
                     fontSize: "16px",
                     color: "#24382A",
                     fontFamily: "Plus Jakarta Sans, sans-serif",
-                    "::placeholder": { color: "#747870" },
+                    "::placeholder": { color: "#5c6e60" },
                   },
                   invalid: { color: "#9B3B2E" },
                 },
@@ -263,7 +277,7 @@ export default function PayPendingOrderForm({ orderId }) {
         <button
           type="submit"
           disabled={!stripe || loading || deliveryLoading}
-          className="w-full rounded-md bg-forest px-6 py-3.5 font-semibold text-white transition-colors hover:bg-forest-deep disabled:cursor-not-allowed disabled:opacity-50"
+          className={`${paymentPrimary} w-full`}
         >
           {loading ? "Traitement..." : "Payer maintenant"}
         </button>
@@ -272,7 +286,7 @@ export default function PayPendingOrderForm({ orderId }) {
           type="button"
           onClick={() => dispatch(closeModal())}
           disabled={loading || deliveryLoading}
-          className="w-full rounded-md border border-line-strong px-6 py-3.5 font-semibold text-ink-soft transition-colors hover:bg-mint disabled:opacity-50"
+          className={`${paymentSecondary} w-full`}
         >
           Annuler
         </button>
