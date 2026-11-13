@@ -67,8 +67,18 @@ métropolitaine : 3 € TTC jusqu'à 1 kg, 5 € jusqu'à 2 kg, 7 € au-delà,
 et 5 € si un produit n'a pas de poids. Les commandes issues d'un devis
 utilisent 5 € TTC. Le calcul exige un taux de TVA français à 20 % applicable
 à l'expédition dans la classe standard WooCommerce. Les tarifs sont calculés
-en euros et actualisés avant paiement. Mondial Relay nécessite une intégration
-et un compte configurés : l'option reste indisponible jusque-là.
+en euros et actualisés avant paiement.
+
+Les points relais Mondial Relay sont saisis manuellement par
+le client : nom, adresse, code postal et ville. La boutique doit vérifier
+que le point existe et appartient au réseau choisi avant l'expédition ; aucune
+étiquette n'est générée automatiquement. En France métropolitaine, la livraison
+coûte 2,88 € TTC jusqu'à 1 kg, 3,20 € jusqu'à 2 kg et 5 €
+au-delà. Si un poids manque, ou pour une ligne de devis sans produit associé,
+le forfait est de 3 € TTC. La même configuration de TVA à 20 % est requise.
+Le mode de réception est choisi dans le panier ; son tarif est confirmé à
+l'étape de livraison en fonction de l'adresse. Si les tarifs ne sont pas encore
+disponibles dans le panier, le montant de livraison reste à confirmer.
 
 ## Wireframes
 

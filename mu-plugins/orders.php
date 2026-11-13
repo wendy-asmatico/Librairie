@@ -62,7 +62,7 @@ function headless_get_current_user_order($request)
         'date'            => $order->get_date_created() ? $order->get_date_created()->date('c') : null,
         'date_paid'       => $order->get_date_paid() ? $order->get_date_paid()->date('c') : null,
         'payment_method'  => $order->get_payment_method_title(),
-        'delivery_mode'   => headless_order_has_store_pickup($order) ? 'pickup' : 'delivery',
+        'delivery_mode'   => headless_order_delivery_mode($order),
         'shipping_method' => $order->get_shipping_method(),
         'customer_note'   => $order->get_customer_note(),
         'currency'        => $order->get_currency(),
@@ -109,7 +109,7 @@ function headless_get_current_user_orders($request)
             'date'     => $order->get_date_created() ? $order->get_date_created()->date('c') : null,
             'total'    => $order->get_total(),
             'currency' => $order->get_currency(),
-            'delivery_mode' => headless_order_has_store_pickup($order) ? 'pickup' : 'delivery',
+            'delivery_mode' => headless_order_delivery_mode($order),
             'shipping_method' => $order->get_shipping_method(),
             'billing'  => [
                 'first_name' => $order->get_billing_first_name(),
@@ -144,6 +144,21 @@ function headless_order_has_store_pickup($order)
         }
     }
     return false;
+}
+
+function headless_order_delivery_mode($order)
+{
+    if (headless_order_has_store_pickup($order)) {
+        return 'pickup';
+    }
+    foreach ($order->get_shipping_methods() as $item) {
+        foreach (['relay_mondial', 'relay_chronopost'] as $mode) {
+            if ($item->get_method_id() === 'headless_' . $mode) {
+                return $mode;
+            }
+        }
+    }
+    return 'delivery';
 }
 
 function headless_pay_pending_order($request)
@@ -185,7 +200,7 @@ function headless_pay_pending_order($request)
         || wc_format_decimal($json_params['expected_total'], wc_get_price_decimals()) !== wc_format_decimal($order->get_total(), wc_get_price_decimals())) {
         return new WP_Error('order_total_changed', 'Le montant de la commande a changé. Rechargez la page avant de payer.', ['status' => 409]);
     }
-    $current_mode = headless_order_has_store_pickup($order) ? 'pickup' : 'delivery';
+    $current_mode = headless_order_delivery_mode($order);
     if (($json_params['delivery_mode'] ?? '') !== $current_mode) {
         return new WP_Error('delivery_mode_changed', 'Le mode de réception a changé. Rechargez la page avant de payer.', ['status' => 409]);
     }
@@ -210,15 +225,29 @@ function headless_pay_pending_order($request)
         $order->set_address([
             'first_name' => $address['first_name'],
             'last_name'  => $address['last_name'],
+            'company'    => '',
             'address_1'  => '14 Boulevard de la Sagesse',
             'address_2'  => '',
             'postcode'   => '13002',
             'city'       => 'Marseille',
             'state'      => '',
             'country'    => 'FR',
+            'phone'      => '',
         ], 'shipping');
+    } elseif (in_array($current_mode, ['relay_mondial', 'relay_chronopost'], true)) {
+        $relay_address = $order->get_address('shipping');
+        $valid = headless_validate_relay_address($relay_address);
+        if (is_wp_error($valid)) {
+            return $valid;
+        }
+        $relay_address['first_name'] = $address['first_name'];
+        $relay_address['last_name'] = $address['last_name'];
+        $order->set_address($relay_address, 'shipping');
     } else {
-        $order->set_address(array_diff_key($address, ['email' => 1]), 'shipping');
+        $order->set_address(array_merge(
+            ['company' => '', 'address_2' => '', 'state' => '', 'phone' => ''],
+            array_diff_key($address, ['email' => 1])
+        ), 'shipping');
     }
     $order->save();
 
@@ -257,7 +286,7 @@ function headless_set_order_delivery($request)
     }
 
     $mode = $request->get_param('mode');
-    if (!in_array($mode, ['pickup', 'delivery'], true)) {
+    if (!in_array($mode, ['pickup', 'delivery', 'relay_mondial'], true)) {
         return new WP_Error('invalid_delivery_mode', 'Mode de réception invalide.', ['status' => 400]);
     }
     $item = new WC_Order_Item_Shipping();
@@ -272,10 +301,26 @@ function headless_set_order_delivery($request)
         if ($order->get_currency() !== 'EUR') {
             return new WP_Error('delivery_currency_unavailable', 'Le tarif de livraison est disponible uniquement en euros.', ['status' => 503]);
         }
-        $destination = [
+        $relay_address = [];
+        if ($mode !== 'delivery') {
+            $raw = $request->get_param('relay_address');
+            $raw = is_array($raw) ? $raw : [];
+            foreach (['company', 'address_1', 'city', 'postcode'] as $field) {
+                $relay_address[$field] = sanitize_text_field((string) ($raw[$field] ?? ''));
+            }
+            $relay_address['country'] = 'FR';
+            $relay_address['address_2'] = '';
+            $relay_address['state'] = '';
+            $relay_address['phone'] = '';
+            $valid = headless_validate_relay_address($relay_address);
+            if (is_wp_error($valid)) {
+                return $valid;
+            }
+        }
+        $destination = $mode === 'delivery' ? [
             'country' => strtoupper(sanitize_text_field((string) $request->get_param('country'))),
             'postcode' => sanitize_text_field((string) $request->get_param('postcode')),
-        ];
+        ] : $relay_address;
         $weight = 0;
         $missing_weight = false;
         $quote = false;
@@ -295,7 +340,7 @@ function headless_set_order_delivery($request)
                 $weight += wc_get_weight((float) $product_weight, 'kg') * $line->get_quantity();
             }
         }
-        $rate = headless_delivery_rate($destination, $weight, $missing_weight, $quote);
+        $rate = headless_delivery_rate($destination, $weight, $missing_weight, $quote, $mode);
         if (is_wp_error($rate)) {
             return $rate;
         }
@@ -305,6 +350,9 @@ function headless_set_order_delivery($request)
         $item->set_taxes(['total' => $rate->get_taxes()]);
         $order->delete_meta_data('_headless_store_pickup');
         $order->update_meta_data('_headless_delivery_destination', $destination);
+        if ($mode !== 'delivery') {
+            $order->set_address($relay_address, 'shipping');
+        }
     }
     foreach ($order->get_shipping_methods() as $existing) {
         $order->remove_item($existing->get_id());

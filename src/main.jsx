@@ -25,8 +25,6 @@ import NewPassword from "./pages/NewPassword";
 import Profile from "./pages/Profile";
 import CustomerOrderDetail from "./pages/CustomerOrderDetail";
 import Wishlist from "./pages/Wishlist";
-import BlogPage from "./pages/Blog";
-import SinglePost from "./pages/SinglePost";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
 import Kids from "./pages/Kids";
@@ -104,8 +102,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/contact" element={<Contact />} />
             <Route path="/centre-aide" element={<Help />} />
             <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/blog/:slug" element={<SinglePost />} />
             <Route path="/success/:orderId" element={<Success />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/commandes/:id" element={<CustomerOrderDetail />} />

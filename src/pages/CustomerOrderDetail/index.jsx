@@ -131,7 +131,7 @@ export default function CustomerOrderDetail() {
               <Address title="Facturation et contact" address={order.billing} />
               {order.delivery_mode === "pickup"
                 ? <div><h3 className="mb-1 font-semibold text-forest">Retrait en boutique</h3><p>{PICKUP_ADDRESS}</p></div>
-                : <Address title="Adresse de livraison" address={order.shipping} />}
+                : <Address title={order.delivery_mode?.startsWith("relay_") ? "Point relais" : "Adresse de livraison"} address={order.shipping} />}
             </div>
           </section>
         </div>

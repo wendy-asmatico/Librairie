@@ -130,13 +130,14 @@ export default function OrderDetails() {
 
       {detail.shipping_address && (
         <>
-          <h3>{order?.delivery_mode === "pickup" ? "Retrait en boutique" : "Adresse de livraison"}</h3>
+          <h3>{order?.delivery_mode === "pickup" ? "Retrait en boutique" : order?.delivery_mode?.startsWith("relay_") ? "Point relais" : "Adresse de livraison"}</h3>
 
           {order?.delivery_mode === "pickup" ? (
             <p>{PICKUP_ADDRESS}</p>
           ) : (
             <>
               <p>{detail.shipping_address.first_name} {detail.shipping_address.last_name}</p>
+              {detail.shipping_address.company && <p>{detail.shipping_address.company}</p>}
               <p>{detail.shipping_address.address_1}</p>
               {detail.shipping_address.address_2 && <p>{detail.shipping_address.address_2}</p>}
               <p>{detail.shipping_address.postcode} {detail.shipping_address.city}</p>
