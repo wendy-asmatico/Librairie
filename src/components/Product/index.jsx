@@ -129,7 +129,7 @@ export default function Product({ product }) {
         <Breadcrumb items={breadcrumbItems} />
       </div>
 
-      <main className="max-w-7xl mx-auto px-gutter pt-2">
+      <div className="max-w-7xl mx-auto px-gutter pt-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
           {/* Galerie d'images */}
@@ -336,7 +336,7 @@ export default function Product({ product }) {
             />
           </section>
         )}
-      </main>
+      </div>
     </div>
   );
 }

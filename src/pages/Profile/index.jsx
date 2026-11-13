@@ -7,6 +7,7 @@ import AccountOrders from "../../components/AccountOrders";
 import AccountOverview from "../../components/AccountOverview";
 import AccountProfileForm from "../../components/AccountProfileForm";
 import WishlistSection from "../Wishlist";
+import StoreLocation from "../../components/StoreLocation";
 import DeleteAccountButton from "../../components/DeleteAccountButton";
 import Seo from "../../components/Seo";
 import {
@@ -97,7 +98,7 @@ export default function Profile() {
       <div className="mx-auto grid max-w-7xl gap-8 px-gutter py-8 pb-14 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12 lg:py-12">
         <AccountNavigation activeSection={section} onSelect={handleSelectSection} />
 
-        <main className="min-w-0" aria-labelledby="account-section-title">
+        <section className="min-w-0" aria-labelledby="account-section-title">
           <div className="mb-7 border-b border-line pb-5">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
               {activeSection.eyebrow}
@@ -125,8 +126,10 @@ export default function Profile() {
           {section === "addresses" && <AccountAddresses />}
           {section === "orders" && <AccountOrders />}
           {section === "wishlist" && <WishlistSection />}
-        </main>
+        </section>
       </div>
+
+       <StoreLocation />
     </div>
   );
 }

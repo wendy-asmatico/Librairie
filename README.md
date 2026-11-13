@@ -25,6 +25,36 @@ Le front utilise la variable suivante :
 3. renseignez le fichier wp-config.php.
 4. copiez le dossier /mu-plugins dans /wp-content.
 
+### Pages légales
+
+Les quatre pages sont affichées directement par le front-end, sans page WordPress
+ni ACF. Les textes provisoires sont définis dans les fichiers suivants :
+
+| Page | Fichier | Adresse sur le site |
+| --- | --- | --- |
+| Mentions légales | `src/pages/LegalMentions/index.jsx` | `/mentions-legales` |
+| CGV et rétractation | `src/pages/CGV/index.jsx` | `/cgv` |
+| CGU | `src/pages/CGU/index.jsx` | `/cgu` |
+| Politique de confidentialité | `src/pages/PrivacyPolicy/index.jsx` | `/politique-de-confidentialite` |
+
+Complétez et faites valider ces textes avant la mise en ligne : l'identité
+juridique, les conditions commerciales et les traitements de données doivent
+correspondre à la boutique réelle. Les pages affichent un avertissement tant
+que leur contenu reste provisoire.
+
+Le centre d'aide `/centre-aide`, accessible depuis la page contact et le pied de
+page, présente les questions fréquentes et renvoie vers le formulaire de contact.
+Avec ACF gratuit activé et `mu-plugins/acf-demo.php` déployé, les questions et
+réponses sont modifiables dans **Pages → Réglages contact → Centre d'aide —
+questions et réponses**. Les six premières questions sont proposées par défaut ;
+quatre emplacements supplémentaires sont disponibles. Chaque question possède
+une réponse et un lien interne facultatif (par exemple `/contact`), avec son
+libellé. Videz la question ou la réponse pour masquer un emplacement. Enregistrez
+la page et rechargez le centre d'aide pour voir les changements. Si les réglages
+sont indisponibles, le site affiche un avertissement et les réponses générales.
+Dans les réglages ACF de contact, l'ancienne valeur `/cgv` du lien centre d'aide
+est redirigée vers `/centre-aide` ; les autres liens configurés sont conservés.
+
 ### Retrait en boutique
 
 Dans WooCommerce, activez la méthode « Point de vente » / « Retrait sur place »
@@ -48,17 +78,43 @@ et un compte configurés : l'option reste indisponible jusque-là.
 
 Un WordPress + WooCommerce prêt à l'emploi est fourni dans `wordpress/` :
 
-1. Lancez Docker Desktop, puis : `cd wordpress && docker compose up -d`
-2. Première fois seulement : `./setup.sh` (installe WordPress en français, WooCommerce, Stripe, Tax, JWT et crée les catégories de la boutique)
-3. Créez un fichier `.env.production.local` à la racine avec `VITE_API_URL=http://localhost:8080`, puis relancez `npm run dev`
+1. Configurez la newsletter si vous souhaitez l'activer : copiez
+   `wordpress/.env.example` en `wordpress/.env`, puis renseignez la clé API
+   Brevo et l'identifiant de la liste de contacts. Le fichier `.env` n'est pas
+   versionné. Sans ces valeurs, les inscriptions au compte fonctionnent toujours,
+   mais une demande d'abonnement à la newsletter affichera un avertissement.
+2. Lancez Docker Desktop, puis : `cd wordpress && docker compose up -d`
+3. Première fois seulement : `./setup.sh` (installe WordPress en français, WooCommerce, Stripe, Tax, JWT et crée les catégories de la boutique)
+4. Créez un fichier `.env.production.local` à la racine avec `VITE_API_URL=http://localhost:8080`, puis relancez `npm run dev`
 
 Admin : http://localhost:8080/wp-admin (identifiant `admin`, mot de passe `maktaba2026`). Les `mu-plugins` du projet sont montés automatiquement.
 
-4. Optionnel : `./seed.sh` ajoute des données de démo (livres de la maquette avec couvertures, clients, 140 commandes sur 60 jours).
+5. Optionnel : `./seed.sh` ajoute des données de démo (livres de la maquette avec couvertures, clients, 140 commandes sur 60 jours).
+
+Le formulaire newsletter de la page d'accueil inscrit l'adresse saisie à la liste
+configurée dans Brevo. La case newsletter du formulaire de création de compte
+ajoute également l'adresse consentante à cette liste. Les clés `BREVO_API_KEY` et
+`BREVO_NEWSLETTER_LIST_ID` doivent aussi être définies comme constantes dans
+`wp-config.php` pour une installation WordPress hors Docker. Les campagnes
+s'envoient ensuite depuis Brevo ; la configuration de l'expéditeur et la validation
+de domaine se font dans ce service.
 
 ## Tableau de bord administrateur
 
 `/admin` (ex. http://localhost:5173/ecom/admin) : réservé aux comptes `administrator` / `shop_manager`.
+Le lien « Administration » du pied de page est visible pour ces deux rôles.
+Dans « Équipe », ils peuvent créer un gestionnaire ou un administrateur via
+`mu-plugins/staff.php`. Le nouveau compte reçoit un e-mail WordPress pour définir
+son mot de passe ; configurez l'envoi d'e-mails du serveur. Si l'envoi échoue,
+le compte reste créé et il faut utiliser la réinitialisation du mot de passe.
+Un administrateur a tous les droits WordPress : permettre aux gestionnaires d'en
+créer leur donne indirectement accès à ces droits. La liste de l'équipe permet
+aux administrateurs de retirer les droits d'un autre membre (son compte devient
+client) ou de le supprimer en réattribuant ses contenus WordPress à l'administrateur
+connecté. Ces actions ne sont pas disponibles sur WordPress multisite et ne
+permettent pas d'agir sur son propre compte. Les sessions WordPress du membre
+sont fermées lors du retrait des droits ; un jeton JWT existant conserve cependant
+la connexion au compte client jusqu'à son expiration.
 Connectez-vous sur le site avec un compte admin, puis ouvrez la page. Les données viennent de l'API WooCommerce (`wc/v3`) avec le jeton JWT.
 La recherche du tableau de bord parcourt les commandes par numéro, nom ou e-mail
 du client et nom de produit commandé, indépendamment de la période sélectionnée.
@@ -66,6 +122,12 @@ Les filtres « Toutes », « À préparer » et « Retraits » restent applicabl
 Les sections « Clients », « Messages » et « Avis clients » proposent des listes
 consultables et paginées dans le tableau de bord. Les clients sont les comptes
 WooCommerce ayant le rôle client ; les commandes invitées ne créent pas de compte.
+Dans l'espace client, sélectionner une commande affiche sa progression selon son
+statut WooCommerce. Les retraits suivent les étapes validation, préparation et
+remise en boutique ; les livraisons ajoutent l'étape expédition. Aucune date de
+livraison estimée ni aucun numéro de suivi ne sont fournis. Le lien « Détails »
+ouvre une fiche en lecture seule avec les produits, montants et coordonnées de la
+commande ; WordPress vérifie qu'elle appartient au client connecté.
 Un message est marqué comme lu lorsqu'il est ouvert. Sa suppression le place
 dans la corbeille WordPress ; pour une demande de devis ou de coffret, elle le
 retire uniquement de la boîte de messages afin de conserver le devis. Les autres

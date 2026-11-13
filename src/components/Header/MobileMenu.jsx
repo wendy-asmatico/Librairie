@@ -1,9 +1,23 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Autocomplete from "../Autocomplete";
 import useRayonNav from "./useRayonNav";
 
 export default function MobileMenu({ isOpen, onClose, cartBadgeValue, token, onLogout }) {
   const { items, isActive, goTo } = useRayonNav(onClose);
+  const menuRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen || window.matchMedia("(min-width: 768px)").matches) return;
+    const previousFocus = document.activeElement;
+    closeButtonRef.current?.focus();
+    return () => {
+      if (menuRef.current?.contains(document.activeElement) && previousFocus?.isConnected) {
+        previousFocus.focus();
+      }
+    };
+  }, [isOpen]);
 
   return (
     <>
@@ -15,13 +29,18 @@ export default function MobileMenu({ isOpen, onClose, cartBadgeValue, token, onL
       />
 
       <div
+        id="menu-mobile"
+        ref={menuRef}
         className={`fixed top-0 right-0 z-50 w-4/5 max-w-xs h-full bg-white shadow-2xl transition-transform duration-300 ease-in-out md:hidden flex flex-col p-6 ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+          isOpen ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") onClose();
+        }}
       >
         <div className="flex justify-between items-center mb-6">
           <span className="font-bold text-[#8C6D23]">MENU</span>
-          <button onClick={onClose} className="text-xl p-1 bg-transparent border-none">✕</button>
+          <button ref={closeButtonRef} type="button" onClick={onClose} aria-label="Fermer le menu" className="text-xl p-1 bg-transparent border-none">✕</button>
         </div>
 
         <div className="mb-6">

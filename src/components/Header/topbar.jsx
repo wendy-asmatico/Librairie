@@ -5,10 +5,10 @@ const DEFAULT_CONTENT = {
   left_highlight_text: "Retrait gratuit en boutique",
   left_secondary_text: "Paiement 100% sécurisé",
   phone_label: "Service client :",
-  phone_value: "+33 1 42 68 00 00",
-  phone_href: "tel:+33142680000",
+  phone_value: "+33 7 83 76 84 16",
+  phone_href: "tel:+33783768416",
   whatsapp_label: "WhatsApp Conseil Direct",
-  whatsapp_url: "https://wa.me/33142680000",
+  whatsapp_url: "https://wa.me/33783768416",
 };
 
 export default function TopBar() {
@@ -84,7 +84,7 @@ export default function TopBar() {
 
         <div className="hidden sm:flex items-center gap-6 text-[12px]">
           <a
-            href={content.phone_href || "tel:+33142680000"}
+            href={content.phone_href || "tel:+33783768416"}
             className="hover:text-[#D0B172] transition-colors flex items-center gap-2 text-[#E2E8E0]"
           >
             <svg
@@ -104,7 +104,7 @@ export default function TopBar() {
           </a>
 
           <a
-            href={content.whatsapp_url || "https://wa.me/33142680000"}
+            href={content.whatsapp_url || "https://wa.me/33783768416"}
             target="_blank"
             rel="noreferrer"
             className="hover:text-[#D0B172] transition-colors flex items-center gap-2 text-[#E2E8E0]"

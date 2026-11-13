@@ -2,13 +2,33 @@ import { useState } from "react";
 
 export default function Newsletter() {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState("idle");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email) {
-      setSubmitted(true);
+    setStatus("loading");
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/wp-json/custom/v1/newsletter`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim() }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Impossible de vous inscrire pour le moment.");
+      }
+
+      setStatus("success");
       setEmail("");
+    } catch (requestError) {
+      setStatus("error");
+      setError(requestError.message || "Impossible de joindre le service. Réessayez plus tard.");
     }
   };
 
@@ -34,15 +54,17 @@ export default function Newsletter() {
         </p>
 
         {/* Formulaire */}
-        {submitted ? (
-          <div className="bg-[#B1D2AA]/30 text-[#2A3B28] px-6 py-3.5 rounded-2xl font-bold text-sm">
-            Merci ! Votre inscription est bien enregistrée.
+        {status === "success" ? (
+          <div role="status" className="bg-[#B1D2AA]/30 text-[#2A3B28] px-6 py-3.5 rounded-2xl font-bold text-sm">
+            Merci ! Votre adresse a bien été inscrite à la newsletter.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="w-full max-w-lg flex flex-col sm:flex-row items-center gap-3 mb-4">
             <input
               type="email"
               required
+              autoComplete="email"
+              aria-label="Votre adresse e-mail"
               placeholder="Votre adresse email personnelle..."
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -50,17 +72,21 @@ export default function Newsletter() {
             />
             <button
               type="submit"
-              className="w-full sm:w-auto bg-[#B1D2AA] hover:bg-[#a1c49a] text-[#2A3B28] font-bold text-sm px-7 py-3.5 rounded-xl transition-colors shrink-0 cursor-pointer shadow-2xs"
+              disabled={status === "loading"}
+              className="w-full sm:w-auto bg-[#B1D2AA] hover:bg-[#a1c49a] text-[#2A3B28] font-bold text-sm px-7 py-3.5 rounded-xl transition-colors shrink-0 cursor-pointer shadow-2xs disabled:cursor-wait disabled:opacity-70"
             >
-              S'inscrire
+              {status === "loading" ? "Inscription…" : "S'inscrire"}
             </button>
           </form>
+        )}
+        {status === "error" && (
+          <p role="alert" className="mb-4 text-sm text-red-700">{error}</p>
         )}
 
         {/* Cadenas et mention légale */}
         <p className="text-[11px] text-gray-500 flex items-center justify-center gap-1.5 mt-1">
           <span>🔒</span>
-          <span>Vos données restent strictly confidentielles. Désinscription en 1 clic sans condition.</span>
+          <span>Vos données restent strictement confidentielles. Désinscription en 1 clic sans condition.</span>
         </p>
 
       </div>

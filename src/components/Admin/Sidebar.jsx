@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { WP_ADMIN_URL } from "../../admin/api";
 import { initials } from "../../admin/format";
@@ -23,6 +24,19 @@ const wp = (path) => `${WP_ADMIN_URL}/${path}`;
 export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) {
   const location = useLocation();
   const currentRoute = `${location.pathname}${location.search}`;
+  const sidebarRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (!open || window.matchMedia("(min-width: 1024px)").matches) return;
+    const previousFocus = document.activeElement;
+    closeButtonRef.current?.focus();
+    return () => {
+      if (sidebarRef.current?.contains(document.activeElement) && previousFocus?.isConnected) {
+        previousFocus.focus();
+      }
+    };
+  }, [open]);
 
   const groups = [
     {
@@ -62,6 +76,7 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
       title: "Boutique",
       items: [
         { label: "Promotions", icon: icPromos, to: "/admin/promotions" },
+        { label: "Équipe", icon: icClients, to: "/admin/equipe" },
         { label: "Paramètres", icon: icSettings, href: wp("admin.php?page=wc-settings") },
       ],
     },
@@ -81,11 +96,24 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
         aria-hidden="true"
       />
       <aside
+        ref={sidebarRef}
         className={`fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col gap-1 overflow-y-auto bg-forest px-4 pt-7 pb-6 font-sans transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
-          open ? "translate-x-0" : "-translate-x-full"
+          open ? "visible translate-x-0" : "invisible -translate-x-full lg:visible"
         }`}
         aria-label="Navigation administrateur"
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && open) onClose();
+        }}
       >
+        <button
+          ref={closeButtonRef}
+          type="button"
+          onClick={onClose}
+          className="self-end rounded p-2 text-leaf-soft lg:hidden"
+          aria-label="Fermer le menu"
+        >
+          ✕
+        </button>
         <Link to="/admin" className="flex items-center gap-2.5 pb-5 pl-2">
           <span className="flex size-[52px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-ivory">
             <span className="relative block h-[29.389px] w-[46px] overflow-hidden">
@@ -113,7 +141,14 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
               const isActive = item.to ? currentRoute === item.to || (item.to === "/admin/messages" && location.pathname === item.to) : false;
               const content = (
                 <>
-                  <img src={item.icon} alt="" className="size-[18px] shrink-0" />
+                  <span
+                    aria-hidden="true"
+                    className={`size-[18px] shrink-0 bg-current ${isActive ? "text-forest" : "text-leaf-soft"}`}
+                    style={{
+                      WebkitMask: `url("${item.icon}") center / contain no-repeat`,
+                      mask: `url("${item.icon}") center / contain no-repeat`,
+                    }}
+                  />
                   <span
                     className={`flex-1 text-sm leading-5 ${
                       isActive ? "font-bold text-forest" : "font-semibold text-leaf-soft"
@@ -178,10 +213,14 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
           </p>
           <Link
             to="/"
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-sage py-[9px] text-xs leading-4 font-semibold tracking-[0.48px] text-white transition-colors hover:bg-[#9cc08f]"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-sage py-[9px] text-xs leading-4 font-semibold tracking-[0.48px] text-forest transition-colors hover:bg-[#9cc08f]"
           >
             Voir la boutique
-            <img src={icExternal} alt="" className="size-[13px]" />
+            <span
+              aria-hidden="true"
+              className="size-[13px] bg-current"
+              style={{ WebkitMask: `url("${icExternal}") center / contain no-repeat`, mask: `url("${icExternal}") center / contain no-repeat` }}
+            />
           </Link>
         </div>
 

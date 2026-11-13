@@ -12,8 +12,8 @@ const KICKER = "font-sans text-[11px] leading-4 font-bold tracking-[0.55px] text
 
 const DEFAULT_CONTENT = {
   phone_kicker: "SERVICE CLIENT",
-  phone: "+33 1 42 68 00 00",
-  phone_href: "tel:+33142680000",
+  phone: "+33 7 83 76 84 16",
+  phone_href: "tel:+33783768416",
   phone_note: "Du mardi au dimanche · 10h30 – 19h30",
   email_kicker: "PAR EMAIL",
   email: "contact@maktabaelhikma.fr",
@@ -23,7 +23,7 @@ const DEFAULT_CONTENT = {
   whatsapp_description:
     "Une photo d’un livre, une question sur la taille d’un qamis ou une idée de coffret : un libraire vous répond en direct sur WhatsApp.",
   whatsapp_button_text: "Écrire sur WhatsApp",
-  whatsapp_url: "https://wa.me/33142680000",
+  whatsapp_url: "https://wa.me/33783768416",
   faq_kicker: "QUESTIONS FRÉQUENTES",
   faq_title: "Votre réponse est peut-être déjà ici",
   faq_1_label: "Modalités et délais d’expédition",
@@ -35,7 +35,7 @@ const DEFAULT_CONTENT = {
   faq_4_label: "Retours & droit de rétractation",
   faq_4_url: "/cgv",
   faq_all_text: "Voir tout le Centre d’aide →",
-  faq_all_url: "/cgv",
+  faq_all_url: "/centre-aide",
 };
 
 function ContactCard({ icon, kicker, value, href, note }) {
@@ -152,7 +152,7 @@ export default function ContactInfo() {
           })}
         </ul>
         <Link
-          to={content.faq_all_url}
+          to={content.faq_all_url === "/cgv" ? "/centre-aide" : content.faq_all_url}
           className="self-start font-sans text-[13px] leading-[18px] font-semibold tracking-[0.26px] text-gold hover:text-gold-dark"
         >
           {content.faq_all_text}

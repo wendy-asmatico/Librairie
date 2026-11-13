@@ -9,6 +9,14 @@ add_action('rest_api_init', function () {
         },
     ]);
 
+    register_rest_route('custom/v1', '/orders/(?P<order_id>\d+)', [
+        'methods'             => 'GET',
+        'callback'            => 'headless_get_current_user_order',
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        },
+    ]);
+
     register_rest_route('custom/v1', '/orders/(?P<order_id>\d+)/pay', [
         'methods'             => 'POST',
         'callback'            => 'headless_pay_pending_order',
@@ -35,6 +43,50 @@ add_action('rest_api_init', function () {
         },
     ]);
 });
+
+function headless_get_current_user_order($request)
+{
+    if (!function_exists('wc_get_order')) {
+        return new WP_Error('woocommerce_unavailable', 'WooCommerce est requis pour cette fonctionnalité.', ['status' => 503]);
+    }
+
+    $order = wc_get_order((int) $request->get_param('order_id'));
+    if (!$order || (int) $order->get_customer_id() !== get_current_user_id()) {
+        return new WP_Error('order_not_found', 'Commande introuvable.', ['status' => 404]);
+    }
+
+    return rest_ensure_response([
+        'id'              => $order->get_id(),
+        'number'          => $order->get_order_number(),
+        'status'          => $order->get_status(),
+        'date'            => $order->get_date_created() ? $order->get_date_created()->date('c') : null,
+        'date_paid'       => $order->get_date_paid() ? $order->get_date_paid()->date('c') : null,
+        'payment_method'  => $order->get_payment_method_title(),
+        'delivery_mode'   => headless_order_has_store_pickup($order) ? 'pickup' : 'delivery',
+        'shipping_method' => $order->get_shipping_method(),
+        'customer_note'   => $order->get_customer_note(),
+        'currency'        => $order->get_currency(),
+        'total'           => $order->get_total(),
+        'total_tax'       => $order->get_total_tax(),
+        'shipping_total'  => $order->get_shipping_total(),
+        'discount_total'  => $order->get_discount_total(),
+        'billing'         => $order->get_address('billing'),
+        'shipping'        => $order->get_address('shipping'),
+        'items'           => array_map(function ($item) {
+            return [
+                'id'        => $item->get_id(),
+                'name'      => $item->get_name(),
+                'quantity'  => $item->get_quantity(),
+                'total'     => $item->get_total(),
+                'total_tax' => $item->get_total_tax(),
+            ];
+        }, array_values($order->get_items())),
+        'fees'            => array_map(function ($item) {
+            return ['id' => $item->get_id(), 'name' => $item->get_name(), 'total' => $item->get_total()];
+        }, array_values($order->get_fees())),
+        'coupons'         => array_values($order->get_coupon_codes()),
+    ]);
+}
 
 function headless_get_current_user_orders($request)
 {

@@ -53,6 +53,12 @@ add_action('rest_api_init', function () {
         'permission_callback' => '__return_true',
     ]);
 
+    register_rest_route('custom/v1', '/help-settings', [
+        'methods'             => 'GET',
+        'callback'            => 'headless_help_settings',
+        'permission_callback' => '__return_true',
+    ]);
+
     register_rest_route('custom/v1', '/topbar-settings', [
         'methods'             => 'GET',
         'callback'            => 'headless_topbar_settings',
@@ -328,7 +334,7 @@ add_action('acf/init', function () {
         ['contact_faq_4_label', 'FAQ 4 — Question', 'Retours & droit de rétractation', 'text'],
         ['contact_faq_4_url', 'FAQ 4 — Lien', '/cgv', 'text'],
         ['contact_faq_all_text', 'FAQ — Texte du lien centre d’aide', 'Voir tout le Centre d’aide →', 'text'],
-        ['contact_faq_all_url', 'FAQ — Lien centre d’aide', '/cgv', 'text'],
+        ['contact_faq_all_url', 'FAQ — Lien centre d’aide', '/centre-aide', 'text'],
     ];
 
     $contact_acf_fields = [];
@@ -353,6 +359,43 @@ add_action('acf/init', function () {
         ]]],
         'position' => 'normal',
         'style'    => 'default',
+    ]);
+
+    $help_defaults = [
+        ['Comment suivre ma commande ?', 'Connectez-vous et consultez vos commandes pour voir leur statut et leurs détails. Si vous avez commandé sans compte, contactez-nous avec votre numéro de commande.', 'Mes commandes', '/profile?section=orders'],
+        ['Puis-je retirer ma commande en boutique ?', 'Le retrait en boutique est proposé lors de la commande lorsqu’il est disponible. L’adresse de retrait est : 14 Boulevard de la Sagesse, 13002 Marseille. Pour toute question sur le retrait, contactez-nous.', 'Nous contacter', '/contact'],
+        ['Comment connaître les frais et délais de livraison ?', 'Les modes de réception disponibles et les frais sont indiqués lors de la commande, avant le paiement. Pour connaître les délais applicables à votre commande, contactez-nous.', 'Nous contacter', '/contact?objet=commande'],
+        ['Comment demander un retour ou exercer mon droit de rétractation ?', 'Consultez les conditions générales de vente et contactez-nous avec les informations de votre commande. Les conditions de retour sont en cours de finalisation.', 'Consulter les CGV', '/cgv'],
+        ['Comment demander un conseil ou un devis ?', 'Utilisez le formulaire de contact pour une question ou une demande de conseil. Pour un devis ou un coffret sur mesure, choisissez une demande de devis.', 'Demander un devis', '/contact?objet=devis'],
+        ['Comment contacter la librairie ?', 'Vous pouvez nous écrire à contact@maktabaelhikma.fr, nous appeler au +33 7 83 76 84 16 ou utiliser le formulaire de contact.', 'Nous contacter', '/contact'],
+    ];
+    $help_fields = [];
+    for ($index = 1; $index <= 10; $index++) {
+        $defaults = $help_defaults[$index - 1] ?? ['', '', '', ''];
+        foreach ([
+            ['question', 'Question', 'text', 0],
+            ['answer', 'Réponse', 'textarea', 1],
+            ['link_label', 'Texte du lien facultatif', 'text', 2],
+            ['link_url', 'Lien interne facultatif (ex. /contact)', 'text', 3],
+        ] as [$name, $label, $type, $default_index]) {
+            $help_fields[] = [
+                'key'           => 'field_help_' . $index . '_' . $name,
+                'label'         => 'FAQ ' . $index . ' — ' . $label,
+                'name'          => 'help_' . $index . '_' . $name,
+                'type'          => $type,
+                'default_value' => $defaults[$default_index],
+            ];
+        }
+    }
+    acf_add_local_field_group([
+        'key'      => 'group_help_settings',
+        'title'    => 'Centre d’aide — questions et réponses',
+        'fields'   => $help_fields,
+        'location' => [[[
+            'param'    => 'page_slug',
+            'operator' => '==',
+            'value'    => 'reglages-contact',
+        ]]],
     ]);
 
     $topbar_fields = [
@@ -732,6 +775,42 @@ function headless_contact_info_settings()
     }
 
     return rest_ensure_response($content);
+}
+
+function headless_help_settings()
+{
+    if (!function_exists('get_field')) {
+        return new WP_Error('acf_not_active', 'Advanced Custom Fields doit être activé pour afficher la FAQ.', ['status' => 503]);
+    }
+
+    $page = get_page_by_path('reglages-contact', OBJECT, 'page');
+    if (!$page || $page->post_status !== 'publish') {
+        return new WP_Error('help_settings_not_found', 'La page publiée « Réglages contact » est introuvable.', ['status' => 404]);
+    }
+
+    $items = [];
+    for ($index = 1; $index <= 10; $index++) {
+        $prefix = 'help_' . $index . '_';
+        $question = trim(sanitize_text_field((string) get_field($prefix . 'question', $page->ID)));
+        $answer = trim(sanitize_textarea_field((string) get_field($prefix . 'answer', $page->ID)));
+        if ($question === '' || $answer === '') {
+            continue;
+        }
+        $link_url = trim((string) get_field($prefix . 'link_url', $page->ID));
+        if ($link_url === '' || $link_url[0] !== '/' || strpos($link_url, '//') === 0) {
+            $link_url = '';
+        } else {
+            $link_url = sanitize_text_field($link_url);
+        }
+        $items[] = [
+            'question'   => $question,
+            'answer'     => $answer,
+            'link_label' => sanitize_text_field((string) get_field($prefix . 'link_label', $page->ID)),
+            'link_url'   => $link_url,
+        ];
+    }
+
+    return rest_ensure_response(['items' => $items]);
 }
 
 function headless_topbar_settings()

@@ -65,7 +65,7 @@ export default function NewPassword() {
   };
 
   return (
-    <main className="min-h-screen bg-ivory px-gutter py-12 font-sans text-ink">
+    <div className="min-h-screen bg-ivory px-gutter py-12 font-sans text-ink">
       <div className="mx-auto max-w-xl rounded-[28px] border border-line bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sm:p-10">
         <p className="text-[11px] leading-4 font-bold tracking-[1.2px] text-gold uppercase">Sécurité</p>
         <h1 className="mt-3 font-serif text-[38px] leading-[44px] font-semibold text-forest-deep">
@@ -147,6 +147,6 @@ export default function NewPassword() {
           </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
