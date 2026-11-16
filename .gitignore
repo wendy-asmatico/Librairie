@@ -5,3 +5,4 @@ dist
 *.css.map
 video_de_presentation.mp4
 .env*.local
+wordpress/.env

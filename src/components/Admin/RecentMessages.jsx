@@ -1,12 +1,8 @@
 import dotUnread from "../../assets/admin/dot-unread.svg";
 import dotRead from "../../assets/admin/dot-read.svg";
-import { WP_ADMIN_URL } from "../../admin/api";
+import { Link } from "react-router-dom";
 import { timeAgo } from "../../admin/format";
 
-const INBOX = `${WP_ADMIN_URL}/edit.php?post_type=contact_message`;
-
-// Messages récents — maquette 210:228.
-// Messages du formulaire de contact (mu-plugin contact.php), ouverts dans l'admin WordPress.
 export default function RecentMessages({ messages = [] }) {
   return (
     <div className="flex flex-col gap-3.5 overflow-hidden rounded-2xl border border-line bg-white p-[22px] font-sans shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
@@ -15,14 +11,12 @@ export default function RecentMessages({ messages = [] }) {
           <p className="text-[11px] leading-4 font-bold tracking-[0.55px] text-gold uppercase">Formulaire de contact</p>
           <p className="font-serif text-xl leading-7 font-bold text-forest-deep">Messages récents</p>
         </div>
-        <a
-          href={INBOX}
-          target="_blank"
-          rel="noreferrer"
+        <Link
+          to="/admin/messages"
           className="text-xs leading-4 font-semibold text-muted transition-colors hover:text-gold"
         >
           Boîte →
-        </a>
+        </Link>
       </div>
 
       {messages.length === 0 ? (
@@ -34,11 +28,9 @@ export default function RecentMessages({ messages = [] }) {
         </div>
       ) : (
         messages.slice(0, 3).map((m, i) => (
-          <a
+          <Link
             key={m.id}
-            href={m.edit_url}
-            target="_blank"
-            rel="noreferrer"
+            to={`/admin/messages?message=${m.id}`}
             className={`-mx-2 flex items-start gap-2.5 rounded-lg px-2 transition-colors hover:bg-ivory ${
               i > 0 ? "border-t border-[#eef2ea] pt-3" : ""
             }`}
@@ -56,7 +48,7 @@ export default function RecentMessages({ messages = [] }) {
               </span>
               <p className="truncate text-xs leading-[18px] text-muted">{m.excerpt}</p>
             </div>
-          </a>
+          </Link>
         ))
       )}
     </div>

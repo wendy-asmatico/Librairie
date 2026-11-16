@@ -1,9 +1,0 @@
-.similar-products-section .similar-products-grid {
-  display: flex;
-  flex-wrap: wrap;
-  flex-direction: row;
-  justify-content: space-between;
-}
-.similar-products-section .similar-products-grid .product-card {
-  margin-bottom: 2vw;
-}/*# sourceMappingURL=index.css.map */

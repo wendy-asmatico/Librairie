@@ -41,7 +41,7 @@ export default function StickyCheckoutBar({ visible }) {
           <div className="mx-auto flex max-w-180 items-center gap-4">
             <p className="flex shrink-0 flex-col gap-1">
               <span className="text-xs leading-none font-medium text-ink-muted">
-                Total · {pluralize(summary.itemCount, "article")}
+                {summary.pendingShipping ? "Hors livraison" : "Total"} · {pluralize(summary.itemCount, "article")}
               </span>
               <span className="font-serif text-[1.375rem] leading-none font-semibold whitespace-nowrap text-ink">
                 {formatPrice(summary.total, summary.currency)}

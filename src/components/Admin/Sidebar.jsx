@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { WP_ADMIN_URL } from "../../admin/api";
 import { initials } from "../../admin/format";
 
@@ -7,9 +8,7 @@ import icDashboard from "../../assets/admin/nav-dashboard.svg";
 import icOrders from "../../assets/admin/nav-orders.svg";
 import icPickup from "../../assets/admin/nav-pickup.svg";
 import icProducts from "../../assets/admin/nav-products.svg";
-import icCategories from "../../assets/admin/nav-categories.svg";
 import icGifts from "../../assets/admin/nav-gifts.svg";
-import icStock from "../../assets/admin/nav-stock.svg";
 import icClients from "../../assets/admin/nav-clients.svg";
 import icMessages from "../../assets/admin/nav-messages.svg";
 import icReviews from "../../assets/admin/nav-reviews.svg";
@@ -19,20 +18,36 @@ import dotOnline from "../../assets/admin/dot-online.svg";
 import icExternal from "../../assets/admin/ic-external.svg";
 import icLogout from "../../assets/admin/ic-logout.svg";
 
-// Les écrans autres que le tableau de bord ouvrent l'admin WooCommerce
+// Les écrans non encore refaits en React ouvrent l'admin WooCommerce
 const wp = (path) => `${WP_ADMIN_URL}/${path}`;
 
 export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) {
+  const location = useLocation();
+  const currentRoute = `${location.pathname}${location.search}`;
+  const sidebarRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (!open || window.matchMedia("(min-width: 1024px)").matches) return;
+    const previousFocus = document.activeElement;
+    closeButtonRef.current?.focus();
+    return () => {
+      if (sidebarRef.current?.contains(document.activeElement) && previousFocus?.isConnected) {
+        previousFocus.focus();
+      }
+    };
+  }, [open]);
+
   const groups = [
     {
       title: "Pilotage",
       items: [
-        { label: "Tableau de bord", icon: icDashboard, active: true },
-        { label: "Commandes", icon: icOrders, href: wp("admin.php?page=wc-orders"), badge: badges.orders },
+        { label: "Tableau de bord", icon: icDashboard, to: "/admin" },
+        { label: "Commandes", icon: icOrders, to: "/admin/commandes", badge: badges.orders },
         {
           label: "Retraits boutique",
           icon: icPickup,
-          href: wp("admin.php?page=wc-orders&status=wc-processing"),
+          to: "/admin/commandes?filter=pickup",
           badge: badges.pickups,
         },
       ],
@@ -40,33 +55,28 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
     {
       title: "Catalogue",
       items: [
-        { label: "Produits", icon: icProducts, href: wp("edit.php?post_type=product") },
-        {
-          label: "Rayons & catégories",
-          icon: icCategories,
-          href: wp("edit-tags.php?taxonomy=product_cat&post_type=product"),
-        },
-        { label: "Coffrets & devis", icon: icGifts, soon: true },
-        { label: "Stocks", icon: icStock, href: wp("edit.php?post_type=product&stock_status=instock") },
+        { label: "Produits", icon: icProducts, to: "/admin/produits" },
+        { label: "Coffrets & devis", icon: icGifts, to: "/admin/devis", badge: badges.quotes },
       ],
     },
     {
       title: "Relation client",
       items: [
-        { label: "Clients", icon: icClients, href: wp("users.php?role=customer") },
+        { label: "Clients", icon: icClients, to: "/admin/clients" },
         {
           label: "Messages",
           icon: icMessages,
-          href: wp("edit.php?post_type=contact_message"),
+          to: "/admin/messages",
           badge: badges.messages,
         },
-        { label: "Avis clients", icon: icReviews, href: wp("edit.php?post_type=product&page=product-reviews") },
+        { label: "Avis clients", icon: icReviews, to: "/admin/avis" },
       ],
     },
     {
       title: "Boutique",
       items: [
-        { label: "Promotions", icon: icPromos, href: wp("edit.php?post_type=shop_coupon") },
+        { label: "Promotions", icon: icPromos, to: "/admin/promotions" },
+        { label: "Équipe", icon: icClients, to: "/admin/equipe" },
         { label: "Paramètres", icon: icSettings, href: wp("admin.php?page=wc-settings") },
       ],
     },
@@ -86,11 +96,24 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
         aria-hidden="true"
       />
       <aside
+        ref={sidebarRef}
         className={`fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col gap-1 overflow-y-auto bg-forest px-4 pt-7 pb-6 font-sans transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
-          open ? "translate-x-0" : "-translate-x-full"
+          open ? "visible translate-x-0" : "invisible -translate-x-full lg:visible"
         }`}
         aria-label="Navigation administrateur"
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && open) onClose();
+        }}
       >
+        <button
+          ref={closeButtonRef}
+          type="button"
+          onClick={onClose}
+          className="self-end rounded p-2 text-leaf-soft lg:hidden"
+          aria-label="Fermer le menu"
+        >
+          ✕
+        </button>
         <Link to="/admin" className="flex items-center gap-2.5 pb-5 pl-2">
           <span className="flex size-[52px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-ivory">
             <span className="relative block h-[29.389px] w-[46px] overflow-hidden">
@@ -115,12 +138,20 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
               {group.title}
             </p>
             {group.items.map((item) => {
+              const isActive = item.to ? currentRoute === item.to || (item.to === "/admin/messages" && location.pathname === item.to) : false;
               const content = (
                 <>
-                  <img src={item.icon} alt="" className="size-[18px] shrink-0" />
+                  <span
+                    aria-hidden="true"
+                    className={`size-[18px] shrink-0 bg-current ${isActive ? "text-forest" : "text-leaf-soft"}`}
+                    style={{
+                      WebkitMask: `url("${item.icon}") center / contain no-repeat`,
+                      mask: `url("${item.icon}") center / contain no-repeat`,
+                    }}
+                  />
                   <span
                     className={`flex-1 text-sm leading-5 ${
-                      item.active ? "font-bold text-forest" : "font-semibold text-leaf-soft"
+                      isActive ? "font-bold text-forest" : "font-semibold text-leaf-soft"
                     }`}
                   >
                     {item.label}
@@ -142,7 +173,7 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
                 </>
               );
               const base = "flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 transition-colors";
-              if (item.active) {
+              if (isActive) {
                 return (
                   <span key={item.label} className={`${base} bg-sage`} aria-current="page">
                     {content}
@@ -154,6 +185,13 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
                   <span key={item.label} className={`${base} cursor-not-allowed opacity-60`} title="Bientôt disponible">
                     {content}
                   </span>
+                );
+              }
+              if (item.to) {
+                return (
+                  <Link key={item.label} to={item.to} className={`${base} hover:bg-white/10`}>
+                    {content}
+                  </Link>
                 );
               }
               return (
@@ -175,10 +213,14 @@ export default function Sidebar({ badges = {}, user, onLogout, open, onClose }) 
           </p>
           <Link
             to="/"
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-sage py-[9px] text-xs leading-4 font-semibold tracking-[0.48px] text-white transition-colors hover:bg-[#9cc08f]"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-sage py-[9px] text-xs leading-4 font-semibold tracking-[0.48px] text-forest transition-colors hover:bg-[#9cc08f]"
           >
             Voir la boutique
-            <img src={icExternal} alt="" className="size-[13px]" />
+            <span
+              aria-hidden="true"
+              className="size-[13px] bg-current"
+              style={{ WebkitMask: `url("${icExternal}") center / contain no-repeat`, mask: `url("${icExternal}") center / contain no-repeat` }}
+            />
           </Link>
         </div>
 

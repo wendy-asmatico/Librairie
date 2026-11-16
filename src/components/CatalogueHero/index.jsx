@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import livresImage from "../../assets/images/livres.jpg";
 import vetementsImage from "../../assets/images/vetement.png";
 import accessoiresImage from "../../assets/images/accessoire.png";
@@ -31,8 +32,44 @@ const RAYON_HEROES = {
   },
 };
 
+const CATALOGUE_HERO_API = `${import.meta.env.VITE_API_URL}/wp-json/custom/v1/catalogue-hero-settings`;
+
 export default function CatalogueHero({ onDiscover, onBrowse, categorySlug, onScrollToListing }) {
-  const rayon = RAYON_HEROES[categorySlug];
+  const [heroes, setHeroes] = useState(RAYON_HEROES);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch(CATALOGUE_HERO_API, { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error("Impossible de charger les bannières du catalogue.");
+        return response.json();
+      })
+      .then((data) => {
+        if (!data.heroes) return;
+        setHeroes((current) =>
+          Object.fromEntries(
+            Object.entries(current).map(([slug, fallback]) => {
+              const fromWordPress = data.heroes[slug] || {};
+              return [slug, {
+                ...fallback,
+                label: fromWordPress.label?.trim() || fallback.label,
+                title: fromWordPress.title?.trim() || fallback.title,
+                description: fromWordPress.description?.trim() || fallback.description,
+                image: fromWordPress.image || fallback.image,
+              }];
+            }),
+          ),
+        );
+      })
+      .catch(() => {
+        // Garde les bannières actuelles si WordPress/ACF est indisponible.
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  const rayon = heroes[categorySlug];
 
   if (!rayon) return <Hero onDiscover={onDiscover} onBrowse={onBrowse} />;
 

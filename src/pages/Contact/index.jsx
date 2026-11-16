@@ -5,7 +5,7 @@ import ContactHero from "../../components/ContactHero";
 import Trust from "../../components/Trust";
 import ContactForm, { SUBJECTS } from "../../components/ContactForm";
 import ContactInfo from "../../components/ContactInfo";
-import ContactShop from "../../components/ContactShop";
+import StoreLocation from "../../components/StoreLocation";
 
 // Page Contact — maquette « Contact — ordinateur » de Lisa (node 175:2)
 export default function Contact() {
@@ -33,7 +33,7 @@ export default function Contact() {
         </div>
       </section>
 
-      <ContactShop />
+      <StoreLocation />
     </div>
   );
 }

@@ -27,10 +27,14 @@ services:
       WORDPRESS_DB_NAME: wordpress
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      BREVO_NEWSLETTER_LIST_ID: ${BREVO_NEWSLETTER_LIST_ID:-}
       WORDPRESS_CONFIG_EXTRA: |
         define('JWT_AUTH_SECRET_KEY', 'maktaba-local-dev-secret-change-me');
         define('JWT_AUTH_CORS_ENABLE', true);
         define('FS_METHOD', 'direct');
+        define('BREVO_API_KEY', getenv('BREVO_API_KEY') ?: '');
+        define('BREVO_NEWSLETTER_LIST_ID', getenv('BREVO_NEWSLETTER_LIST_ID') ?: '');
     volumes:
       - wp_data:/var/www/html
       - ../mu-plugins:/var/www/html/wp-content/mu-plugins

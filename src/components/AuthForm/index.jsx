@@ -235,7 +235,7 @@ function RegisterCard() {
     if (Object.keys(next).length) return;
 
     try {
-      await dispatch(
+      const result = await dispatch(
         registerThunk({
           email: values.email.trim(),
           password: values.password,
@@ -245,7 +245,13 @@ function RegisterCard() {
           newsletter,
         }),
       ).unwrap();
-      dispatch(showToast("Votre compte a bien été créé, vous êtes connecté."));
+      dispatch(
+        showToast(
+          result.newsletterSubscribed
+            ? "Votre compte a bien été créé, vous êtes connecté."
+            : "Votre compte est créé, mais l’inscription à la newsletter n’a pas abouti. Réessayez plus tard.",
+        ),
+      );
     } catch (message) {
       setFailure(String(message || "La création du compte a échoué, merci de réessayer."));
     }
@@ -332,7 +338,14 @@ function RegisterCard() {
         >
           Conditions générales de vente
         </Link>{" "}
-        et la Politique de confidentialité RGPD. *
+        et la{" "}
+        <Link
+          to="/politique-de-confidentialite"
+          onClick={() => dispatch(closeModal())}
+          className="font-semibold text-gold underline hover:text-gold-dark"
+        >
+          Politique de confidentialité
+        </Link>. *
       </AccountCheckbox>
 
       <button

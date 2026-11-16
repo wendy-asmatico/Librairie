@@ -15,7 +15,7 @@ import Toast from "../../components/Toast";
 import Seo from "../../components/Seo";
 
 import useDashboardData from "../../admin/useDashboardData";
-import { WP_ADMIN_URL } from "../../admin/api";
+import { wcFetchAll } from "../../admin/api";
 import { fetchCurrentUserThunk } from "../../thunkActionsCreator/userThunks";
 import { logout } from "../../slices/userSlice";
 import { openModal } from "../../slices/modalSlice";
@@ -23,7 +23,6 @@ import { openModal } from "../../slices/modalSlice";
 import icSearch from "../../assets/admin/ic-search.svg";
 import icCalendar from "../../assets/admin/ic-calendar.svg";
 import icChevron from "../../assets/admin/ic-chevron-down.svg";
-import btnNotifications from "../../assets/admin/btn-notifications.svg";
 import icPlus from "../../assets/admin/ic-plus.svg";
 import kpiOrders from "../../assets/admin/kpi-orders.svg";
 import kpiPickup from "../../assets/admin/kpi-pickup.svg";
@@ -65,8 +64,11 @@ export default function AdminDashboard() {
   const [days, setDays] = useState(30);
   const [search, setSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [orderSearch, setOrderSearch] = useState({ loading: false, error: "", orders: [] });
+  const [searchAttempt, setSearchAttempt] = useState(0);
 
   const isAdmin = profile?.roles?.some((r) => ["administrator", "shop_manager"].includes(r));
+  const hasSearch = Boolean(search.trim());
 
   // Le profil chargé à la connexion ne contient pas les rôles
   useEffect(() => {
@@ -74,6 +76,30 @@ export default function AdminDashboard() {
   }, [token, profile?.roles, dispatch]);
 
   const { loading, error, data, reload } = useDashboardData(token && isAdmin ? token : null, days);
+
+  useEffect(() => {
+    if (!token || !isAdmin || !hasSearch) return;
+    let cancelled = false;
+    setOrderSearch({ loading: true, error: "", orders: [] });
+    const timer = setTimeout(() => {
+      wcFetchAll("/orders", token, {
+        status: "any",
+        orderby: "date",
+        order: "desc",
+        _fields: "id,number,billing,date_created,shipping_lines,meta_data,total,currency,status,line_items",
+      }, Infinity)
+        .then(({ items }) => {
+          if (!cancelled) setOrderSearch({ loading: false, error: "", orders: items });
+        })
+        .catch((fetchError) => {
+          if (!cancelled) setOrderSearch({ loading: false, error: fetchError.message || "Erreur de chargement des commandes.", orders: [] });
+        });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [token, isAdmin, hasSearch, searchAttempt]);
 
   if (!token) {
     return (
@@ -154,9 +180,9 @@ export default function AdminDashboard() {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Commande, client, produit…"
+              placeholder="N° commande, client, produit…"
               className="w-full bg-transparent text-[13px] leading-[18px] text-ink outline-none placeholder:text-muted"
-              aria-label="Rechercher une commande"
+              aria-label="Rechercher une commande par numéro, client ou produit"
             />
           </label>
 
@@ -177,25 +203,14 @@ export default function AdminDashboard() {
             <img src={icChevron} alt="" className="pointer-events-none absolute right-3.5 size-3.5" />
           </label>
 
-          <a
-            href={`${WP_ADMIN_URL}/admin.php?page=wc-orders&status=wc-processing`}
-            target="_blank"
-            rel="noreferrer"
-            className="relative size-[42px] shrink-0"
-            aria-label="Commandes à préparer"
-          >
-            <img src={btnNotifications} alt="" className="absolute inset-[-2.38%_-4.76%_-7.14%_-4.76%] max-w-none" />
-          </a>
-
-          <a
-            href={`${WP_ADMIN_URL}/post-new.php?post_type=product`}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => dispatch(openModal({ name: "modalAddProduct" }))}
             className="flex items-center gap-2 rounded-lg bg-gold px-[18px] py-3 text-[13px] leading-[18px] font-semibold tracking-[0.52px] text-white transition-colors hover:bg-gold-dark"
           >
             <img src={icPlus} alt="" className="size-[15px]" />
             Ajouter un produit
-          </a>
+          </button>
         </header>
 
         {error && (
@@ -233,13 +248,28 @@ export default function AdminDashboard() {
             </section>
 
             {/* Graphiques — 209:2 */}
-            <section className="grid gap-5 xl:grid-cols-[1fr_380px]">
+            <section className="grid gap-5 xl:grid-cols-[1fr_520px]">
               <OrdersChart daily={data.daily} total={data.kpis.orders.value} days={days} />
               <CategoryBreakdown rayons={data.rayons} />
             </section>
 
             {/* Activité — 210:2 */}
-            <LatestOrders orders={data.latest} search={search} />
+            {hasSearch && orderSearch.loading ? (
+              <p role="status" className="rounded-2xl border border-line bg-white p-6 text-sm text-muted">Recherche dans les commandes...</p>
+            ) : hasSearch && orderSearch.error ? (
+              <div role="alert" className="rounded-2xl border border-[#f8dcd5] bg-[#fff5f2] p-6 text-sm text-[#8a2c1b]">
+                Impossible de rechercher les commandes : {orderSearch.error}{" "}
+                <button type="button" onClick={() => setSearchAttempt((current) => current + 1)} className="font-semibold underline">Réessayer</button>
+              </div>
+            ) : null}
+            <div hidden={hasSearch && (orderSearch.loading || Boolean(orderSearch.error))}>
+              <LatestOrders
+                orders={hasSearch ? orderSearch.orders : data.latest}
+                search={search}
+                maxRows={hasSearch ? Infinity : 6}
+                title={hasSearch ? "Résultats de recherche" : "Dernières commandes"}
+              />
+            </div>
             <section className="grid gap-5 lg:grid-cols-2">
               <StockAlerts products={data.lowStock} />
               <RecentMessages messages={data.messages?.items} />

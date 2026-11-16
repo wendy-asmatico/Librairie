@@ -1,5 +1,8 @@
 // Petits utilitaires d'affichage du tableau de bord
 export const isPickup = (order) =>
+  (order.meta_data || []).some((meta) =>
+    meta.key === "_headless_store_pickup" && meta.value && meta.value !== "0",
+  ) ||
   (order.shipping_lines || []).some((line) =>
     /local_pickup|pickup_location/.test(line.method_id || ""),
   );

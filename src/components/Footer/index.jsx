@@ -1,10 +1,11 @@
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { setFilters } from "../../slices/filtersSlice";
+import { fetchCurrentUserThunk } from "../../thunkActionsCreator/userThunks";
 import { BRAND, rayonBySlug } from "../../brand";
 import logoRound from "../../assets/images/logo-round.jpg";
-import icStar from "../../assets/images/ic-star.svg";
 import icPin from "../../assets/images/ic-pin.svg";
 import icClock from "../../assets/images/ic-clock.svg";
 import icPhone from "../../assets/images/ic-phone-dark.svg";
@@ -25,7 +26,7 @@ const SERVICES = [
   { label: "Modalités et délais d'expédition", to: "/cgv" },
   { label: "Suivre l'état de ma commande", to: "/profile" },
   { label: "Devis & Coffrets sur mesure pro/famille", to: "/contact?objet=devis" },
-  { label: "Centre d'Aide & Foire aux questions", to: "/contact" },
+  { label: "Centre d'aide & Foire aux questions", to: "/centre-aide" },
 ];
 
 const LINK =
@@ -34,6 +35,12 @@ const LINK =
 export default function Footer() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { token, profile } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (token && !profile?.roles) dispatch(fetchCurrentUserThunk());
+  }, [dispatch, token, profile?.roles]);
+
   const openRayon = (slug) => {
     const page = rayonBySlug(slug)?.to;
     if (page) {
@@ -55,16 +62,6 @@ export default function Footer() {
             <span className="font-serif text-[22px] leading-[30px] font-bold text-forest">{BRAND.shortName}</span>
           </div>
           <p className="text-sm leading-[22.75px] text-ink">Librairie et boutique Islamique</p>
-          <div className="inline-flex items-center gap-2 self-start rounded-lg bg-white p-2 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-            <span className="flex" aria-hidden="true">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <img key={i} src={icStar} alt="" className="block h-[11.083px] w-[11.667px]" />
-              ))}
-            </span>
-            <span className="text-[11px] leading-4 font-semibold tracking-[0.66px] text-[#161d17]">
-              4.9/5 sur Google (380+ avis)
-            </span>
-          </div>
         </div>
 
         <div className="flex min-w-0 flex-col gap-4">
@@ -115,6 +112,9 @@ export default function Footer() {
               <img src={icPhone} alt="" className="block size-3" />
               <span className="text-sm leading-[22px] text-ink">{BRAND.phone}</span>
             </a>
+            <a href={`mailto:${BRAND.email}`} className="text-sm leading-[22px] text-ink hover:text-gold">
+              {BRAND.email}
+            </a>
             <a
               href={BRAND.whatsappHref}
               target="_blank"
@@ -135,10 +135,16 @@ export default function Footer() {
           <span>© {new Date().getFullYear()} {BRAND.shortName}. Tous droits réservés.</span>
           <Link to="/mentions-legales">Mentions Légales</Link>
           <Link to="/cgv">CGV &amp; Rétractation</Link>
-          <Link to="/cgu">Politique de Confidentialité RGPD</Link>
+          <Link to="/cgu">CGU</Link>
+          <Link to="/politique-de-confidentialite">Politique de confidentialité</Link>
+          {token && profile?.roles?.some((role) => ["administrator", "shop_manager"].includes(role)) && (
+            <Link to="/admin" className="rounded-lg border border-line px-3 py-2 font-semibold text-forest hover:bg-mint">
+              Administration
+            </Link>
+          )}
         </div>
         <span className="text-[11px] leading-4 font-semibold tracking-[0.66px] text-muted">
-          Paiements certifiés : CB • VISA • MASTERCARD • APPLE PAY • PAYPAL
+          Paiement sécurisé
         </span>
       </div>
     </footer>

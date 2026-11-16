@@ -9,7 +9,6 @@ import SimilarProducts from "../../components/SimilarProducts";
 import Review from "../../components/Review";
 import Loader from "../../components/Loader";
 
-import "./index.css";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -47,8 +46,8 @@ export default function ProductDetails() {
   const bg = matchedCategory?.image?.src;
 
   return (
-    <main>
-      <div className="product-details-page">
+    <div>
+      <div className="product-details-page ">
         <Product product={productToDisplay} />
         <SimilarProducts
           currentProduct={productToDisplay}
@@ -61,6 +60,6 @@ export default function ProductDetails() {
           style={{ "--cat-bg": bg ? `url(${bg})` : "none" }}
         ></div>
       </div>
-    </main>
+    </div>
   );
 }

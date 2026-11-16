@@ -9,9 +9,12 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col font-sans bg-white text-gray-900">
       <Seo />
+      <a href="#contenu-principal" className="sr-only focus:not-sr-only focus:absolute focus:z-[1000] focus:bg-white focus:p-3 focus:text-forest">
+        Aller au contenu principal
+      </a>
       <Header />
 
-      <main className="flex-1">
+      <main id="contenu-principal" tabIndex={-1} className="flex-1">
         <Outlet /> 
       </main>
 

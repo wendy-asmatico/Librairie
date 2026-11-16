@@ -23,16 +23,25 @@ import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 import NewPassword from "./pages/NewPassword";
 import Profile from "./pages/Profile";
+import CustomerOrderDetail from "./pages/CustomerOrderDetail";
 import Wishlist from "./pages/Wishlist";
-import BlogPage from "./pages/Blog";
-import SinglePost from "./pages/SinglePost";
 import Contact from "./pages/Contact";
+import Help from "./pages/Help";
 import Kids from "./pages/Kids";
 import LegalMentions from "./pages/LegalMentions";
 import CGU from "./pages/CGU";
 import CGV from "./pages/CGV";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Error404 from "./pages/Error404";
 import AdminDashboard from "./pages/Admin";
+import AdminOrders from "./pages/AdminOrders";
+import AdminProducts from "./pages/AdminProducts";
+import AdminOrderDetail from "./pages/AdminOrderDetail";
+import AdminProductDetail from "./pages/AdminProductDetail";
+import AdminQuotes from "./pages/AdminQuotes";
+import AdminRelations from "./pages/AdminRelations";
+import AdminPromotions from "./pages/AdminPromotions";
+import AdminStaff from "./pages/AdminStaff";
 
 import Layout from "./components/Layout/layout";
 import ThemeApplier from "./components/ThemeApplier";
@@ -67,6 +76,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Routes>
           {/* Espace administrateur : sa propre mise en page (sans en-tête ni pied de boutique) */}
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/commandes" element={<AdminOrders />} />
+          <Route path="/admin/commandes/:id" element={<AdminOrderDetail />} />
+          <Route path="/admin/produits" element={<AdminProducts />} />
+          <Route path="/admin/produits/:id" element={<AdminProductDetail />} />
+          <Route path="/admin/devis" element={<AdminQuotes />} />
+          <Route path="/admin/clients" element={<AdminRelations key="clients" section="clients" />} />
+          <Route path="/admin/messages" element={<AdminRelations key="messages" section="messages" />} />
+          <Route path="/admin/avis" element={<AdminRelations key="avis" section="avis" />} />
+          <Route path="/admin/promotions" element={<AdminPromotions />} />
+          <Route path="/admin/equipe" element={<AdminStaff />} />
 
           {/* Layout parent qui englobe toutes les pages */}
           <Route element={<Layout />}>
@@ -77,15 +96,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/mentions-legales" element={<LegalMentions />} />
             <Route path="/cgu" element={<CGU />} />
             <Route path="/cgv" element={<CGV />} />
+            <Route path="/politique-de-confidentialite" element={<PrivacyPolicy />} />
             <Route path="/panier" element={<Cart />} />
             <Route path="/commande" element={<Checkout />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/centre-aide" element={<Help />} />
             <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/blog/:slug" element={<SinglePost />} />
             <Route path="/success/:orderId" element={<Success />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/profile/commandes/:id" element={<CustomerOrderDetail />} />
             <Route path="*" element={<Error404 />} />
           </Route>
         </Routes>

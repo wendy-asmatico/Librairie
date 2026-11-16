@@ -4,7 +4,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import CheckoutForm from "../CheckoutForm";
 import Loader from "../Loader";
 
-export default function StripeWrapper({ shippingAddress }) {
+export default function StripeWrapper({ step, onStepChange }) {
   const [stripePromise, setStripePromise] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,7 +41,7 @@ export default function StripeWrapper({ shippingAddress }) {
   }
   return (
     <Elements stripe={stripePromise}>
-      <CheckoutForm shippingAddress={shippingAddress} />
+      <CheckoutForm step={step} onStepChange={onStepChange} />
     </Elements>
   );
 }

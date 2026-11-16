@@ -72,6 +72,14 @@ export const PackageIcon = (props) => (
   </Icon>
 );
 
+export const TruckIcon = (props) => (
+  <Icon {...props}>
+    <path d="M3 5h11v12H3zM14 9h4l3 3v5h-7z" />
+    <circle cx="7" cy="18" r="2" />
+    <circle cx="18" cy="18" r="2" />
+  </Icon>
+);
+
 export const UserIcon = (props) => (
   <Icon {...props}>
     <circle cx="12" cy="8" r="4" />

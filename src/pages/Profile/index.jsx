@@ -1,11 +1,13 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom"; // 1. Import de useSearchParams
 import { useEffect, useState } from "react";
 import AccountAddresses from "../../components/AccountAddresses";
 import AccountNavigation from "../../components/AccountNavigation";
 import AccountOrders from "../../components/AccountOrders";
 import AccountOverview from "../../components/AccountOverview";
 import AccountProfileForm from "../../components/AccountProfileForm";
+import WishlistSection from "../Wishlist";
+import StoreLocation from "../../components/StoreLocation";
 import DeleteAccountButton from "../../components/DeleteAccountButton";
 import Seo from "../../components/Seo";
 import {
@@ -19,13 +21,40 @@ const SECTIONS = {
   profile: { title: "Mes informations", eyebrow: "Votre profil" },
   addresses: { title: "Mes adresses", eyebrow: "Livraison & facturation" },
   orders: { title: "Mes commandes", eyebrow: "Votre historique" },
+  wishlist: { title: "Mes favoris", eyebrow: "Vos articles sauvegardés" },
 };
 
 export default function Profile() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams(); // 2. Récupération des paramètres d'URL
+
   const { token, profile } = useSelector((state) => state.user);
-  const [section, setSection] = useState("overview");
+
+  // 3. Extraction de la section depuis l'URL (?section=...)
+  const sectionParam = searchParams.get("section");
+  const [section, setSection] = useState(
+    sectionParam && SECTIONS[sectionParam] ? sectionParam : "overview"
+  );
+
+  // 4. Synchronisation : si le paramètre dans l'URL change, on met à jour l'état local
+  useEffect(() => {
+    if (sectionParam && SECTIONS[sectionParam]) {
+      setSection(sectionParam);
+    } else if (!sectionParam) {
+      setSection("overview");
+    }
+  }, [sectionParam]);
+
+  // 5. Fonction pour changer de section et mettre à jour l'URL en même temps
+  const handleSelectSection = (newSection) => {
+    setSection(newSection);
+    if (newSection === "overview") {
+      setSearchParams({}); // Nettoie l'URL pour l'onglet par défaut
+    } else {
+      setSearchParams({ section: newSection });
+    }
+  };
 
   useEffect(() => {
     if (!token) {
@@ -40,7 +69,7 @@ export default function Profile() {
 
   if (!token) return null;
 
-  const activeSection = SECTIONS[section];
+  const activeSection = SECTIONS[section] || SECTIONS.overview;
   const displayName = profile?.firstName || profile?.displayName || profile?.email;
 
   return (
@@ -67,9 +96,9 @@ export default function Profile() {
       </header>
 
       <div className="mx-auto grid max-w-7xl gap-8 px-gutter py-8 pb-14 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12 lg:py-12">
-        <AccountNavigation activeSection={section} onSelect={setSection} />
+        <AccountNavigation activeSection={section} onSelect={handleSelectSection} />
 
-        <main className="min-w-0" aria-labelledby="account-section-title">
+        <section className="min-w-0" aria-labelledby="account-section-title">
           <div className="mb-7 border-b border-line pb-5">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
               {activeSection.eyebrow}
@@ -79,7 +108,7 @@ export default function Profile() {
             </h2>
           </div>
 
-          {section === "overview" && <AccountOverview onShowOrders={() => setSection("orders")} />}
+          {section === "overview" && <AccountOverview onShowOrders={() => handleSelectSection("orders")} />}
           {section === "profile" && (
             <div className="space-y-10">
               <AccountProfileForm />
@@ -96,8 +125,11 @@ export default function Profile() {
           )}
           {section === "addresses" && <AccountAddresses />}
           {section === "orders" && <AccountOrders />}
-        </main>
+          {section === "wishlist" && <WishlistSection />}
+        </section>
       </div>
+
+       <StoreLocation />
     </div>
   );
 }

@@ -166,6 +166,15 @@ export const selectShippingRateThunk = createCartMutation(
   }),
 );
 
+export const updateCartCustomerThunk = createCartMutation(
+  "cart/updateCustomer",
+  (shippingAddress) => ({
+    path: "/update-customer",
+    body: { shipping_address: shippingAddress },
+    fallbackMessage: "Impossible de calculer les modes de livraison.",
+  }),
+);
+
 export const toggleGiftWrapThunk = createCartMutation(
   "cart/toggleGiftWrap",
   ({ itemKey, giftWrap }) => ({
